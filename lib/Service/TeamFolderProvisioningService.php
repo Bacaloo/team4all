@@ -124,12 +124,12 @@ class TeamFolderProvisioningService {
 	}
 
 	private function ensureDocumentsFolder(object $folder, string $mountPoint): ?Folder {
-		$currentUser = $this->groupProvisioningService->getCurrentUser();
-		if ($currentUser !== null) {
+		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if ($provisioningUser !== null) {
 			try {
 				/** @var IRootFolder $rootFolder */
 				$rootFolder = $this->serverContainer->get(IRootFolder::class);
-				$userFolder = $rootFolder->getUserFolder($currentUser->getUID());
+				$userFolder = $rootFolder->getUserFolder($provisioningUser->getUID());
 
 				return $userFolder->getOrCreateFolder($mountPoint . '/' . self::DOCUMENTS_FOLDER_NAME);
 			} catch (NotFoundException|NotPermittedException) {
@@ -168,13 +168,13 @@ class TeamFolderProvisioningService {
 			}
 		}
 
-		$currentUser = $this->groupProvisioningService->getCurrentUser();
-		if ($currentUser === null) {
+		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if ($provisioningUser === null) {
 			return null;
 		}
 
 		try {
-			$userFolder = $rootFolder->getUserFolder($currentUser->getUID());
+			$userFolder = $rootFolder->getUserFolder($provisioningUser->getUID());
 			$node = $userFolder->get($mountPoint);
 		} catch (NotFoundException|NotPermittedException) {
 			return null;

@@ -49,6 +49,22 @@ class GroupProvisioningService {
 		return $user instanceof IUser ? $user : null;
 	}
 
+	public function getProvisioningUser(): ?IUser {
+		$currentUser = $this->getCurrentUser();
+		if ($currentUser instanceof IUser) {
+			return $currentUser;
+		}
+
+		$group = $this->groupManager->get(self::GROUP_ID);
+		if (!$group instanceof IGroup) {
+			return null;
+		}
+
+		$users = $group->getUsers();
+
+		return $users[0] ?? null;
+	}
+
 	public function ensureTeam4AllGroup(): void {
 		$group = $this->groupManager->get(self::GROUP_ID);
 		if ($group instanceof IGroup) {
