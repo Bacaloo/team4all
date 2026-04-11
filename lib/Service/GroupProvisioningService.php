@@ -33,6 +33,12 @@ class GroupProvisioningService {
 		return $this->isAdminUser($user);
 	}
 
+	public function isCurrentUserAdmin(): bool {
+		$user = $this->userSession->getUser();
+
+		return $user instanceof IUser && $this->isAdminUser($user);
+	}
+
 	public function ensureTeam4AllGroup(): void {
 		$group = $this->groupManager->get(self::GROUP_ID);
 		if ($group instanceof IGroup) {
