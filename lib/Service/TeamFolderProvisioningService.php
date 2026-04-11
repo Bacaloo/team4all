@@ -179,18 +179,27 @@ class TeamFolderProvisioningService {
 			}
 		}
 
-		if ($provisioningUser !== null) {
-			try {
-				/** @var IRootFolder $rootFolder */
-				$rootFolder = $this->serverContainer->get(IRootFolder::class);
-				$userFolder = $rootFolder->getUserFolder($provisioningUser->getUID());
+			if ($provisioningUser !== null) {
+				try {
+					/** @var IRootFolder $rootFolder */
+					$rootFolder = $this->serverContainer->get(IRootFolder::class);
+					$userFolder = $rootFolder->getUserFolder($provisioningUser->getUID());
+					$documentsPath = $mountPoint . '/' . self::DOCUMENTS_FOLDER_NAME;
 
-				return $userFolder->getOrCreateFolder($mountPoint . '/' . self::DOCUMENTS_FOLDER_NAME);
-			} catch (NotFoundException|NotPermittedException) {
-				$this->logger->warning('Could not create Dokumente through user mount, falling back to direct folder node.', [
-					'uid' => $provisioningUser->getUID(),
-					'mountPoint' => $mountPoint,
-				]);
+					if ($userFolder->nodeExists($documentsPath)) {
+						$node = $userFolder->get($documentsPath);
+
+						return $node instanceof Folder ? $node : null;
+					}
+
+					$node = $userFolder->newFolder($documentsPath);
+
+					return $node instanceof Folder ? $node : null;
+				} catch (NotFoundException|NotPermittedException) {
+					$this->logger->warning('Could not create Dokumente through user mount, falling back to direct folder node.', [
+						'uid' => $provisioningUser->getUID(),
+						'mountPoint' => $mountPoint,
+					]);
 			}
 		}
 
@@ -208,7 +217,15 @@ class TeamFolderProvisioningService {
 		}
 
 		try {
-			return $teamFolder->getOrCreateFolder(self::DOCUMENTS_FOLDER_NAME);
+			if ($teamFolder->nodeExists(self::DOCUMENTS_FOLDER_NAME)) {
+				$node = $teamFolder->get(self::DOCUMENTS_FOLDER_NAME);
+
+				return $node instanceof Folder ? $node : null;
+			}
+
+			$node = $teamFolder->newFolder(self::DOCUMENTS_FOLDER_NAME);
+
+			return $node instanceof Folder ? $node : null;
 		} catch (NotPermittedException) {
 			$this->logger->warning('Could not create Dokumente through direct Team4All folder node.', [
 				'mountPoint' => $mountPoint,
