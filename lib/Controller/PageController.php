@@ -6,6 +6,8 @@ namespace OCA\Team4All\Controller;
 
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 
@@ -18,14 +20,13 @@ class PageController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
-	/**
-	 * @NoAdminRequired
-	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
 		if (!$this->appManager->isEnabledForAnyone('contacts')) {
-			return new TemplateResponse('team4all', 'contacts_missing');
+			return new TemplateResponse($this->appName, 'contacts_missing');
 		}
 
-		return new TemplateResponse('team4all', 'main');
+		return new TemplateResponse($this->appName, 'main');
 	}
 }
