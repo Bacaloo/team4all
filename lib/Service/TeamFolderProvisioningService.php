@@ -35,6 +35,14 @@ class TeamFolderProvisioningService {
 	}
 
 	public function ensureTeamFolder(): void {
+		$this->ensureTeamFolderInternal(false);
+	}
+
+	public function ensureTeamFolderForUserContext(): void {
+		$this->ensureTeamFolderInternal(true);
+	}
+
+	private function ensureTeamFolderInternal(bool $requireProvisioningUser): void {
 		try {
 			if (!$this->canProvisionTeamFolder()) {
 				$this->logger->info('Skipped Team4All folder provisioning because current context is not allowed to provision.');
@@ -84,12 +92,17 @@ class TeamFolderProvisioningService {
 
 			$groupFolderManager->setFolderACL($folderId, true);
 
-			$documentsFolder = $this->ensureDocumentsFolder($folder, $mountPoint);
+			$documentsFolder = $this->ensureDocumentsFolder($folder, $mountPoint, $requireProvisioningUser);
 			if (!$documentsFolder instanceof Folder) {
-				$this->logger->warning('Could not resolve or create the Dokumente folder inside Team4All.', [
-					'mountPoint' => $mountPoint,
-					'folderId' => $folderId,
-				]);
+				$this->logger->warning(
+					$requireProvisioningUser
+						? 'Could not resolve or create the Dokumente folder inside Team4All in user context.'
+						: 'Skipped Dokumente provisioning because no user context is available during activation.',
+					[
+						'mountPoint' => $mountPoint,
+						'folderId' => $folderId,
+					]
+				);
 				return;
 			}
 
@@ -156,12 +169,14 @@ class TeamFolderProvisioningService {
 		return null;
 	}
 
-	private function ensureDocumentsFolder(object $folder, string $mountPoint): ?Folder {
+	private function ensureDocumentsFolder(object $folder, string $mountPoint, bool $requireProvisioningUser): ?Folder {
 		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
 		if ($provisioningUser === null) {
-			$this->logger->warning('Could not provision Dokumente because no provisioning user could be resolved.', [
-				'mountPoint' => $mountPoint,
-			]);
+			if ($requireProvisioningUser) {
+				$this->logger->warning('Could not provision Dokumente because no provisioning user could be resolved.', [
+					'mountPoint' => $mountPoint,
+				]);
+			}
 		}
 
 		if ($provisioningUser !== null) {
@@ -177,6 +192,10 @@ class TeamFolderProvisioningService {
 					'mountPoint' => $mountPoint,
 				]);
 			}
+		}
+
+		if (!$requireProvisioningUser) {
+			return null;
 		}
 
 		$teamFolder = $this->resolveTeamFolderNode($folder, $mountPoint);

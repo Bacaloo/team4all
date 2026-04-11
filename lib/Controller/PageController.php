@@ -46,7 +46,7 @@ class PageController extends Controller {
 		}
 
 		$this->groupProvisioningService->ensureTeam4AllGroup();
-		$this->teamFolderProvisioningService->ensureTeamFolder();
+		$this->teamFolderProvisioningService->ensureTeamFolderForUserContext();
 
 		$missingApps = $this->getMissingRequiredApps();
 		if ($missingApps !== []) {
