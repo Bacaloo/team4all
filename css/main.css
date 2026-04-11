@@ -1,6 +1,6 @@
 .team4all-root {
     display: grid;
-    grid-template-columns: minmax(180px, 15%) minmax(0, 1fr);
+    grid-template-columns: minmax(260px, 1.3fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(180px, 1fr);
     min-height: calc(100vh - 50px);
     gap: 18px;
     padding: 18px;
@@ -50,6 +50,7 @@
 }
 
 .team4all-main__panel {
+    width: 100%;
     min-height: 100%;
     padding: 32px;
     border: 1px solid rgba(15, 23, 42, 0.14);
@@ -98,10 +99,17 @@
 
 @media (max-width: 900px) {
     .team4all-root {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
     .team4all-sidebar {
+        grid-column: 1 / -1;
         border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+}
+
+@media (max-width: 640px) {
+    .team4all-root {
+        grid-template-columns: 1fr;
     }
 }
