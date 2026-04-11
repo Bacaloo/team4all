@@ -8,7 +8,7 @@ style('team4all', 'main');
 <div
     id="team4all-root"
     class="team4all-root"
-    style="display:grid;grid-template-columns:minmax(180px,15%) minmax(0,1fr);gap:18px;padding:18px;min-height:calc(100vh - 50px);"
+    style="display:grid;grid-template-columns:minmax(280px,40%) minmax(0,1fr);gap:18px;padding:18px;min-height:calc(100vh - 50px);"
 >
     <aside
         class="team4all-sidebar"
