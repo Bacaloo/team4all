@@ -10,7 +10,7 @@
   <namespace>Team4All</namespace>
   <category>productivity</category>
   <dependencies>
-    <nextcloud min-version="28" max-version="32"/>
+    <nextcloud min-version="30"/>
   </dependencies>
   <navigations>
     <navigation>
