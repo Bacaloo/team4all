@@ -1,16 +1,20 @@
 <?xml version="1.0"?>
-<info>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
   <id>team4all</id>
   <name>Team4All</name>
   <summary>Teamarbeit für alle im Unternehmen</summary>
   <description>Grundgerüst der Team4All Nextcloud-App mit Basisroute und Startseite.</description>
   <version>0.1.0</version>
-  <licence>agpl</licence>
+  <licence>AGPL-3.0-or-later</licence>
   <author>Team4All</author>
   <namespace>Team4All</namespace>
-  <category>productivity</category>
+  <category>organization</category>
+  <website>https://github.com/bacaloo/team4all</website>
+  <bugs>https://github.com/bacaloo/team4all/issues</bugs>
+  <repository>https://github.com/bacaloo/team4all</repository>
   <dependencies>
-    <nextcloud min-version="30"/>
+    <nextcloud min-version="30" max-version="32"/>
   </dependencies>
   <repair-steps>
     <install>
