@@ -5,7 +5,7 @@
   <name>Team4All</name>
   <summary>Teamarbeit für alle im Unternehmen</summary>
   <description>Grundgerüst der Team4All Nextcloud-App mit Basisroute und Startseite.</description>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <licence>AGPL-3.0-or-later</licence>
   <author>Team4All</author>
   <namespace>Team4All</namespace>
@@ -16,18 +16,14 @@
   <dependencies>
     <nextcloud min-version="32"/>
   </dependencies>
-    <navigations>
-     <repair-steps>
-    <install>
-      <step>OCA\Team4All\Repair\EnsureContactsEnabled</step>
-    </install>
-  </repair-steps>
+  <navigations>
     <navigation>
       <id>team4all-dashboard</id>
       <order>80</order>
       <name>Team4All</name>
       <route>team4all.page.index</route>
       <icon>app-menu.svg</icon>
+      <role>admin</role>
     </navigation>
   </navigations>
 </info>

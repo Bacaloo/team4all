@@ -6,7 +6,6 @@ namespace OCA\Team4All\Controller;
 
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
@@ -32,7 +31,6 @@ class PageController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
-	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
 		$missingApps = $this->getMissingRequiredApps();
