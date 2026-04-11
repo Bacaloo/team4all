@@ -2,6 +2,8 @@
     display: grid;
     grid-template-columns: minmax(180px, 15%) minmax(0, 1fr);
     min-height: calc(100vh - 50px);
+    gap: 18px;
+    padding: 18px;
     background:
         linear-gradient(135deg, rgba(194, 227, 255, 0.22), rgba(255, 255, 255, 0) 42%),
         linear-gradient(180deg, #f8fbff 0%, #eef4f8 100%);
@@ -25,9 +27,11 @@
     flex-direction: column;
     gap: 20px;
     padding: 28px 18px;
-    border-right: 1px solid rgba(15, 23, 42, 0.08);
-    background: rgba(248, 251, 255, 0.92);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(12px);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
 }
 
 .team4all-sidebar__header {
@@ -43,16 +47,15 @@
 }
 
 .team4all-main {
-    padding: 28px;
+    padding: 0;
 }
 
 .team4all-main__panel {
-    max-width: 960px;
     min-height: 100%;
     padding: 32px;
     border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.94);
     box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
 }
 
@@ -100,11 +103,6 @@
     }
 
     .team4all-sidebar {
-        border-right: 0;
         border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    }
-
-    .team4all-main {
-        padding-top: 20px;
     }
 }
