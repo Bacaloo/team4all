@@ -12,6 +12,11 @@
   <dependencies>
     <nextcloud min-version="30"/>
   </dependencies>
+  <repair-steps>
+    <install>
+      <step>OCA\Team4All\Repair\EnsureContactsEnabled</step>
+    </install>
+  </repair-steps>
   <navigations>
     <navigation>
       <id>team4all-dashboard</id>
