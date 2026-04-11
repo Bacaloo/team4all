@@ -9,6 +9,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
+use OCA\Team4All\Service\GroupProvisioningService;
 
 class PageController extends Controller {
 	private const REQUIRED_APPS = [
@@ -27,12 +28,15 @@ class PageController extends Controller {
 		string $appName,
 		IRequest $request,
 		private IAppManager $appManager,
+		private GroupProvisioningService $groupProvisioningService,
 	) {
 		parent::__construct($appName, $request);
 	}
 
 	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
+		$this->groupProvisioningService->ensureTeam4AllGroup();
+
 		$missingApps = $this->getMissingRequiredApps();
 		if ($missingApps !== []) {
 			return new TemplateResponse($this->appName, 'contacts_missing', [
