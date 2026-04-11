@@ -7,6 +7,8 @@ namespace OCA\Team4All\Service;
 use OCP\Constants;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
+use OCP\Files\NotPermittedException;
 use OCP\IServerContainer;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -30,7 +32,7 @@ class TeamFolderProvisioningService {
 	}
 
 	public function ensureTeamFolder(): void {
-		if (!$this->groupProvisioningService->isCurrentUserAdmin()) {
+		if (!$this->canProvisionTeamFolder()) {
 			return;
 		}
 
@@ -67,7 +69,7 @@ class TeamFolderProvisioningService {
 
 		$groupFolderManager->setFolderACL($folderId, true);
 
-		$teamFolder = $this->resolveTeamFolderNode($folder->rootId ?? null);
+		$teamFolder = $this->resolveTeamFolderNode($folder, $mountPoint);
 		if (!$teamFolder instanceof Folder) {
 			return;
 		}
@@ -117,14 +119,36 @@ class TeamFolderProvisioningService {
 		return null;
 	}
 
-	private function resolveTeamFolderNode(mixed $rootId): ?Folder {
-		if (!is_int($rootId) && !is_numeric($rootId)) {
+	private function resolveTeamFolderNode(object $folder, string $mountPoint): ?Folder {
+		/** @var IRootFolder $rootFolder */
+		$rootFolder = $this->serverContainer->get(IRootFolder::class);
+
+		$rootId = property_exists($folder, 'rootId') ? $folder->rootId : null;
+		if (is_int($rootId) || is_numeric($rootId)) {
+			$node = $rootFolder->getFirstNodeById((int)$rootId);
+			if ($node instanceof Folder) {
+				return $node;
+			}
+
+			$nodes = $rootFolder->getById((int)$rootId);
+			foreach ($nodes as $candidate) {
+				if ($candidate instanceof Folder) {
+					return $candidate;
+				}
+			}
+		}
+
+		$currentUser = $this->groupProvisioningService->getCurrentUser();
+		if ($currentUser === null) {
 			return null;
 		}
 
-		/** @var IRootFolder $rootFolder */
-		$rootFolder = $this->serverContainer->get(IRootFolder::class);
-		$node = $rootFolder->getFirstNodeById((int)$rootId);
+		try {
+			$userFolder = $rootFolder->getUserFolder($currentUser->getUID());
+			$node = $userFolder->get($mountPoint);
+		} catch (NotFoundException|NotPermittedException) {
+			return null;
+		}
 
 		return $node instanceof Folder ? $node : null;
 	}
@@ -162,5 +186,13 @@ class TeamFolderProvisioningService {
 		);
 
 		$ruleManager->saveRule($rule);
+	}
+
+	private function canProvisionTeamFolder(): bool {
+		if (!$this->groupProvisioningService->groupExists()) {
+			return $this->groupProvisioningService->isCurrentUserAdmin();
+		}
+
+		return true;
 	}
 }

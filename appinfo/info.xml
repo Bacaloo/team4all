@@ -16,4 +16,9 @@
   <dependencies>
     <nextcloud min-version="32"/>
   </dependencies>
+  <repair-steps>
+    <install>
+      <step>OCA\Team4All\Repair\EnsureTeam4AllStructure</step>
+    </install>
+  </repair-steps>
 </info>
