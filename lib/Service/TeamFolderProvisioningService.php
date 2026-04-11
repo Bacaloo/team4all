@@ -69,14 +69,18 @@ class TeamFolderProvisioningService {
 
 		$groupFolderManager->setFolderACL($folderId, true);
 
-		$teamFolder = $this->resolveTeamFolderNode($folder, $mountPoint);
-		if (!$teamFolder instanceof Folder) {
+		$documentsFolder = $this->ensureDocumentsFolder($folder, $mountPoint);
+		if (!$documentsFolder instanceof Folder) {
 			return;
 		}
 
-		$documentsFolder = $teamFolder->getOrCreateFolder(self::DOCUMENTS_FOLDER_NAME);
 		$ruleManager = $this->resolveGroupFolderRuleManager();
 		if ($ruleManager === null) {
+			return;
+		}
+
+		$teamFolder = $documentsFolder->getParent();
+		if (!$teamFolder instanceof Folder) {
 			return;
 		}
 
@@ -117,6 +121,32 @@ class TeamFolderProvisioningService {
 		}
 
 		return null;
+	}
+
+	private function ensureDocumentsFolder(object $folder, string $mountPoint): ?Folder {
+		$currentUser = $this->groupProvisioningService->getCurrentUser();
+		if ($currentUser !== null) {
+			try {
+				/** @var IRootFolder $rootFolder */
+				$rootFolder = $this->serverContainer->get(IRootFolder::class);
+				$userFolder = $rootFolder->getUserFolder($currentUser->getUID());
+
+				return $userFolder->getOrCreateFolder($mountPoint . '/' . self::DOCUMENTS_FOLDER_NAME);
+			} catch (NotFoundException|NotPermittedException) {
+				// Fall back to the group-folder node resolution below.
+			}
+		}
+
+		$teamFolder = $this->resolveTeamFolderNode($folder, $mountPoint);
+		if (!$teamFolder instanceof Folder) {
+			return null;
+		}
+
+		try {
+			return $teamFolder->getOrCreateFolder(self::DOCUMENTS_FOLDER_NAME);
+		} catch (NotPermittedException) {
+			return null;
+		}
 	}
 
 	private function resolveTeamFolderNode(object $folder, string $mountPoint): ?Folder {
