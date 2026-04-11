@@ -1,18 +1,17 @@
 <?php
 /** @var array $_ */
-/** @var array{missingApps?: list<array{id: string, name: string}>} $params */
 
 script('team4all', 'main');
 style('team4all', 'main');
 
-$missingApps = $params['missingApps'] ?? [];
+$missingApps = $_['missingApps'] ?? [];
 ?>
 <div id="team4all-root" class="team4all-root team4all-status">
 	<img class="team4all-logo" src="<?= image_path('team4all', 'app.svg') ?>" alt="Team4All Logo" />
 	<h2>Team4All</h2>
 	<p>Die App kann erst genutzt werden, wenn alle Pflicht-Apps in Nextcloud aktiviert sind.</p>
 	<?php if ($missingApps !== []): ?>
-		<p>Aktuell fehlen:</p>
+		<h3>Noch fehlende Apps</h3>
 		<ul class="team4all-missing-list">
 			<?php foreach ($missingApps as $missingApp): ?>
 				<li>
