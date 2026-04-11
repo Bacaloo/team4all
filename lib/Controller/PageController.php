@@ -12,6 +12,18 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 
 class PageController extends Controller {
+	private const REQUIRED_APPS = [
+		'calendar' => 'Calendar',
+		'circles' => 'Teams',
+		'files' => 'Files',
+		'files_pdfviewer' => 'PDF viewer',
+		'files_sharing' => 'File sharing',
+		'groupfolders' => 'Team folders',
+		'mail' => 'Mail',
+		'tasks' => 'Tasks',
+		'onlyoffice' => 'ONLYOFFICE',
+	];
+
 	public function __construct(
 		string $appName,
 		IRequest $request,
@@ -23,10 +35,31 @@ class PageController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
-		if (!$this->appManager->isEnabledForAnyone('contacts')) {
-			return new TemplateResponse($this->appName, 'contacts_missing');
+		$missingApps = $this->getMissingRequiredApps();
+		if ($missingApps !== []) {
+			return new TemplateResponse($this->appName, 'contacts_missing', [
+				'missingApps' => $missingApps,
+			]);
 		}
 
 		return new TemplateResponse($this->appName, 'main');
+	}
+
+	/**
+	 * @return list<array{id: string, name: string}>
+	 */
+	private function getMissingRequiredApps(): array {
+		$missingApps = [];
+
+		foreach (self::REQUIRED_APPS as $appId => $appName) {
+			if (!$this->appManager->isEnabledForAnyone($appId)) {
+				$missingApps[] = [
+					'id' => $appId,
+					'name' => $appName,
+				];
+			}
+		}
+
+		return $missingApps;
 	}
 }

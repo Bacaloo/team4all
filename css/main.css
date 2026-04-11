@@ -1,9 +1,29 @@
 .team4all-root {
     padding: 24px;
+    max-width: 720px;
 }
 
 .team4all-logo {
     width: 120px;
     height: auto;
     margin-bottom: 12px;
+}
+
+.team4all-status {
+    background: var(--color-main-background);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+}
+
+.team4all-missing-list {
+    margin: 16px 0 0;
+    padding-left: 20px;
+}
+
+.team4all-missing-list li + li {
+    margin-top: 8px;
+}
+
+.team4all-app-id {
+    color: var(--color-text-maxcontrast);
 }
