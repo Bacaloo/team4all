@@ -14,7 +14,7 @@
   <bugs>https://github.com/bacaloo/team4all/issues</bugs>
   <repository>https://github.com/bacaloo/team4all</repository>
   <dependencies>
-    <nextcloud min-version="30" max-version="32"/>
+    <nextcloud min-version="32"/>
   </dependencies>
   <repair-steps>
     <install>
