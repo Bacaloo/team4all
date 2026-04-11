@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\Controller;
 
+use OCA\Team4All\Service\GroupProvisioningService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
-use OCA\Team4All\Service\GroupProvisioningService;
 
 class PageController extends Controller {
 	private const REQUIRED_APPS = [
@@ -35,6 +36,13 @@ class PageController extends Controller {
 
 	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
+		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+			$response = new TemplateResponse($this->appName, 'access_denied');
+			$response->setStatus(Http::STATUS_FORBIDDEN);
+
+			return $response;
+		}
+
 		$this->groupProvisioningService->ensureTeam4AllGroup();
 
 		$missingApps = $this->getMissingRequiredApps();
