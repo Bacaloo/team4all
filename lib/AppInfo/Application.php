@@ -40,7 +40,7 @@ class Application extends App implements IBootstrap {
 				'id' => self::APP_ID,
 				'order' => 80,
 				'href' => $urlGenerator->linkToRoute('team4all.page.index'),
-				'icon' => $urlGenerator->imagePath(self::APP_ID, 'app-menu.svg'),
+				'icon' => $urlGenerator->getAbsoluteURL('/apps/' . self::APP_ID . '/img/app-menu.svg'),
 				'name' => 'Team4All',
 			];
 		});
