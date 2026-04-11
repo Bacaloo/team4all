@@ -158,6 +158,12 @@ class TeamFolderProvisioningService {
 
 	private function ensureDocumentsFolder(object $folder, string $mountPoint): ?Folder {
 		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if ($provisioningUser === null) {
+			$this->logger->warning('Could not provision Dokumente because no provisioning user could be resolved.', [
+				'mountPoint' => $mountPoint,
+			]);
+		}
+
 		if ($provisioningUser !== null) {
 			try {
 				/** @var IRootFolder $rootFolder */
@@ -175,6 +181,10 @@ class TeamFolderProvisioningService {
 
 		$teamFolder = $this->resolveTeamFolderNode($folder, $mountPoint);
 		if (!$teamFolder instanceof Folder) {
+			$this->logger->warning('Could not resolve Team4All folder node while creating Dokumente.', [
+				'mountPoint' => $mountPoint,
+				'rootId' => property_exists($folder, 'rootId') ? $folder->rootId : null,
+			]);
 			return null;
 		}
 
@@ -209,6 +219,9 @@ class TeamFolderProvisioningService {
 
 		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
 		if ($provisioningUser === null) {
+			$this->logger->warning('Could not resolve Team4All folder node because no provisioning user is available for mount lookup.', [
+				'mountPoint' => $mountPoint,
+			]);
 			return null;
 		}
 

@@ -62,7 +62,18 @@ class GroupProvisioningService {
 
 		$users = $group->getUsers();
 
-		return $users[0] ?? null;
+		if (isset($users[0]) && $users[0] instanceof IUser) {
+			return $users[0];
+		}
+
+		$adminGroup = $this->groupManager->get(self::ADMIN_GROUP_ID);
+		if (!$adminGroup instanceof IGroup) {
+			return null;
+		}
+
+		$adminUsers = $adminGroup->getUsers();
+
+		return $adminUsers[0] ?? null;
 	}
 
 	public function ensureTeam4AllGroup(): void {
