@@ -547,6 +547,7 @@ class ContactGroupProvisioningService {
 	 */
 	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): array {
 		$entries = $this->groupContactsByCompany($contacts);
+		$allCards = $cardDavBackend->getCards($addressBookId);
 
 		foreach ($entries as $entry) {
 			if ($entry['type'] !== 'group' || $entry['company'] === '') {
@@ -558,6 +559,12 @@ class ContactGroupProvisioningService {
 			}
 
 			$company = $entry['company'];
+			$existingLeaderContact = $this->findExistingLeaderContact($allCards, $company);
+			if ($existingLeaderContact !== null) {
+				$contacts[] = $existingLeaderContact;
+				continue;
+			}
+
 			$leaderUri = $this->buildGroupLeaderContactUri($company);
 			$leaderUid = $this->buildGroupLeaderContactUid($company);
 			$vCard = new VCard();
@@ -583,6 +590,62 @@ class ContactGroupProvisioningService {
 		}
 
 		return $contacts;
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $cards
+	 * @return array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
+	 */
+	private function findExistingLeaderContact(array $cards, string $company): ?array {
+		$candidates = [];
+
+		foreach ($cards as $card) {
+			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+				continue;
+			}
+
+			$vCard = $this->parseVCard($card['carddata']);
+			if (!$vCard instanceof VCard) {
+				continue;
+			}
+
+			$rawName = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
+			$normalizedCompany = $this->extractCompany($vCard);
+			$effectiveName = $rawName !== '' ? $rawName : $normalizedCompany;
+
+			if (!$this->isLeaderContact($rawName, $effectiveName, $company)) {
+				continue;
+			}
+
+			$email = '';
+			$telephone = '';
+			foreach ($vCard->select('EMAIL') as $emailProperty) {
+				$email = trim((string)$emailProperty->getValue());
+				if ($email !== '') {
+					break;
+				}
+			}
+
+			foreach ($vCard->select('TEL') as $telephoneProperty) {
+				$telephone = trim((string)$telephoneProperty->getValue());
+				if ($telephone !== '') {
+					break;
+				}
+			}
+
+			$candidates[] = [
+				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
+				'rawName' => $rawName,
+				'searchText' => $this->buildContactSearchText($rawName, $this->extractStructuredName($vCard), $normalizedCompany, $email, $telephone),
+				'note' => $this->extractNote($vCard),
+				'uid' => isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '',
+				'email' => $email,
+				'uri' => (string)($card['uri'] ?? ''),
+				'company' => $normalizedCompany,
+			];
+		}
+
+		return $this->pickPreferredLeaderCandidate($candidates);
 	}
 
 	private function buildManagedContactUid(IUser $user): string {
