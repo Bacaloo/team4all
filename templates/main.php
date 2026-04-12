@@ -36,15 +36,10 @@ style('team4all', 'main');
                 <h2>Kontakte</h2>
             </div>
         </div>
-        <p class="team4all-sidebar__copy">
-            Team4All liest diese Kontakte direkt aus dem Standard-Adressbuch <strong>contacts</strong> und bildet daraus Gruppen ueber das Feld <strong>Firma</strong>.
-        </p>
 		<?php $team4AllGroups = $_['team4AllGroups'] ?? []; ?>
-		<?php $team4AllGroupCount = (int)($_['team4AllGroupCount'] ?? count($team4AllGroups)); ?>
 		<div class="team4all-contact-list">
 			<div class="team4all-contact-list__header">
 				<strong>Team4All-Gruppen</strong>
-				<span><?= $team4AllGroupCount ?></span>
 			</div>
 			<?php if ($team4AllGroups === []): ?>
 				<div class="team4all-contact-placeholder">
@@ -54,21 +49,16 @@ style('team4all', 'main');
 			<?php else: ?>
 				<ul class="team4all-contact-groups">
 					<?php foreach ($team4AllGroups as $group): ?>
-						<?php
-							$searchText = mb_strtolower(
-								$group['company'] . ' ' .
-								($group['leader']['name'] ?? '') . ' ' .
-								($group['leader']['email'] ?? '') . ' ' .
-								implode(' ', array_map(static fn(array $member): string => $member['name'] . ' ' . $member['email'], $group['members']))
-							);
-						?>
-						<li class="team4all-contact-group" data-team4all-search="<?= p($searchText) ?>">
+						<li class="team4all-contact-group">
 							<div class="team4all-contact-group__header">
 								<strong><?= p($group['company']) ?></strong>
 								<span><?= count($group['members']) + ($group['leader'] !== null ? 1 : 0) ?></span>
 							</div>
 							<?php if ($group['leader'] !== null): ?>
-								<div class="team4all-contact-item team4all-contact-item--leader">
+								<div
+									class="team4all-contact-item team4all-contact-item--leader"
+									data-team4all-contact-search="<?= p(mb_strtolower($group['company'] . ' ' . $group['leader']['name'] . ' ' . $group['leader']['email'])) ?>"
+								>
 									<em>Leader</em>
 									<strong><?= p($group['leader']['name']) ?></strong>
 									<?php if ($group['leader']['email'] !== ''): ?>
@@ -84,7 +74,10 @@ style('team4all', 'main');
 							<?php if ($group['members'] !== []): ?>
 								<ul class="team4all-contact-items">
 									<?php foreach ($group['members'] as $member): ?>
-										<li class="team4all-contact-item">
+										<li
+											class="team4all-contact-item"
+											data-team4all-contact-search="<?= p(mb_strtolower($group['company'] . ' ' . $member['name'] . ' ' . $member['email'])) ?>"
+										>
 											<em>Member</em>
 											<strong><?= p($member['name']) ?></strong>
 											<?php if ($member['email'] !== ''): ?>
