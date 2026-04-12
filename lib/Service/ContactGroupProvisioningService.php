@@ -339,7 +339,20 @@ class ContactGroupProvisioningService {
 			$value = $value[0] ?? '';
 		}
 
-		return trim((string)$value);
+		return $this->canonicalizeCompanyName((string)$value);
+	}
+
+	private function canonicalizeCompanyName(string $value): string {
+		$value = trim($value);
+		if ($value === '') {
+			return '';
+		}
+
+		if (preg_match('/^([[:alnum:]]{4})-([0-9]+)$/u', $value, $matches) === 1) {
+			return $matches[1];
+		}
+
+		return $value;
 	}
 
 	private function extractStructuredName(VCard $vCard): string {
