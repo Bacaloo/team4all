@@ -137,8 +137,8 @@
 
             if (mode === 'leader') {
                 showLeaderNote(
-                    trigger.getAttribute('data-team4all-leader-title') || '',
-                    decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || '')
+                    trigger.getAttribute('data-team4all-note-title') || trigger.getAttribute('data-team4all-leader-title') || '',
+                    decodeDataValue(trigger.getAttribute('data-team4all-note-content') || trigger.getAttribute('data-team4all-leader-content') || '')
                 );
                 return;
             }

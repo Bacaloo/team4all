@@ -64,6 +64,8 @@ style('team4all', 'main');
 									type="button"
 									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
 									data-team4all-note-mode="leader"
+									data-team4all-note-title="<?= p($entry['leader']['name']) ?>"
+									data-team4all-note-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
 									data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
 									data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
 								>
