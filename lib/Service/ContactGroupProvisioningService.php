@@ -442,12 +442,13 @@ class ContactGroupProvisioningService {
 				$grouped[$company] = [
 					'company' => $company,
 					'leader' => null,
+					'leaderCandidates' => [],
 					'members' => [],
 				];
 			}
 
 			if ($this->isLeaderContact($contact['rawName'], $contact['name'], $company)) {
-				$grouped[$company]['leader'] = $this->pickPreferredLeader($grouped[$company]['leader'], $contact);
+				$grouped[$company]['leaderCandidates'][] = $contact;
 				continue;
 			}
 
@@ -455,6 +456,9 @@ class ContactGroupProvisioningService {
 		}
 
 		foreach ($grouped as &$group) {
+			$group['leader'] = $this->pickPreferredLeaderCandidate($group['leaderCandidates']);
+			unset($group['leaderCandidates']);
+
 			if ($group['leader'] !== null) {
 				$leaderUri = $group['leader']['uri'];
 				$group['members'] = array_values(
@@ -492,42 +496,47 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null $currentLeader
-	 * @param array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string} $candidate
-	 * @return array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}
+	 * @param list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}> $candidates
+	 * @return array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null
 	 */
-	private function pickPreferredLeader(?array $currentLeader, array $candidate): array {
-		if ($currentLeader === null) {
-			return $candidate;
+	private function pickPreferredLeaderCandidate(array $candidates): ?array {
+		if ($candidates === []) {
+			return null;
 		}
 
-		$currentLeaderIsGenerated = $this->isGeneratedGroupLeaderUri($currentLeader['uri']);
-		$candidateIsGenerated = $this->isGeneratedGroupLeaderUri($candidate['uri']);
+		usort($candidates, function (array $left, array $right): int {
+			$leftScore = $this->leaderCandidateScore($left);
+			$rightScore = $this->leaderCandidateScore($right);
 
-		if ($currentLeaderIsGenerated && !$candidateIsGenerated) {
-			return $candidate;
-		}
+			return $rightScore <=> $leftScore;
+		});
 
-		if (!$currentLeaderIsGenerated && $candidateIsGenerated) {
-			return $currentLeader;
-		}
-
-		$currentLeaderHasNote = trim($currentLeader['note']) !== '';
-		$candidateHasNote = trim($candidate['note']) !== '';
-
-		if ($candidateHasNote && !$currentLeaderHasNote) {
-			return $candidate;
-		}
-
-		if ($candidateHasNote === $currentLeaderHasNote && trim($currentLeader['rawName']) === '' && trim($candidate['rawName']) !== '') {
-			return $candidate;
-		}
-
-		return $currentLeader;
+		return $candidates[0];
 	}
 
 	private function isGeneratedGroupLeaderUri(string $uri): bool {
 		return str_starts_with($uri, self::GROUP_LEADER_URI_PREFIX);
+	}
+
+	/**
+	 * @param array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string} $candidate
+	 */
+	private function leaderCandidateScore(array $candidate): int {
+		$score = 0;
+
+		if (!$this->isGeneratedGroupLeaderUri($candidate['uri'])) {
+			$score += 100;
+		}
+
+		if (trim($candidate['note']) !== '') {
+			$score += 50;
+		}
+
+		if (trim($candidate['rawName']) !== '') {
+			$score += 10;
+		}
+
+		return $score;
 	}
 
 	/**
