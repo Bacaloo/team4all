@@ -44,7 +44,19 @@
         }
 
         try {
-            return atob(value);
+            const binary = atob(value);
+            const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+
+            if (typeof TextDecoder !== 'undefined') {
+                return new TextDecoder('utf-8').decode(bytes);
+            }
+
+            let decoded = '';
+            bytes.forEach((byte) => {
+                decoded += `%${byte.toString(16).padStart(2, '0')}`;
+            });
+
+            return decodeURIComponent(decoded);
         } catch (error) {
             return value;
         }
