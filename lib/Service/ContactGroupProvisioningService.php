@@ -35,6 +35,10 @@ class ContactGroupProvisioningService {
 				return;
 			}
 
+			$this->logger->info('Starting Team4All contact group provisioning.', [
+				'uid' => $provisioningUser->getUID(),
+			]);
+
 			$cardDavBackend = $this->resolveCardDavBackend();
 			if ($cardDavBackend === null) {
 				$this->logger->warning('Skipped Team4All contact group provisioning because the CardDAV backend could not be resolved.');
@@ -49,6 +53,11 @@ class ContactGroupProvisioningService {
 				]);
 				return;
 			}
+
+			$this->logger->info('Resolved provisioning address books for Team4All contact group.', [
+				'uid' => $provisioningUser->getUID(),
+				'addressBookCount' => count($addressBooks),
+			]);
 
 			foreach ($addressBooks as $addressBook) {
 				if (!isset($addressBook['id'])) {
@@ -126,13 +135,18 @@ class ContactGroupProvisioningService {
 			return array_values($addressBooks);
 		}
 
-		$addressBookId = $cardDavBackend->createAddressBook(
+			$addressBookId = $cardDavBackend->createAddressBook(
 			$principalUri,
 			self::TEAM4ALL_ADDRESSBOOK_URI,
 			[
 				'{DAV:}displayname' => self::TEAM4ALL_ADDRESSBOOK_DISPLAY_NAME,
 			],
 		);
+
+		$this->logger->info('Created Team4All address book for contact group provisioning.', [
+			'principalUri' => $principalUri,
+			'addressBookId' => (int)$addressBookId,
+		]);
 
 		$addressBook = $cardDavBackend->getAddressBookById((int)$addressBookId);
 
