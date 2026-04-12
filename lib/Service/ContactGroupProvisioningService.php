@@ -344,7 +344,7 @@ class ContactGroupProvisioningService {
 				];
 			}
 
-			if (strcasecmp($contact['name'], $company) === 0) {
+			if ($this->isLeaderContact($contact['name'], $company)) {
 				$grouped[$company]['leader'] = $contact;
 				continue;
 			}
@@ -385,6 +385,22 @@ class ContactGroupProvisioningService {
 
 	private function buildManagedContactUri(IUser $user): string {
 		return self::MANAGED_CONTACT_URI_PREFIX . $user->getUID() . '.vcf';
+	}
+
+	private function isLeaderContact(string $name, string $company): bool {
+		return $this->normalizeComparableValue($name) === $this->normalizeComparableValue($company);
+	}
+
+	private function normalizeComparableValue(string $value): string {
+		$value = str_replace(
+			['\\,', '\\;', '\\\\'],
+			[',', ';', '\\'],
+			$value
+		);
+		$value = mb_strtolower(trim($value));
+		$value = preg_replace('/\s+/', ' ', $value) ?? $value;
+
+		return $value;
 	}
 
 	private function cardContainsTeam4AllCategory(string $cardData): bool {
