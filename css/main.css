@@ -183,6 +183,10 @@
     gap: 10px;
 }
 
+.team4all-contact-items--indented {
+    margin-left: 18px;
+}
+
 .team4all-contact-groups {
     margin: 0;
     padding: 0;
@@ -227,11 +231,6 @@
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 14px;
     background: rgba(248, 251, 255, 0.96);
-}
-
-.team4all-contact-item--leader {
-    border-color: rgba(61, 106, 139, 0.28);
-    background: rgba(227, 240, 249, 0.95);
 }
 
 .team4all-contact-item--single {
