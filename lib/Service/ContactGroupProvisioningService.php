@@ -17,6 +17,8 @@ class ContactGroupProvisioningService {
 	private const CARD_DAV_BACKEND_CLASS = 'OCA\\DAV\\CardDAV\\CardDavBackend';
 	private const MANAGED_CONTACT_UID_PREFIX = 'team4all-provisioning-';
 	private const MANAGED_CONTACT_URI_PREFIX = 'team4all-provisioning-';
+	private const GROUP_LEADER_UID_PREFIX = 'team4all-group-leader-';
+	private const GROUP_LEADER_URI_PREFIX = 'team4all-group-leader-';
 	private const DEFAULT_ADDRESSBOOK_URI = 'contacts';
 	private const TEAM4ALL_ADDRESSBOOK_URI = 'team4all';
 	private const TEAM4ALL_ADDRESSBOOK_DISPLAY_NAME = 'Team4All';
@@ -179,6 +181,12 @@ class ContactGroupProvisioningService {
 				'company' => $company,
 			];
 		}
+
+		$contacts = $this->ensureMissingGroupLeaderContacts(
+			$cardDavBackend,
+			(int)$addressBook['id'],
+			$contacts,
+		);
 
 		return $this->groupContactsByCompany($contacts);
 	}
@@ -406,12 +414,68 @@ class ContactGroupProvisioningService {
 		return $entries;
 	}
 
+	/**
+	 * @param list<array{name: string, rawName: string, email: string, uri: string, company: string}> $contacts
+	 * @return list<array{name: string, rawName: string, email: string, uri: string, company: string}>
+	 */
+	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): array {
+		$entries = $this->groupContactsByCompany($contacts);
+
+		foreach ($entries as $entry) {
+			if ($entry['type'] !== 'group' || $entry['company'] === '') {
+				continue;
+			}
+
+			if ($entry['leader'] !== null || count($entry['members']) <= 1) {
+				continue;
+			}
+
+			$company = $entry['company'];
+			$leaderUri = $this->buildGroupLeaderContactUri($company);
+			$leaderUid = $this->buildGroupLeaderContactUid($company);
+			$vCard = new VCard();
+			$this->applyManagedGroupLeaderData($vCard, $company, $leaderUid);
+			$cardDavBackend->createCard($addressBookId, $leaderUri, $vCard->serialize());
+
+			$this->logger->info('Created missing Team4All group leader contact in default contacts address book.', [
+				'addressBookId' => $addressBookId,
+				'company' => $company,
+				'cardUri' => $leaderUri,
+			]);
+
+			$contacts[] = [
+				'name' => $company,
+				'rawName' => $company,
+				'email' => '',
+				'uri' => $leaderUri,
+				'company' => $company,
+			];
+		}
+
+		return $contacts;
+	}
+
 	private function buildManagedContactUid(IUser $user): string {
 		return self::MANAGED_CONTACT_UID_PREFIX . $user->getUID() . '@team4all.local';
 	}
 
 	private function buildManagedContactUri(IUser $user): string {
 		return self::MANAGED_CONTACT_URI_PREFIX . $user->getUID() . '.vcf';
+	}
+
+	private function buildGroupLeaderContactUid(string $company): string {
+		return self::GROUP_LEADER_UID_PREFIX . sha1($this->normalizeComparableValue($company)) . '@team4all.local';
+	}
+
+	private function buildGroupLeaderContactUri(string $company): string {
+		return self::GROUP_LEADER_URI_PREFIX . sha1($this->normalizeComparableValue($company)) . '.vcf';
+	}
+
+	private function applyManagedGroupLeaderData(VCard $vCard, string $company, string $uid): void {
+		$vCard->UID = $uid;
+		$vCard->FN = $company;
+		$vCard->ORG = $company;
+		$vCard->add('CATEGORIES', self::CONTACT_GROUP_NAME);
 	}
 
 	private function isLeaderContact(string $rawName, string $effectiveName, string $company): bool {

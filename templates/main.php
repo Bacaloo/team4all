@@ -53,11 +53,6 @@ style('team4all', 'main');
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['name'] . ' ' . $entry['person']['email'])) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
-									<?php if ($entry['person']['email'] !== ''): ?>
-										<span><?= p($entry['person']['email']) ?></span>
-									<?php else: ?>
-										<span>Keine E-Mail-Adresse</span>
-									<?php endif; ?>
 								</div>
 							</li>
 							<?php continue; ?>
@@ -65,7 +60,6 @@ style('team4all', 'main');
 						<li class="team4all-contact-group">
 							<div class="team4all-contact-group__header">
 								<strong><?= p($entry['company']) ?></strong>
-								<span><?= count($entry['members']) + ($entry['leader'] !== null ? 1 : 0) ?></span>
 							</div>
 							<?php if ($entry['leader'] === null && count($entry['members']) === 1): ?>
 								<div
@@ -73,11 +67,6 @@ style('team4all', 'main');
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['company'] . ' ' . $entry['members'][0]['name'] . ' ' . $entry['members'][0]['email'])) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
-									<?php if ($entry['members'][0]['email'] !== ''): ?>
-										<span><?= p($entry['members'][0]['email']) ?></span>
-									<?php else: ?>
-										<span>Keine E-Mail-Adresse</span>
-									<?php endif; ?>
 								</div>
 							<?php else: ?>
 								<?php if ($entry['leader'] === null): ?>
@@ -94,13 +83,7 @@ style('team4all', 'main');
 											class="team4all-contact-item"
 											data-team4all-contact-search="<?= p(mb_strtolower($entry['company'] . ' ' . $member['name'] . ' ' . $member['email'])) ?>"
 										>
-											<em>Member</em>
 											<strong><?= p($member['name']) ?></strong>
-											<?php if ($member['email'] !== ''): ?>
-												<span><?= p($member['email']) ?></span>
-											<?php else: ?>
-												<span>Keine E-Mail-Adresse</span>
-											<?php endif; ?>
 										</li>
 									<?php endforeach; ?>
 								</ul>
