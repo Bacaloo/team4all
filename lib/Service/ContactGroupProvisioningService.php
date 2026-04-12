@@ -121,9 +121,9 @@ class ContactGroupProvisioningService {
 	 *   type: 'group'|'person',
 	 *   label: string,
 	 *   company: string,
-	 *   leader: array{name: string, rawName: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, email: string, uri: string, company: string}|null
+	 *   leader: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	public function getTeam4AllContactGroups(): array {
@@ -162,7 +162,9 @@ class ContactGroupProvisioningService {
 			}
 
 			$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
+			$structuredName = $this->extractStructuredName($vCard);
 			$email = '';
+			$telephone = '';
 			$company = $this->extractCompany($vCard);
 			$effectiveName = $name !== '' ? $name : $company;
 
@@ -173,9 +175,17 @@ class ContactGroupProvisioningService {
 				}
 			}
 
+			foreach ($vCard->select('TEL') as $telephoneProperty) {
+				$telephone = trim((string)$telephoneProperty->getValue());
+				if ($telephone !== '') {
+					break;
+				}
+			}
+
 			$contacts[] = [
 				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
 				'rawName' => $name,
+				'searchText' => $this->buildContactSearchText($name, $structuredName, $company, $email, $telephone),
 				'email' => $email,
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $company,
@@ -332,15 +342,56 @@ class ContactGroupProvisioningService {
 		return trim((string)$value);
 	}
 
+	private function extractStructuredName(VCard $vCard): string {
+		if (!isset($vCard->N)) {
+			return '';
+		}
+
+		$value = $vCard->N->getValue();
+		if (!is_array($value)) {
+			return trim((string)$value);
+		}
+
+		$parts = [];
+		foreach ($value as $part) {
+			if (is_array($part)) {
+				foreach ($part as $nestedPart) {
+					$nestedPart = trim((string)$nestedPart);
+					if ($nestedPart !== '') {
+						$parts[] = $nestedPart;
+					}
+				}
+				continue;
+			}
+
+			$part = trim((string)$part);
+			if ($part !== '') {
+				$parts[] = $part;
+			}
+		}
+
+		return implode(' ', $parts);
+	}
+
+	private function buildContactSearchText(string $formattedName, string $structuredName, string $company, string $email, string $telephone): string {
+		return trim(implode(' ', array_filter([
+			$formattedName,
+			$structuredName,
+			$company,
+			$email,
+			$telephone,
+		], static fn(string $value): bool => trim($value) !== '')));
+	}
+
 	/**
-	 * @param list<array{name: string, rawName: string, email: string, uri: string, company: string}> $contacts
+	 * @param list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}> $contacts
 	 * @return list<array{
 	 *   type: 'group'|'person',
 	 *   label: string,
 	 *   company: string,
-	 *   leader: array{name: string, rawName: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, email: string, uri: string, company: string}|null
+	 *   leader: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	private function groupContactsByCompany(array $contacts): array {
@@ -415,8 +466,8 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param list<array{name: string, rawName: string, email: string, uri: string, company: string}> $contacts
-	 * @return list<array{name: string, rawName: string, email: string, uri: string, company: string}>
+	 * @param list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}> $contacts
+	 * @return list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}>
 	 */
 	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): array {
 		$entries = $this->groupContactsByCompany($contacts);
@@ -446,6 +497,7 @@ class ContactGroupProvisioningService {
 			$contacts[] = [
 				'name' => $company,
 				'rawName' => $company,
+				'searchText' => $company,
 				'email' => '',
 				'uri' => $leaderUri,
 				'company' => $company,

@@ -13,11 +13,8 @@ style('team4all', 'main');
     <section
         class="team4all-toolbar"
         aria-label="Funktionsbereich"
-        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:16px;height:50px;padding:0 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
+        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:flex-end;gap:16px;height:50px;padding:0 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
-        <div class="team4all-toolbar__title">
-            <p class="team4all-eyebrow" style="margin:0;">Funktionsbereich</p>
-        </div>
         <div class="team4all-toolbar__content">
             <label class="team4all-search">
                 <span class="team4all-search__label">Kontakte suchen</span>
@@ -50,7 +47,7 @@ style('team4all', 'main');
 							<li class="team4all-contact-group team4all-contact-group--person">
 								<div
 									class="team4all-contact-item team4all-contact-item--single"
-									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['name'] . ' ' . $entry['person']['email'])) ?>"
+									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['searchText'])) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
 								</div>
@@ -64,7 +61,7 @@ style('team4all', 'main');
 							<?php if ($entry['leader'] === null && count($entry['members']) === 1): ?>
 								<div
 									class="team4all-contact-item team4all-contact-item--single"
-									data-team4all-contact-search="<?= p(mb_strtolower($entry['company'] . ' ' . $entry['members'][0]['name'] . ' ' . $entry['members'][0]['email'])) ?>"
+									data-team4all-contact-search="<?= p(mb_strtolower($entry['members'][0]['searchText'])) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
 								</div>
@@ -81,7 +78,7 @@ style('team4all', 'main');
 									<?php foreach ($entry['members'] as $member): ?>
 										<li
 											class="team4all-contact-item"
-											data-team4all-contact-search="<?= p(mb_strtolower($entry['company'] . ' ' . $member['name'] . ' ' . $member['email'])) ?>"
+											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
 										>
 											<strong><?= p($member['name']) ?></strong>
 										</li>
