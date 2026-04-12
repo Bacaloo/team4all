@@ -353,6 +353,16 @@ class ContactGroupProvisioningService {
 		}
 
 		foreach ($grouped as &$group) {
+			if ($group['leader'] !== null) {
+				$leaderUri = $group['leader']['uri'];
+				$group['members'] = array_values(
+					array_filter(
+						$group['members'],
+						static fn(array $member): bool => $member['uri'] !== $leaderUri
+					)
+				);
+			}
+
 			usort(
 				$group['members'],
 				static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name'])
