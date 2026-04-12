@@ -554,14 +554,14 @@ class ContactGroupProvisioningService {
 				continue;
 			}
 
-			if ($entry['leader'] !== null || count($entry['members']) <= 1) {
+			$company = $entry['company'];
+			$existingLeaderContact = $this->findExistingLeaderContact($allCards, $company);
+			if ($existingLeaderContact !== null && ($entry['leader'] === null || $this->isGeneratedGroupLeaderUri($entry['leader']['uri']))) {
+				$contacts[] = $existingLeaderContact;
 				continue;
 			}
 
-			$company = $entry['company'];
-			$existingLeaderContact = $this->findExistingLeaderContact($allCards, $company);
-			if ($existingLeaderContact !== null) {
-				$contacts[] = $existingLeaderContact;
+			if ($entry['leader'] !== null || count($entry['members']) <= 1) {
 				continue;
 			}
 
