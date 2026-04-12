@@ -18,6 +18,7 @@ style('team4all', 'main');
         <div class="team4all-toolbar__content">
             <label class="team4all-search">
                 <span class="team4all-search__label visually-hidden">Kontakte suchen</span>
+                <span class="team4all-search__icon" aria-hidden="true"></span>
                 <input id="team4all-contact-search" type="search" placeholder="Kontakte suchen" autocomplete="off" />
             </label>
         </div>
