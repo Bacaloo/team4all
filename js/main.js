@@ -28,11 +28,6 @@
     const detailsSingle = document.getElementById('team4all-details-single');
     const detailsSingleEditor = document.getElementById('team4all-details-single-editor');
     const detailsSingleTitle = document.getElementById('team4all-details-single-title');
-    const detailsSplit = document.getElementById('team4all-details-split');
-    const detailsLeaderEditor = document.getElementById('team4all-details-leader-editor');
-    const detailsLeaderTitle = document.getElementById('team4all-details-leader-title');
-    const detailsMemberEditor = document.getElementById('team4all-details-member-editor');
-    const detailsMemberTitle = document.getElementById('team4all-details-member-title');
 
     const detailEditors = {
         single: {
@@ -47,34 +42,6 @@
                 locality: document.getElementById('team4all-details-single-locality'),
                 telephones: document.getElementById('team4all-details-single-telephones'),
                 emails: document.getElementById('team4all-details-single-emails'),
-            },
-        },
-        leader: {
-            container: detailsLeaderEditor,
-            title: detailsLeaderTitle,
-            fields: {
-                prefix: document.getElementById('team4all-details-leader-prefix'),
-                firstName: document.getElementById('team4all-details-leader-first-name'),
-                lastName: document.getElementById('team4all-details-leader-last-name'),
-                streetAddress: document.getElementById('team4all-details-leader-street-address'),
-                postalCode: document.getElementById('team4all-details-leader-postal-code'),
-                locality: document.getElementById('team4all-details-leader-locality'),
-                telephones: document.getElementById('team4all-details-leader-telephones'),
-                emails: document.getElementById('team4all-details-leader-emails'),
-            },
-        },
-        member: {
-            container: detailsMemberEditor,
-            title: detailsMemberTitle,
-            fields: {
-                prefix: document.getElementById('team4all-details-member-prefix'),
-                firstName: document.getElementById('team4all-details-member-first-name'),
-                lastName: document.getElementById('team4all-details-member-last-name'),
-                streetAddress: document.getElementById('team4all-details-member-street-address'),
-                postalCode: document.getElementById('team4all-details-member-postal-code'),
-                locality: document.getElementById('team4all-details-member-locality'),
-                telephones: document.getElementById('team4all-details-member-telephones'),
-                emails: document.getElementById('team4all-details-member-emails'),
             },
         },
     };
@@ -262,12 +229,46 @@
         editor.container.dataset.contactUri = '';
         editor.container.dataset.originalValue = '';
         editor.container.dataset.saving = 'false';
-        Object.values(editor.fields).forEach((field) => {
-            if (field) {
+        ['prefix', 'firstName', 'lastName', 'streetAddress', 'postalCode', 'locality'].forEach((fieldName) => {
+            const field = editor.fields[fieldName];
+            if (field && 'value' in field) {
                 field.value = '';
             }
         });
+        renderContactLinks(editor.fields.telephones, [], 'tel');
+        renderContactLinks(editor.fields.emails, [], 'mail');
     };
+
+    const buildMailHref = (email) => `${window.OC?.webroot || ''}/apps/mail/compose?to=${encodeURIComponent(email)}`;
+
+    const renderContactLinks = (element, values, type) => {
+        if (!element) {
+            return;
+        }
+
+        element.replaceChildren();
+
+        if (!values.length) {
+            const empty = document.createElement('span');
+            empty.className = 'team4all-details__link-empty';
+            empty.textContent = type === 'tel' ? 'Keine Telefonnummer vorhanden.' : 'Keine E-Mail-Adresse vorhanden.';
+            element.appendChild(empty);
+            return;
+        }
+
+        values.forEach((value) => {
+            const link = document.createElement('a');
+            link.className = 'team4all-details__link';
+            link.textContent = type === 'tel' ? `tel:${value}` : `mailto:${value}`;
+            link.href = type === 'tel' ? `tel:${value}` : buildMailHref(value);
+            if (type === 'mail') {
+                link.dataset.mailto = `mailto:${value}`;
+            }
+            element.appendChild(link);
+        });
+    };
+
+    const splitMultilineValue = (value) => value.split(/\r\n|\r|\n/).map((entry) => entry.trim()).filter((entry) => entry !== '');
 
     const populateDetailEditor = (editor, title, data) => {
         if (!editor) {
@@ -281,8 +282,8 @@
         editor.fields.streetAddress.value = data.streetAddress || '';
         editor.fields.postalCode.value = data.postalCode || '';
         editor.fields.locality.value = data.locality || '';
-        editor.fields.telephones.value = data.telephones || '';
-        editor.fields.emails.value = data.emails || '';
+        renderContactLinks(editor.fields.telephones, splitMultilineValue(data.telephones || ''), 'tel');
+        renderContactLinks(editor.fields.emails, splitMultilineValue(data.emails || ''), 'mail');
         assignDetailEditorState(editor, data);
     };
 
@@ -293,8 +294,8 @@
         streetAddress: editor.fields.streetAddress.value || '',
         postalCode: editor.fields.postalCode.value || '',
         locality: editor.fields.locality.value || '',
-        telephones: editor.fields.telephones.value || '',
-        emails: editor.fields.emails.value || '',
+        telephones: JSON.parse(editor.container.dataset.originalValue || '{}').telephones || '',
+        emails: JSON.parse(editor.container.dataset.originalValue || '{}').emails || '',
     });
 
     const restoreDetailEditorValues = (editor, values) => {
@@ -304,8 +305,8 @@
         editor.fields.streetAddress.value = values.streetAddress || '';
         editor.fields.postalCode.value = values.postalCode || '';
         editor.fields.locality.value = values.locality || '';
-        editor.fields.telephones.value = values.telephones || '';
-        editor.fields.emails.value = values.emails || '';
+        renderContactLinks(editor.fields.telephones, splitMultilineValue(values.telephones || ''), 'tel');
+        renderContactLinks(editor.fields.emails, splitMultilineValue(values.emails || ''), 'mail');
     };
 
     const saveDetailEditor = async (editor) => {
@@ -400,34 +401,12 @@
     const showEmptyDetails = () => {
         setVisible(detailsEmpty, true);
         setVisible(detailsSingle, false);
-        setVisible(detailsSplit, false);
     };
 
     const showSingleDetails = (title, data) => {
         setVisible(detailsEmpty, false);
         setVisible(detailsSingle, true);
-        setVisible(detailsSplit, false);
         populateDetailEditor(detailEditors.single, title, data);
-        clearDetailEditorState(detailEditors.leader);
-        clearDetailEditorState(detailEditors.member);
-    };
-
-    const showLeaderDetails = (leaderTitle, leaderData) => {
-        setVisible(detailsEmpty, false);
-        setVisible(detailsSingle, false);
-        setVisible(detailsSplit, true);
-        setVisible(detailsMemberEditor, false);
-        populateDetailEditor(detailEditors.leader, leaderTitle, leaderData);
-        clearDetailEditorState(detailEditors.member);
-    };
-
-    const showMemberDetails = (leaderTitle, leaderData, memberTitle, memberData) => {
-        setVisible(detailsEmpty, false);
-        setVisible(detailsSingle, false);
-        setVisible(detailsSplit, true);
-        setVisible(detailsMemberEditor, true);
-        populateDetailEditor(detailEditors.leader, leaderTitle, leaderData);
-        populateDetailEditor(detailEditors.member, memberTitle, memberData);
     };
 
     const showSingleNote = (title, uri, content) => {
@@ -502,26 +481,10 @@
     triggers.forEach((trigger) => {
         trigger.addEventListener('click', () => {
             const noteMode = trigger.getAttribute('data-team4all-note-mode') || 'single';
-            const detailMode = trigger.getAttribute('data-team4all-detail-mode') || noteMode;
-
-            if (detailMode === 'leader') {
-                showLeaderDetails(
-                    trigger.getAttribute('data-team4all-detail-title') || trigger.getAttribute('data-team4all-leader-detail-title') || '',
-                    readTriggerDetailData(trigger)
-                );
-            } else if (detailMode === 'member') {
-                showMemberDetails(
-                    trigger.getAttribute('data-team4all-leader-detail-title') || '',
-                    readTriggerDetailData(trigger, 'data-team4all-leader-detail'),
-                    trigger.getAttribute('data-team4all-detail-title') || '',
-                    readTriggerDetailData(trigger)
-                );
-            } else {
-                showSingleDetails(
-                    trigger.getAttribute('data-team4all-detail-title') || '',
-                    readTriggerDetailData(trigger)
-                );
-            }
+            showSingleDetails(
+                trigger.getAttribute('data-team4all-detail-title') || '',
+                readTriggerDetailData(trigger)
+            );
 
             if (noteMode === 'leader') {
                 showLeaderNote(
@@ -565,6 +528,4 @@
     registerNoteEditor(notesLeaderContent);
     registerNoteEditor(notesMemberContent);
     registerDetailEditor(detailEditors.single);
-    registerDetailEditor(detailEditors.leader);
-    registerDetailEditor(detailEditors.member);
 })();

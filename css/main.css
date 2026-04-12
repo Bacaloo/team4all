@@ -353,7 +353,7 @@ button.team4all-contact-trigger {
 
 .team4all-details__grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 12px;
     min-height: 0;
 }
@@ -375,10 +375,6 @@ button.team4all-contact-trigger {
     grid-column: 1 / -1;
 }
 
-.team4all-details__field--double {
-    grid-column: span 2;
-}
-
 .team4all-details__input,
 .team4all-details__textarea {
     width: 100%;
@@ -398,6 +394,32 @@ button.team4all-contact-trigger {
 
 .team4all-details__textarea--address {
     min-height: 72px;
+}
+
+.team4all-details__links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 14px;
+    background: rgba(248, 251, 255, 0.96);
+    box-sizing: border-box;
+}
+
+.team4all-details__link {
+    color: #215a8a;
+    text-decoration: none;
+    word-break: break-word;
+}
+
+.team4all-details__link:hover,
+.team4all-details__link:focus-visible {
+    text-decoration: underline;
+}
+
+.team4all-details__link-empty {
+    color: var(--color-text-maxcontrast);
 }
 
 .team4all-details__input:focus,
@@ -422,10 +444,6 @@ button.team4all-contact-trigger {
 @media (max-width: 900px) {
     .team4all-root {
         grid-template-columns: 1fr 1fr;
-    }
-
-    .team4all-details__grid {
-        grid-template-columns: 1fr;
     }
 
     .team4all-sidebar {

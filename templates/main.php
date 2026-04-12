@@ -220,122 +220,38 @@ style('team4all', 'main');
                     >
                         <h3 id="team4all-details-single-title" class="team4all-details__title"></h3>
                         <div class="team4all-details__grid">
-                            <label class="team4all-details__field">
+                            <label class="team4all-details__field team4all-details__field--full">
                                 <span>Präfix</span>
                                 <input id="team4all-details-single-prefix" type="text" class="team4all-details__input" />
                             </label>
-                            <label class="team4all-details__field">
+                            <label class="team4all-details__field team4all-details__field--full">
                                 <span>Vorname</span>
                                 <input id="team4all-details-single-first-name" type="text" class="team4all-details__input" />
                             </label>
-                            <label class="team4all-details__field">
+                            <label class="team4all-details__field team4all-details__field--full">
                                 <span>Nachname</span>
                                 <input id="team4all-details-single-last-name" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
-                                <span>Straße/Hausnummer</span>
+                                <span>Straße &amp; Hausnummer</span>
                                 <textarea id="team4all-details-single-street-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
                             </label>
-                            <label class="team4all-details__field">
+                            <label class="team4all-details__field team4all-details__field--full">
                                 <span>PLZ</span>
                                 <input id="team4all-details-single-postal-code" type="text" class="team4all-details__input" />
                             </label>
-                            <label class="team4all-details__field team4all-details__field--double">
+                            <label class="team4all-details__field team4all-details__field--full">
                                 <span>Ort</span>
                                 <input id="team4all-details-single-locality" type="text" class="team4all-details__input" />
                             </label>
-                            <label class="team4all-details__field team4all-details__field--full">
+                            <div class="team4all-details__field team4all-details__field--full">
                                 <span>Telefonkontakte</span>
-                                <textarea id="team4all-details-single-telephones" class="team4all-details__textarea" spellcheck="false"></textarea>
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
+                                <div id="team4all-details-single-telephones" class="team4all-details__links"></div>
+                            </div>
+                            <div class="team4all-details__field team4all-details__field--full">
                                 <span>Mailkontakte</span>
-                                <textarea id="team4all-details-single-emails" class="team4all-details__textarea" spellcheck="false"></textarea>
-                            </label>
-                        </div>
-                    </section>
-                </div>
-                <div id="team4all-details-split" class="team4all-details__split" hidden>
-                    <section
-                        id="team4all-details-leader-editor"
-                        class="team4all-details__section"
-                        data-team4all-contact-editor="true"
-                    >
-                        <h3 id="team4all-details-leader-title" class="team4all-details__title"></h3>
-                        <div class="team4all-details__grid">
-                            <label class="team4all-details__field">
-                                <span>Präfix</span>
-                                <input id="team4all-details-leader-prefix" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field">
-                                <span>Vorname</span>
-                                <input id="team4all-details-leader-first-name" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field">
-                                <span>Nachname</span>
-                                <input id="team4all-details-leader-last-name" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
-                                <span>Straße/Hausnummer</span>
-                                <textarea id="team4all-details-leader-street-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
-                            </label>
-                            <label class="team4all-details__field">
-                                <span>PLZ</span>
-                                <input id="team4all-details-leader-postal-code" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--double">
-                                <span>Ort</span>
-                                <input id="team4all-details-leader-locality" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
-                                <span>Telefonkontakte</span>
-                                <textarea id="team4all-details-leader-telephones" class="team4all-details__textarea" spellcheck="false"></textarea>
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
-                                <span>Mailkontakte</span>
-                                <textarea id="team4all-details-leader-emails" class="team4all-details__textarea" spellcheck="false"></textarea>
-                            </label>
-                        </div>
-                    </section>
-                    <section
-                        id="team4all-details-member-editor"
-                        class="team4all-details__section"
-                        data-team4all-contact-editor="true"
-                    >
-                        <h3 id="team4all-details-member-title" class="team4all-details__title"></h3>
-                        <div class="team4all-details__grid">
-                            <label class="team4all-details__field">
-                                <span>Präfix</span>
-                                <input id="team4all-details-member-prefix" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field">
-                                <span>Vorname</span>
-                                <input id="team4all-details-member-first-name" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field">
-                                <span>Nachname</span>
-                                <input id="team4all-details-member-last-name" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
-                                <span>Straße/Hausnummer</span>
-                                <textarea id="team4all-details-member-street-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
-                            </label>
-                            <label class="team4all-details__field">
-                                <span>PLZ</span>
-                                <input id="team4all-details-member-postal-code" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--double">
-                                <span>Ort</span>
-                                <input id="team4all-details-member-locality" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
-                                <span>Telefonkontakte</span>
-                                <textarea id="team4all-details-member-telephones" class="team4all-details__textarea" spellcheck="false"></textarea>
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
-                                <span>Mailkontakte</span>
-                                <textarea id="team4all-details-member-emails" class="team4all-details__textarea" spellcheck="false"></textarea>
-                            </label>
+                                <div id="team4all-details-single-emails" class="team4all-details__links"></div>
+                            </div>
                         </div>
                     </section>
                 </div>
