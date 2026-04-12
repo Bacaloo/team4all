@@ -121,9 +121,9 @@ class ContactGroupProvisioningService {
 	 *   type: 'group'|'person',
 	 *   label: string,
 	 *   company: string,
-	 *   leader: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null
+	 *   leader: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	public function getTeam4AllContactGroups(): array {
@@ -165,6 +165,7 @@ class ContactGroupProvisioningService {
 			$structuredName = $this->extractStructuredName($vCard);
 			$email = '';
 			$note = $this->extractNote($vCard);
+			$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
 			$telephone = '';
 			$company = $this->extractCompany($vCard);
 			$effectiveName = $name !== '' ? $name : $company;
@@ -188,6 +189,7 @@ class ContactGroupProvisioningService {
 				'rawName' => $name,
 				'searchText' => $this->buildContactSearchText($name, $structuredName, $company, $email, $telephone),
 				'note' => $note,
+				'uid' => $uid,
 				'email' => $email,
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $company,
@@ -410,14 +412,14 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}> $contacts
+	 * @param list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}> $contacts
 	 * @return list<array{
 	 *   type: 'group'|'person',
 	 *   label: string,
 	 *   company: string,
-	 *   leader: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null
+	 *   leader: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	private function groupContactsByCompany(array $contacts): array {
@@ -496,8 +498,8 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}> $candidates
-	 * @return array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null
+	 * @param list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}> $candidates
+	 * @return array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
 	 */
 	private function pickPreferredLeaderCandidate(array $candidates): ?array {
 		if ($candidates === []) {
@@ -519,7 +521,7 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string} $candidate
+	 * @param array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string} $candidate
 	 */
 	private function leaderCandidateScore(array $candidate): int {
 		$score = 0;
@@ -540,8 +542,8 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}> $contacts
-	 * @return list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}>
+	 * @param list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}> $contacts
+	 * @return list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}>
 	 */
 	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): array {
 		$entries = $this->groupContactsByCompany($contacts);
@@ -573,6 +575,7 @@ class ContactGroupProvisioningService {
 				'rawName' => $company,
 				'searchText' => $company,
 				'note' => '',
+				'uid' => $leaderUid,
 				'email' => '',
 				'uri' => $leaderUri,
 				'company' => $company,

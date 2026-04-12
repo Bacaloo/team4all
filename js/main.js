@@ -68,34 +68,41 @@
         setVisible(notesSplit, false);
     };
 
-    const showSingleNote = (title, content) => {
+    const prependUid = (uid, content) => {
+        const normalizedUid = uid && uid.trim() !== '' ? uid.trim() : '(keine UID)';
+        const normalizedContent = content && content.trim() !== '' ? content : 'Keine Notiz vorhanden.';
+
+        return `UID: ${normalizedUid}\n\n${normalizedContent}`;
+    };
+
+    const showSingleNote = (title, uid, content) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, true);
         setVisible(notesSplit, false);
         setContent(notesSingleTitle, title, 'Notiz');
-        setContent(notesSingleContent, content, 'Keine Notiz vorhanden.');
+        setContent(notesSingleContent, prependUid(uid, content), 'Keine Notiz vorhanden.');
     };
 
-    const showLeaderNote = (leaderTitle, leaderContent) => {
+    const showLeaderNote = (leaderTitle, leaderUid, leaderContent) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, false);
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, false);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
-        setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
+        setContent(notesLeaderContent, prependUid(leaderUid, leaderContent), 'Keine Notiz vorhanden.');
         setContent(notesMemberTitle, '', '');
         setContent(notesMemberContent, '', '');
     };
 
-    const showMemberNote = (leaderTitle, leaderContent, memberTitle, memberContent) => {
+    const showMemberNote = (leaderTitle, leaderUid, leaderContent, memberTitle, memberUid, memberContent) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, false);
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, true);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
-        setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
+        setContent(notesLeaderContent, prependUid(leaderUid, leaderContent), 'Keine Notiz vorhanden.');
         setContent(notesMemberTitle, memberTitle, 'Notiz');
-        setContent(notesMemberContent, memberContent, 'Keine Notiz vorhanden.');
+        setContent(notesMemberContent, prependUid(memberUid, memberContent), 'Keine Notiz vorhanden.');
     };
 
     const applySearch = () => {
@@ -138,6 +145,7 @@
             if (mode === 'leader') {
                 showLeaderNote(
                     trigger.getAttribute('data-team4all-note-title') || trigger.getAttribute('data-team4all-leader-title') || '',
+                    trigger.getAttribute('data-team4all-note-uid') || trigger.getAttribute('data-team4all-leader-uid') || '',
                     decodeDataValue(trigger.getAttribute('data-team4all-note-content') || trigger.getAttribute('data-team4all-leader-content') || '')
                 );
                 return;
@@ -146,8 +154,10 @@
             if (mode === 'member') {
                 showMemberNote(
                     trigger.getAttribute('data-team4all-leader-title') || '',
+                    trigger.getAttribute('data-team4all-leader-uid') || '',
                     decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || ''),
                     trigger.getAttribute('data-team4all-note-title') || '',
+                    trigger.getAttribute('data-team4all-note-uid') || '',
                     decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
                 );
                 return;
@@ -155,6 +165,7 @@
 
             showSingleNote(
                 trigger.getAttribute('data-team4all-note-title') || '',
+                trigger.getAttribute('data-team4all-note-uid') || '',
                 decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
             );
         });

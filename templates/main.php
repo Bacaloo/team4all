@@ -51,6 +51,7 @@ style('team4all', 'main');
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['searchText'])) ?>"
 									data-team4all-note-mode="single"
 									data-team4all-note-title="<?= p($entry['person']['name']) ?>"
+									data-team4all-note-uid="<?= p($entry['person']['uid']) ?>"
 									data-team4all-note-content="<?= p(base64_encode($entry['person']['note'])) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
@@ -65,8 +66,10 @@ style('team4all', 'main');
 									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
 									data-team4all-note-mode="leader"
 									data-team4all-note-title="<?= p($entry['leader']['name']) ?>"
+									data-team4all-note-uid="<?= p($entry['leader']['uid']) ?>"
 									data-team4all-note-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
 									data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
+									data-team4all-leader-uid="<?= p($entry['leader']['uid']) ?>"
 									data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
 								>
 									<strong><?= p($entry['company']) ?></strong>
@@ -83,6 +86,7 @@ style('team4all', 'main');
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['members'][0]['searchText'])) ?>"
 									data-team4all-note-mode="single"
 									data-team4all-note-title="<?= p($entry['members'][0]['name']) ?>"
+									data-team4all-note-uid="<?= p($entry['members'][0]['uid']) ?>"
 									data-team4all-note-content="<?= p(base64_encode($entry['members'][0]['note'])) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
@@ -102,12 +106,14 @@ style('team4all', 'main');
 											<button
 												type="button"
 												class="team4all-contact-item team4all-contact-trigger"
-											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
+												data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
 												data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
 												data-team4all-note-title="<?= p($member['name']) ?>"
+												data-team4all-note-uid="<?= p($member['uid']) ?>"
 												data-team4all-note-content="<?= p(base64_encode($member['note'])) ?>"
 												<?php if ($entry['leader'] !== null): ?>
 													data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
+													data-team4all-leader-uid="<?= p($entry['leader']['uid']) ?>"
 													data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
 												<?php endif; ?>
 											>
