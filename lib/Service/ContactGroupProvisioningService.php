@@ -121,9 +121,9 @@ class ContactGroupProvisioningService {
 	 *   type: 'group'|'person',
 	 *   label: string,
 	 *   company: string,
-	 *   leader: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null
+	 *   leader: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	public function getTeam4AllContactGroups(): array {
@@ -164,6 +164,7 @@ class ContactGroupProvisioningService {
 			$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
 			$structuredName = $this->extractStructuredName($vCard);
 			$email = '';
+			$note = $this->extractNote($vCard);
 			$telephone = '';
 			$company = $this->extractCompany($vCard);
 			$effectiveName = $name !== '' ? $name : $company;
@@ -186,6 +187,7 @@ class ContactGroupProvisioningService {
 				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
 				'rawName' => $name,
 				'searchText' => $this->buildContactSearchText($name, $structuredName, $company, $email, $telephone),
+				'note' => $note,
 				'email' => $email,
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $company,
@@ -396,15 +398,26 @@ class ContactGroupProvisioningService {
 		], static fn(string $value): bool => trim($value) !== '')));
 	}
 
+	private function extractNote(VCard $vCard): string {
+		foreach ($vCard->select('NOTE') as $noteProperty) {
+			$note = trim((string)$noteProperty->getValue());
+			if ($note !== '') {
+				return $note;
+			}
+		}
+
+		return '';
+	}
+
 	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}> $contacts
+	 * @param list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}> $contacts
 	 * @return list<array{
 	 *   type: 'group'|'person',
 	 *   label: string,
 	 *   company: string,
-	 *   leader: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}|null
+	 *   leader: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	private function groupContactsByCompany(array $contacts): array {
@@ -479,8 +492,8 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}> $contacts
-	 * @return list<array{name: string, rawName: string, searchText: string, email: string, uri: string, company: string}>
+	 * @param list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}> $contacts
+	 * @return list<array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}>
 	 */
 	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): array {
 		$entries = $this->groupContactsByCompany($contacts);
@@ -511,6 +524,7 @@ class ContactGroupProvisioningService {
 				'name' => $company,
 				'rawName' => $company,
 				'searchText' => $company,
+				'note' => '',
 				'email' => '',
 				'uri' => $leaderUri,
 				'company' => $company,

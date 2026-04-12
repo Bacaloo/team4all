@@ -45,26 +45,46 @@ style('team4all', 'main');
 					<?php foreach ($team4AllGroups as $entry): ?>
 						<?php if ($entry['type'] === 'person' && $entry['person'] !== null): ?>
 							<li class="team4all-contact-group team4all-contact-group--person">
-								<div
-									class="team4all-contact-item team4all-contact-item--single"
+								<button
+									type="button"
+									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['searchText'])) ?>"
+									data-team4all-note-mode="single"
+									data-team4all-note-title="<?= p($entry['person']['name']) ?>"
+									data-team4all-note-content="<?= p($entry['person']['note']) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
-								</div>
+								</button>
 							</li>
 							<?php continue; ?>
 						<?php endif; ?>
 						<li class="team4all-contact-group">
-							<div class="team4all-contact-group__header">
-								<strong><?= p($entry['company']) ?></strong>
-							</div>
+							<?php if ($entry['leader'] !== null): ?>
+								<button
+									type="button"
+									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
+									data-team4all-note-mode="leader"
+									data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
+									data-team4all-leader-content="<?= p($entry['leader']['note']) ?>"
+								>
+									<strong><?= p($entry['company']) ?></strong>
+								</button>
+							<?php else: ?>
+								<div class="team4all-contact-group__header">
+									<strong><?= p($entry['company']) ?></strong>
+								</div>
+							<?php endif; ?>
 							<?php if ($entry['leader'] === null && count($entry['members']) === 1): ?>
-								<div
-									class="team4all-contact-item team4all-contact-item--single"
+								<button
+									type="button"
+									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['members'][0]['searchText'])) ?>"
+									data-team4all-note-mode="single"
+									data-team4all-note-title="<?= p($entry['members'][0]['name']) ?>"
+									data-team4all-note-content="<?= p($entry['members'][0]['note']) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
-								</div>
+								</button>
 							<?php else: ?>
 								<?php if ($entry['leader'] === null): ?>
 									<div class="team4all-contact-placeholder">
@@ -76,11 +96,21 @@ style('team4all', 'main');
 							<?php if ($entry['members'] !== [] && !($entry['leader'] === null && count($entry['members']) === 1)): ?>
 								<ul class="team4all-contact-items<?= $entry['leader'] !== null ? ' team4all-contact-items--indented' : '' ?>">
 									<?php foreach ($entry['members'] as $member): ?>
-										<li
-											class="team4all-contact-item"
+										<li>
+											<button
+												type="button"
+												class="team4all-contact-item team4all-contact-trigger"
 											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
-										>
-											<strong><?= p($member['name']) ?></strong>
+												data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
+												data-team4all-note-title="<?= p($member['name']) ?>"
+												data-team4all-note-content="<?= p($member['note']) ?>"
+												<?php if ($entry['leader'] !== null): ?>
+													data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
+													data-team4all-leader-content="<?= p($entry['leader']['note']) ?>"
+												<?php endif; ?>
+											>
+												<strong><?= p($member['name']) ?></strong>
+											</button>
 										</li>
 									<?php endforeach; ?>
 								</ul>
@@ -130,8 +160,27 @@ style('team4all', 'main');
             style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
             <p class="team4all-eyebrow">Spalte 4</p>
-            <h2>Reserviert</h2>
-            <p>Diese Spalte bleibt für den nächsten Ausbauschritt frei.</p>
+            <h2>Notizen</h2>
+            <div id="team4all-notes" class="team4all-notes" data-mode="empty">
+                <div id="team4all-notes-empty" class="team4all-contact-placeholder">
+                    <strong>Keine Notiz ausgewaehlt</strong>
+                    <span>Bitte links einen Kontakt oder Gruppenleader anklicken.</span>
+                </div>
+                <div id="team4all-notes-single" class="team4all-notes__single" hidden>
+                    <h3 id="team4all-notes-single-title" class="team4all-notes__title"></h3>
+                    <div id="team4all-notes-single-content" class="team4all-notes__content"></div>
+                </div>
+                <div id="team4all-notes-split" class="team4all-notes__split" hidden>
+                    <section class="team4all-notes__section">
+                        <h3 id="team4all-notes-leader-title" class="team4all-notes__title"></h3>
+                        <div id="team4all-notes-leader-content" class="team4all-notes__content"></div>
+                    </section>
+                    <section id="team4all-notes-member-section" class="team4all-notes__section">
+                        <h3 id="team4all-notes-member-title" class="team4all-notes__title"></h3>
+                        <div id="team4all-notes-member-content" class="team4all-notes__content"></div>
+                    </section>
+                </div>
+            </div>
         </div>
     </section>
 </div>

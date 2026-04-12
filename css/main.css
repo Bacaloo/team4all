@@ -201,6 +201,23 @@
     gap: 12px;
 }
 
+.team4all-contact-trigger {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+button.team4all-contact-trigger {
+    font: inherit;
+    color: inherit;
+}
+
+.team4all-contact-trigger--header {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
 .team4all-contact-item {
     display: flex;
     flex-direction: column;
@@ -214,6 +231,60 @@
 .team4all-contact-item--single {
     border-color: rgba(15, 23, 42, 0.14);
     background: rgba(255, 255, 255, 0.98);
+}
+
+.team4all-contact-trigger:focus-visible {
+    outline: 2px solid #3d6a8b;
+    outline-offset: 2px;
+}
+
+.team4all-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: calc(100% - 42px);
+    min-height: 0;
+}
+
+.team4all-notes__single,
+.team4all-notes__split {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.team4all-notes__split {
+    flex-direction: column;
+    gap: 14px;
+}
+
+.team4all-notes__section,
+.team4all-notes__single {
+    min-height: 0;
+}
+
+.team4all-notes__section {
+    display: flex;
+    flex: 1 1 50%;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.team4all-notes__title {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.team4all-notes__content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 14px;
+    background: rgba(248, 251, 255, 0.96);
+    white-space: pre-wrap;
+    line-height: 1.5;
 }
 
 .team4all-missing-list {
