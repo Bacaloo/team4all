@@ -159,6 +159,7 @@ class ContactGroupProvisioningService {
 			$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
 			$email = '';
 			$company = $this->extractCompany($vCard);
+			$effectiveName = $name !== '' ? $name : $company;
 
 			foreach ($vCard->select('EMAIL') as $emailProperty) {
 				$email = trim((string)$emailProperty->getValue());
@@ -168,7 +169,8 @@ class ContactGroupProvisioningService {
 			}
 
 			$contacts[] = [
-				'name' => $name !== '' ? $name : '(Ohne Namen)',
+				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
+				'rawName' => $name,
 				'email' => $email,
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $company,
@@ -323,8 +325,8 @@ class ContactGroupProvisioningService {
 	 * @param list<array{name: string, email: string, uri: string, company: string}> $contacts
 	 * @return list<array{
 	 *   company: string,
-	 *   leader: array{name: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, email: string, uri: string, company: string}>
+	 *   leader: array{name: string, rawName: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, email: string, uri: string, company: string}>
 	 * }>
 	 */
 	private function groupContactsByCompany(array $contacts): array {
@@ -344,7 +346,7 @@ class ContactGroupProvisioningService {
 				];
 			}
 
-			if ($this->isLeaderContact($contact['name'], $company)) {
+			if ($this->isLeaderContact($contact['rawName'], $contact['name'], $company)) {
 				$grouped[$company]['leader'] = $contact;
 				continue;
 			}
@@ -387,8 +389,18 @@ class ContactGroupProvisioningService {
 		return self::MANAGED_CONTACT_URI_PREFIX . $user->getUID() . '.vcf';
 	}
 
-	private function isLeaderContact(string $name, string $company): bool {
-		return $this->normalizeComparableValue($name) === $this->normalizeComparableValue($company);
+	private function isLeaderContact(string $rawName, string $effectiveName, string $company): bool {
+		$normalizedCompany = $this->normalizeComparableValue($company);
+
+		if ($normalizedCompany === '') {
+			return false;
+		}
+
+		if ($this->normalizeComparableValue($rawName) === $normalizedCompany) {
+			return true;
+		}
+
+		return $this->normalizeComparableValue($effectiveName) === $normalizedCompany;
 	}
 
 	private function normalizeComparableValue(string $value): string {
