@@ -47,37 +47,30 @@ class ContactGroupProvisioningService {
 			}
 
 			$principalUri = 'principals/users/' . $provisioningUser->getUID();
-			$addressBooks = $this->resolveAddressBooks($cardDavBackend, $principalUri);
-			if ($addressBooks === []) {
-				$this->logger->warning('Skipped Team4All contact group provisioning because no writable address book could be resolved.', [
+			$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
+			if ($addressBook === null || !isset($addressBook['id'])) {
+				$this->logger->warning('Skipped Team4All contact group provisioning because the default contacts address book could not be resolved.', [
 					'uid' => $provisioningUser->getUID(),
 				]);
 				return;
 			}
 
-			$this->logger->info('Resolved provisioning address books for Team4All contact group.', [
+			$this->logger->info('Resolved default contacts address book for Team4All contact group.', [
 				'uid' => $provisioningUser->getUID(),
-				'addressBookCount' => count($addressBooks),
+				'addressBookId' => (int)$addressBook['id'],
+				'addressBookUri' => (string)($addressBook['uri'] ?? ''),
 			]);
 
-			foreach ($addressBooks as $addressBook) {
-				if (!isset($addressBook['id'])) {
-					continue;
-				}
-
-				$existingCards = $cardDavBackend->getCards((int)$addressBook['id']);
-				if ($this->contactGroupExists($existingCards)) {
-					$this->logger->info('Verified Team4All contact group in provisioning address book.', [
-						'uid' => $provisioningUser->getUID(),
-						'addressBookId' => (int)$addressBook['id'],
-					]);
-					return;
-				}
-			}
-
-			$addressBook = $addressBooks[0];
 			$addressBookId = (int)$addressBook['id'];
 			$existingCards = $cardDavBackend->getCards($addressBookId);
+
+			if ($this->contactGroupExists($existingCards)) {
+				$this->logger->info('Verified Team4All contact group in default contacts address book.', [
+					'uid' => $provisioningUser->getUID(),
+					'addressBookId' => $addressBookId,
+				]);
+				return;
+			}
 
 			$managedUid = $this->buildManagedContactUid($provisioningUser);
 			$managedUri = $this->buildManagedContactUri($provisioningUser);
@@ -128,44 +121,32 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @return list<array<string, mixed>>
+	 * @return array<string, mixed>|null
 	 */
-	private function resolveAddressBooks(object $cardDavBackend, string $principalUri): array {
+	private function resolveContactsAddressBook(object $cardDavBackend, string $principalUri): ?array {
 		$addressBooks = $cardDavBackend->getUsersOwnAddressBooks($principalUri);
 		if (!empty($addressBooks)) {
-			usort(
-				$addressBooks,
-				static function (array $left, array $right): int {
-					$leftScore = ($left['uri'] ?? null) === self::DEFAULT_ADDRESSBOOK_URI ? 0 : 1;
-					$rightScore = ($right['uri'] ?? null) === self::DEFAULT_ADDRESSBOOK_URI ? 0 : 1;
-
-					if ($leftScore !== $rightScore) {
-						return $leftScore <=> $rightScore;
-					}
-
-					return strcmp((string)($left['uri'] ?? ''), (string)($right['uri'] ?? ''));
+			foreach ($addressBooks as $addressBook) {
+				if (($addressBook['uri'] ?? null) === self::DEFAULT_ADDRESSBOOK_URI) {
+					return $addressBook;
 				}
-			);
-
-			return array_values($addressBooks);
+			}
 		}
 
-			$addressBookId = $cardDavBackend->createAddressBook(
+		$addressBookId = $cardDavBackend->createAddressBook(
 			$principalUri,
-			self::TEAM4ALL_ADDRESSBOOK_URI,
+			self::DEFAULT_ADDRESSBOOK_URI,
 			[
-				'{DAV:}displayname' => self::TEAM4ALL_ADDRESSBOOK_DISPLAY_NAME,
+				'{DAV:}displayname' => 'Kontakte',
 			],
 		);
 
-		$this->logger->info('Created Team4All address book for contact group provisioning.', [
+		$this->logger->info('Created default contacts address book for Team4All contact group provisioning.', [
 			'principalUri' => $principalUri,
 			'addressBookId' => (int)$addressBookId,
 		]);
 
-		$addressBook = $cardDavBackend->getAddressBookById((int)$addressBookId);
-
-		return $addressBook === null ? [] : [$addressBook];
+		return $cardDavBackend->getAddressBookById((int)$addressBookId);
 	}
 
 	/**
