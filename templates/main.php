@@ -51,7 +51,7 @@ style('team4all', 'main');
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['searchText'])) ?>"
 									data-team4all-note-mode="single"
 									data-team4all-note-title="<?= p($entry['person']['name']) ?>"
-									data-team4all-note-content="<?= p($entry['person']['note']) ?>"
+									data-team4all-note-content="<?= p(base64_encode($entry['person']['note'])) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
 								</button>
@@ -65,7 +65,7 @@ style('team4all', 'main');
 									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
 									data-team4all-note-mode="leader"
 									data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
-									data-team4all-leader-content="<?= p($entry['leader']['note']) ?>"
+									data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
 								>
 									<strong><?= p($entry['company']) ?></strong>
 								</button>
@@ -81,7 +81,7 @@ style('team4all', 'main');
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['members'][0]['searchText'])) ?>"
 									data-team4all-note-mode="single"
 									data-team4all-note-title="<?= p($entry['members'][0]['name']) ?>"
-									data-team4all-note-content="<?= p($entry['members'][0]['note']) ?>"
+									data-team4all-note-content="<?= p(base64_encode($entry['members'][0]['note'])) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
 								</button>
@@ -103,10 +103,10 @@ style('team4all', 'main');
 											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
 												data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
 												data-team4all-note-title="<?= p($member['name']) ?>"
-												data-team4all-note-content="<?= p($member['note']) ?>"
+												data-team4all-note-content="<?= p(base64_encode($member['note'])) ?>"
 												<?php if ($entry['leader'] !== null): ?>
 													data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
-													data-team4all-leader-content="<?= p($entry['leader']['note']) ?>"
+													data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
 												<?php endif; ?>
 											>
 												<strong><?= p($member['name']) ?></strong>
@@ -127,7 +127,6 @@ style('team4all', 'main');
             class="team4all-main__panel"
             style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
-            <p class="team4all-eyebrow">Spalte 2</p>
             <h1>Arbeitsbereich</h1>
             <p>
                 Diese Spalte ist als erster freier Arbeitsbereich vorbereitet.
@@ -144,7 +143,6 @@ style('team4all', 'main');
             class="team4all-main__panel"
             style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
-            <p class="team4all-eyebrow">Spalte 3</p>
             <h2>Reserviert</h2>
             <p>Hier kann später ein weiterer Funktionsbereich entstehen.</p>
         </div>
@@ -159,7 +157,6 @@ style('team4all', 'main');
             class="team4all-main__panel"
             style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
-            <p class="team4all-eyebrow">Spalte 4</p>
             <h2>Notizen</h2>
             <div id="team4all-notes" class="team4all-notes" data-mode="empty">
                 <div id="team4all-notes-empty" class="team4all-contact-placeholder">

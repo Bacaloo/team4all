@@ -38,6 +38,18 @@
         element.textContent = value && value.trim() !== '' ? value : fallback;
     };
 
+    const decodeDataValue = (value) => {
+        if (!value) {
+            return '';
+        }
+
+        try {
+            return atob(value);
+        } catch (error) {
+            return value;
+        }
+    };
+
     const showEmptyNotes = () => {
         setVisible(notesEmpty, true);
         setVisible(notesSingle, false);
@@ -114,7 +126,7 @@
             if (mode === 'leader') {
                 showLeaderNote(
                     trigger.getAttribute('data-team4all-leader-title') || '',
-                    trigger.getAttribute('data-team4all-leader-content') || ''
+                    decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || '')
                 );
                 return;
             }
@@ -122,16 +134,16 @@
             if (mode === 'member') {
                 showMemberNote(
                     trigger.getAttribute('data-team4all-leader-title') || '',
-                    trigger.getAttribute('data-team4all-leader-content') || '',
+                    decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || ''),
                     trigger.getAttribute('data-team4all-note-title') || '',
-                    trigger.getAttribute('data-team4all-note-content') || ''
+                    decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
                 );
                 return;
             }
 
             showSingleNote(
                 trigger.getAttribute('data-team4all-note-title') || '',
-                trigger.getAttribute('data-team4all-note-content') || ''
+                decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
             );
         });
     });
