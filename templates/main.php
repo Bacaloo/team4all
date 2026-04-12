@@ -55,14 +55,23 @@ style('team4all', 'main');
 								<span><?= count($group['members']) + ($group['leader'] !== null ? 1 : 0) ?></span>
 							</div>
 							<?php if ($group['leader'] !== null): ?>
+								<?php
+									$normalizedLeaderName = mb_strtolower(trim(str_replace(['\\,', '\\;', '\\\\'], [',', ';', '\\'], $group['leader']['name'])));
+									$normalizedCompanyName = mb_strtolower(trim(str_replace(['\\,', '\\;', '\\\\'], [',', ';', '\\'], $group['company'])));
+									$leaderMatchesGroupName = $normalizedLeaderName === $normalizedCompanyName;
+								?>
 								<div
 									class="team4all-contact-item team4all-contact-item--leader"
 									data-team4all-contact-search="<?= p(mb_strtolower($group['company'] . ' ' . $group['leader']['name'] . ' ' . $group['leader']['email'])) ?>"
 								>
 									<em>Leader</em>
-									<strong><?= p($group['leader']['name']) ?></strong>
+									<?php if (!$leaderMatchesGroupName): ?>
+										<strong><?= p($group['leader']['name']) ?></strong>
+									<?php endif; ?>
 									<?php if ($group['leader']['email'] !== ''): ?>
 										<span><?= p($group['leader']['email']) ?></span>
+									<?php elseif ($leaderMatchesGroupName): ?>
+										<span>Eintrag entspricht dem Gruppennamen.</span>
 									<?php endif; ?>
 								</div>
 							<?php elseif (count($group['members']) === 1): ?>
