@@ -116,9 +116,12 @@ class ContactGroupProvisioningService {
 
 	/**
 	 * @return list<array{
+	 *   type: 'group'|'person',
+	 *   label: string,
 	 *   company: string,
-	 *   leader: array{name: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, email: string, uri: string, company: string}>
+	 *   leader: array{name: string, rawName: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, rawName: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	public function getTeam4AllContactGroups(): array {
@@ -322,19 +325,31 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param list<array{name: string, email: string, uri: string, company: string}> $contacts
+	 * @param list<array{name: string, rawName: string, email: string, uri: string, company: string}> $contacts
 	 * @return list<array{
+	 *   type: 'group'|'person',
+	 *   label: string,
 	 *   company: string,
 	 *   leader: array{name: string, rawName: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, email: string, uri: string, company: string}>
+	 *   members: list<array{name: string, rawName: string, email: string, uri: string, company: string}>,
+	 *   person: array{name: string, rawName: string, email: string, uri: string, company: string}|null
 	 * }>
 	 */
 	private function groupContactsByCompany(array $contacts): array {
 		$grouped = [];
+		$entries = [];
 
 		foreach ($contacts as $contact) {
 			$company = trim($contact['company']);
 			if ($company === '') {
+				$entries[] = [
+					'type' => 'person',
+					'label' => $contact['name'],
+					'company' => '',
+					'leader' => null,
+					'members' => [],
+					'person' => $contact,
+				];
 				continue;
 			}
 
@@ -372,13 +387,23 @@ class ContactGroupProvisioningService {
 		}
 		unset($group);
 
-		$groups = array_values($grouped);
+		foreach (array_values($grouped) as $group) {
+			$entries[] = [
+				'type' => 'group',
+				'label' => $group['company'],
+				'company' => $group['company'],
+				'leader' => $group['leader'],
+				'members' => $group['members'],
+				'person' => null,
+			];
+		}
+
 		usort(
-			$groups,
-			static fn(array $left, array $right): int => strcasecmp($left['company'], $right['company'])
+			$entries,
+			static fn(array $left, array $right): int => strcasecmp($left['label'], $right['label'])
 		);
 
-		return $groups;
+		return $entries;
 	}
 
 	private function buildManagedContactUid(IUser $user): string {

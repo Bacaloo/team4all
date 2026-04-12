@@ -157,23 +157,6 @@
     overflow: auto;
 }
 
-.team4all-contact-list__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.team4all-contact-list__header span {
-    min-width: 28px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgba(61, 106, 139, 0.10);
-    color: #3d6a8b;
-    text-align: center;
-    font-weight: 700;
-}
-
 .team4all-contact-items {
     margin: 0;
     padding: 0;
@@ -204,6 +187,12 @@
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 16px;
     background: rgba(248, 251, 255, 0.96);
+}
+
+.team4all-contact-group--person {
+    padding: 0;
+    border: 0;
+    background: transparent;
 }
 
 .team4all-contact-group__header {
