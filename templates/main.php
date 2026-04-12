@@ -12,13 +12,13 @@ style('team4all', 'main');
 >
     <section
         class="team4all-toolbar"
-        aria-label="Funktionsbereich"
-        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:flex-end;gap:16px;height:50px;padding:0 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
+        aria-label="Kontaktsuche"
+        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:stretch;gap:16px;height:50px;padding:0 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
         <div class="team4all-toolbar__content">
             <label class="team4all-search">
-                <span class="team4all-search__label">Kontakte suchen</span>
-                <input id="team4all-contact-search" type="search" placeholder="Name, Firma oder E-Mail" autocomplete="off" />
+                <span class="team4all-search__label visually-hidden">Kontakte suchen</span>
+                <input id="team4all-contact-search" type="search" placeholder="Kontakte suchen" autocomplete="off" />
             </label>
         </div>
     </section>
