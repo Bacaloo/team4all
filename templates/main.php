@@ -29,9 +29,7 @@ style('team4all', 'main');
         style="display:flex;flex-direction:column;gap:20px;height:100%;min-height:0;padding:28px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
         <div class="team4all-sidebar__header">
-            <img class="team4all-logo" src="<?= image_path('team4all', 'app.svg') ?>" alt="Team4All Logo" />
             <div>
-                <p class="team4all-eyebrow">Team4All</p>
                 <h2>Kontakte</h2>
             </div>
         </div>
