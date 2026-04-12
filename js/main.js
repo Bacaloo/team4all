@@ -12,6 +12,10 @@
     }
 
     const groups = Array.from(root.querySelectorAll('.team4all-contact-group'));
+    const setVisible = (element, visible) => {
+        element.hidden = !visible;
+        element.style.display = visible ? '' : 'none';
+    };
 
     const applySearch = () => {
         const query = search.value.trim().toLowerCase();
@@ -23,7 +27,7 @@
             items.forEach((item) => {
                 const haystack = (item.getAttribute('data-team4all-contact-search') || '').toLowerCase();
                 const visible = query === '' || haystack.includes(query);
-                item.hidden = !visible;
+                setVisible(item, visible);
 
                 if (visible) {
                     hasVisibleItems = true;
@@ -32,15 +36,18 @@
 
             const placeholder = group.querySelector('.team4all-contact-placeholder');
             if (placeholder) {
-                placeholder.hidden = query !== '';
+                setVisible(placeholder, query === '');
                 if (query === '') {
                     hasVisibleItems = true;
                 }
             }
 
-            group.hidden = !hasVisibleItems;
+            setVisible(group, hasVisibleItems);
         });
     };
 
     search.addEventListener('input', applySearch);
+    search.addEventListener('change', applySearch);
+    search.addEventListener('search', applySearch);
+    applySearch();
 })();
