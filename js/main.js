@@ -110,6 +110,12 @@
             return;
         }
 
+        const confirmed = window.confirm('Aenderungen an der Notiz speichern?');
+        if (!confirmed) {
+            element.value = originalValue;
+            return;
+        }
+
         element.dataset.saving = 'true';
 
         try {
@@ -147,6 +153,16 @@
 
         element.addEventListener('blur', () => {
             void saveEditorNote(element);
+        });
+
+        element.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            event.preventDefault();
+            element.value = element.dataset.originalValue || '';
+            element.blur();
         });
     };
 
