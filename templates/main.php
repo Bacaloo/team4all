@@ -10,6 +10,19 @@ style('team4all', 'main');
     class="team4all-root"
     style="display:grid;grid-template-columns:minmax(320px,2fr) repeat(3,minmax(220px,1fr));gap:18px;padding:18px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;"
 >
+    <section
+        class="team4all-toolbar"
+        aria-label="Funktionsbereich"
+        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:50px;padding:0 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
+    >
+        <div class="team4all-toolbar__title">
+            <p class="team4all-eyebrow" style="margin:0;">Funktionsbereich</p>
+        </div>
+        <div class="team4all-toolbar__content">
+            <span>Hier entstehen die globalen Aktionen und Filter der App.</span>
+        </div>
+    </section>
+
     <aside
         class="team4all-sidebar"
         aria-label="Kontaktebereich"
