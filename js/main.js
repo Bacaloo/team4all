@@ -103,6 +103,20 @@
         postalCode: decodeDataValue(trigger.getAttribute(`${prefix}-postal-code`) || ''),
         locality: decodeDataValue(trigger.getAttribute(`${prefix}-locality`) || ''),
         telephones: decodeDataValue(trigger.getAttribute(`${prefix}-telephones`) || ''),
+        telephoneEntries: (() => {
+            const encoded = trigger.getAttribute(`${prefix}-telephone-entries`) || '';
+
+            if (encoded === '') {
+                return [];
+            }
+
+            try {
+                const parsed = JSON.parse(decodeDataValue(encoded));
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        })(),
         emails: decodeDataValue(trigger.getAttribute(`${prefix}-emails`) || ''),
     });
 
@@ -216,6 +230,7 @@
             postalCode: data.postalCode || '',
             locality: data.locality || '',
             telephones: data.telephones || '',
+            telephoneEntries: data.telephoneEntries || [],
             emails: data.emails || '',
         });
         editor.container.dataset.saving = 'false';
@@ -235,13 +250,46 @@
                 field.value = '';
             }
         });
-        renderContactLinks(editor.fields.telephones, [], 'tel');
-        renderContactLinks(editor.fields.emails, [], 'mail');
+        renderTelephoneEntries(editor.fields.telephones, []);
+        renderMailLinks(editor.fields.emails, []);
     };
 
     const buildMailHref = (email) => `${window.OC?.webroot || ''}/apps/mail/compose?to=${encodeURIComponent(email)}`;
 
-    const renderContactLinks = (element, values, type) => {
+    const renderTelephoneEntries = (element, entries) => {
+        if (!element) {
+            return;
+        }
+
+        element.replaceChildren();
+
+        if (!entries.length) {
+            const empty = document.createElement('span');
+            empty.className = 'team4all-details__link-empty';
+            empty.textContent = 'Keine Telefonnummer vorhanden.';
+            element.appendChild(empty);
+            return;
+        }
+
+        entries.forEach((entry) => {
+            const row = document.createElement('div');
+            row.className = 'team4all-details__telephone-entry';
+
+            const label = document.createElement('span');
+            label.className = 'team4all-details__telephone-label';
+            label.textContent = entry.label || 'Telefon';
+
+            const link = document.createElement('a');
+            link.className = 'team4all-details__link';
+            link.textContent = entry.value || '';
+            link.href = `tel:${entry.value || ''}`;
+
+            row.append(label, link);
+            element.appendChild(row);
+        });
+    };
+
+    const renderMailLinks = (element, values) => {
         if (!element) {
             return;
         }
@@ -251,7 +299,7 @@
         if (!values.length) {
             const empty = document.createElement('span');
             empty.className = 'team4all-details__link-empty';
-            empty.textContent = type === 'tel' ? 'Keine Telefonnummer vorhanden.' : 'Keine E-Mail-Adresse vorhanden.';
+            empty.textContent = 'Keine E-Mail-Adresse vorhanden.';
             element.appendChild(empty);
             return;
         }
@@ -259,11 +307,9 @@
         values.forEach((value) => {
             const link = document.createElement('a');
             link.className = 'team4all-details__link';
-            link.textContent = type === 'tel' ? `tel:${value}` : `mailto:${value}`;
-            link.href = type === 'tel' ? `tel:${value}` : buildMailHref(value);
-            if (type === 'mail') {
-                link.dataset.mailto = `mailto:${value}`;
-            }
+            link.textContent = `mailto:${value}`;
+            link.href = buildMailHref(value);
+            link.dataset.mailto = `mailto:${value}`;
             element.appendChild(link);
         });
     };
@@ -282,8 +328,8 @@
         editor.fields.streetAddress.value = data.streetAddress || '';
         editor.fields.postalCode.value = data.postalCode || '';
         editor.fields.locality.value = data.locality || '';
-        renderContactLinks(editor.fields.telephones, splitMultilineValue(data.telephones || ''), 'tel');
-        renderContactLinks(editor.fields.emails, splitMultilineValue(data.emails || ''), 'mail');
+        renderTelephoneEntries(editor.fields.telephones, data.telephoneEntries || []);
+        renderMailLinks(editor.fields.emails, splitMultilineValue(data.emails || ''));
         assignDetailEditorState(editor, data);
     };
 
@@ -295,6 +341,7 @@
         postalCode: editor.fields.postalCode.value || '',
         locality: editor.fields.locality.value || '',
         telephones: JSON.parse(editor.container.dataset.originalValue || '{}').telephones || '',
+        telephoneEntries: JSON.parse(editor.container.dataset.originalValue || '{}').telephoneEntries || [],
         emails: JSON.parse(editor.container.dataset.originalValue || '{}').emails || '',
     });
 
@@ -305,8 +352,8 @@
         editor.fields.streetAddress.value = values.streetAddress || '';
         editor.fields.postalCode.value = values.postalCode || '';
         editor.fields.locality.value = values.locality || '';
-        renderContactLinks(editor.fields.telephones, splitMultilineValue(values.telephones || ''), 'tel');
-        renderContactLinks(editor.fields.emails, splitMultilineValue(values.emails || ''), 'mail');
+        renderTelephoneEntries(editor.fields.telephones, values.telephoneEntries || []);
+        renderMailLinks(editor.fields.emails, splitMultilineValue(values.emails || ''));
     };
 
     const saveDetailEditor = async (editor) => {
@@ -372,7 +419,7 @@
         }
 
         Object.values(editor.fields).forEach((field) => {
-            if (!field) {
+            if (!field || !('addEventListener' in field) || !('value' in field)) {
                 return;
             }
 

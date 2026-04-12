@@ -106,6 +106,7 @@ style('team4all', 'main');
 									data-team4all-leader-detail-postal-code="<?= p(base64_encode($entry['leader']['postalCode'])) ?>"
 									data-team4all-leader-detail-locality="<?= p(base64_encode($entry['leader']['locality'])) ?>"
 									data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
+									data-team4all-leader-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['leader']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 								>
 									<strong><?= p($entry['company']) ?></strong>
@@ -135,6 +136,7 @@ style('team4all', 'main');
 									data-team4all-detail-postal-code="<?= p(base64_encode($entry['members'][0]['postalCode'])) ?>"
 									data-team4all-detail-locality="<?= p(base64_encode($entry['members'][0]['locality'])) ?>"
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['members'][0]['telephones'])) ?>"
+									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['members'][0]['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['members'][0]['emails'])) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
@@ -170,6 +172,7 @@ style('team4all', 'main');
 											data-team4all-detail-postal-code="<?= p(base64_encode($member['postalCode'])) ?>"
 											data-team4all-detail-locality="<?= p(base64_encode($member['locality'])) ?>"
 											data-team4all-detail-telephones="<?= p(base64_encode($member['telephones'])) ?>"
+											data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($member['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											data-team4all-detail-emails="<?= p(base64_encode($member['emails'])) ?>"
 											<?php if ($entry['leader'] !== null): ?>
 												data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
@@ -185,6 +188,7 @@ style('team4all', 'main');
 												data-team4all-leader-detail-postal-code="<?= p(base64_encode($entry['leader']['postalCode'])) ?>"
 												data-team4all-leader-detail-locality="<?= p(base64_encode($entry['leader']['locality'])) ?>"
 												data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
+												data-team4all-leader-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['leader']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 												data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 											<?php endif; ?>
 										>
@@ -206,7 +210,7 @@ style('team4all', 'main');
             class="team4all-main__panel"
             style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
-            <h1>Kontaktdaten</h1>
+            <h2>Kontaktdaten</h2>
             <div id="team4all-details" class="team4all-details" data-mode="empty">
                 <div id="team4all-details-empty" class="team4all-contact-placeholder">
                     <strong>Keine Kontaktdaten ausgewählt</strong>
@@ -234,7 +238,7 @@ style('team4all', 'main');
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
                                 <span>Straße &amp; Hausnummer</span>
-                                <textarea id="team4all-details-single-street-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                                <input id="team4all-details-single-street-address" type="text" class="team4all-details__input" spellcheck="true" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
                                 <span>PLZ</span>

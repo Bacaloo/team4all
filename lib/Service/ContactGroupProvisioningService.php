@@ -158,7 +158,11 @@ class ContactGroupProvisioningService {
 			$company = $this->extractCompany($vCard);
 			$effectiveName = $name !== '' ? $name : $company;
 			$emails = $this->extractEmailValues($vCard);
-			$telephones = $this->extractTelephoneValues($vCard);
+			$telephoneEntries = $this->extractTelephoneEntries($vCard);
+			$telephones = array_map(
+				static fn(array $entry): string => $entry['value'],
+				$telephoneEntries
+			);
 			$displayParts = $this->buildEditableDisplayNameParts($name, $nameParts, $company);
 
 			$contacts[] = [
@@ -182,6 +186,7 @@ class ContactGroupProvisioningService {
 				'streetAddress' => $this->extractStreetAddress($vCard),
 				'postalCode' => $this->extractPostalCode($vCard),
 				'locality' => $this->extractLocality($vCard),
+				'telephoneEntries' => $telephoneEntries,
 				'telephones' => implode("\n", $telephones),
 				'emails' => implode("\n", $emails),
 			];
@@ -532,19 +537,52 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @return list<string>
+	 * @return list<array{label: string, value: string}>
 	 */
-	private function extractTelephoneValues(VCard $vCard): array {
-		$telephones = [];
+	private function extractTelephoneEntries(VCard $vCard): array {
+		$telephoneEntries = [];
 
 		foreach ($vCard->select('TEL') as $telephoneProperty) {
 			$telephone = trim((string)$telephoneProperty->getValue());
-			if ($telephone !== '') {
-				$telephones[] = $telephone;
+			if ($telephone === '') {
+				continue;
 			}
+
+			$label = $this->buildTelephoneLabel($telephoneProperty);
+			$key = $label . '|' . $telephone;
+			$telephoneEntries[$key] = [
+				'label' => $label,
+				'value' => $telephone,
+			];
 		}
 
-		return array_values(array_unique($telephones));
+		return array_values($telephoneEntries);
+	}
+
+	private function buildTelephoneLabel($telephoneProperty): string {
+		if (!isset($telephoneProperty['TYPE'])) {
+			return 'Telefon';
+		}
+
+		$typeValue = (string)$telephoneProperty['TYPE']->getValue();
+		$typeParts = array_map(
+			static fn(string $part): string => mb_strtolower(trim($part)),
+			explode(',', $typeValue)
+		);
+
+		if (in_array('cell', $typeParts, true) || in_array('mobile', $typeParts, true)) {
+			return 'Mobil';
+		}
+
+		if (in_array('home', $typeParts, true)) {
+			return 'Privat';
+		}
+
+		if (in_array('work', $typeParts, true)) {
+			return 'Arbeit';
+		}
+
+		return 'Telefon';
 	}
 
 	private function composeStructuredName(array $nameParts): string {
@@ -757,6 +795,7 @@ class ContactGroupProvisioningService {
 				'streetAddress' => '',
 				'postalCode' => '',
 				'locality' => '',
+				'telephoneEntries' => [],
 				'telephones' => '',
 				'emails' => '',
 			];
@@ -788,7 +827,11 @@ class ContactGroupProvisioningService {
 
 			$nameParts = $this->extractStructuredNameParts($vCard);
 			$emails = $this->extractEmailValues($vCard);
-			$telephones = $this->extractTelephoneValues($vCard);
+			$telephoneEntries = $this->extractTelephoneEntries($vCard);
+			$telephones = array_map(
+				static fn(array $entry): string => $entry['value'],
+				$telephoneEntries
+			);
 			$displayParts = $this->buildEditableDisplayNameParts($rawName, $nameParts, $normalizedCompany);
 
 			$candidates[] = [
@@ -812,6 +855,7 @@ class ContactGroupProvisioningService {
 				'streetAddress' => $this->extractStreetAddress($vCard),
 				'postalCode' => $this->extractPostalCode($vCard),
 				'locality' => $this->extractLocality($vCard),
+				'telephoneEntries' => $telephoneEntries,
 				'telephones' => implode("\n", $telephones),
 				'emails' => implode("\n", $emails),
 			];
