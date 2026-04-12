@@ -17,6 +17,7 @@ class ContactGroupProvisioningService {
 	private const CARD_DAV_BACKEND_CLASS = 'OCA\\DAV\\CardDAV\\CardDavBackend';
 	private const MANAGED_CONTACT_UID_PREFIX = 'team4all-provisioning-';
 	private const MANAGED_CONTACT_URI_PREFIX = 'team4all-provisioning-';
+	private const DEFAULT_ADDRESSBOOK_URI = 'contacts';
 	private const TEAM4ALL_ADDRESSBOOK_URI = 'team4all';
 	private const TEAM4ALL_ADDRESSBOOK_DISPLAY_NAME = 'Team4All';
 
@@ -132,6 +133,20 @@ class ContactGroupProvisioningService {
 	private function resolveAddressBooks(object $cardDavBackend, string $principalUri): array {
 		$addressBooks = $cardDavBackend->getUsersOwnAddressBooks($principalUri);
 		if (!empty($addressBooks)) {
+			usort(
+				$addressBooks,
+				static function (array $left, array $right): int {
+					$leftScore = ($left['uri'] ?? null) === self::DEFAULT_ADDRESSBOOK_URI ? 0 : 1;
+					$rightScore = ($right['uri'] ?? null) === self::DEFAULT_ADDRESSBOOK_URI ? 0 : 1;
+
+					if ($leftScore !== $rightScore) {
+						return $leftScore <=> $rightScore;
+					}
+
+					return strcmp((string)($left['uri'] ?? ''), (string)($right['uri'] ?? ''));
+				}
+			);
+
 			return array_values($addressBooks);
 		}
 
