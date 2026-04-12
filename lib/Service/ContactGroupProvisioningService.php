@@ -447,7 +447,7 @@ class ContactGroupProvisioningService {
 			}
 
 			if ($this->isLeaderContact($contact['rawName'], $contact['name'], $company)) {
-				$grouped[$company]['leader'] = $contact;
+				$grouped[$company]['leader'] = $this->pickPreferredLeader($grouped[$company]['leader'], $contact);
 				continue;
 			}
 
@@ -489,6 +489,30 @@ class ContactGroupProvisioningService {
 		);
 
 		return $entries;
+	}
+
+	/**
+	 * @param array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}|null $currentLeader
+	 * @param array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string} $candidate
+	 * @return array{name: string, rawName: string, searchText: string, note: string, email: string, uri: string, company: string}
+	 */
+	private function pickPreferredLeader(?array $currentLeader, array $candidate): array {
+		if ($currentLeader === null) {
+			return $candidate;
+		}
+
+		$currentLeaderHasNote = trim($currentLeader['note']) !== '';
+		$candidateHasNote = trim($candidate['note']) !== '';
+
+		if ($candidateHasNote && !$currentLeaderHasNote) {
+			return $candidate;
+		}
+
+		if ($candidateHasNote === $currentLeaderHasNote && trim($currentLeader['rawName']) === '' && trim($candidate['rawName']) !== '') {
+			return $candidate;
+		}
+
+		return $currentLeader;
 	}
 
 	/**
