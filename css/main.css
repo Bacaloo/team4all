@@ -46,8 +46,30 @@
 }
 
 .team4all-toolbar__content {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 280px;
+}
+
+.team4all-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.team4all-search__label {
     color: var(--color-text-maxcontrast);
-    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.team4all-search input {
+    width: min(320px, 32vw);
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 10px;
+    background: #f8fbff;
 }
 
 .team4all-status {
@@ -132,6 +154,7 @@
     flex-direction: column;
     gap: 12px;
     min-height: 0;
+    overflow: auto;
 }
 
 .team4all-contact-list__header {
@@ -160,6 +183,42 @@
     gap: 10px;
 }
 
+.team4all-contact-groups {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.team4all-contact-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 16px;
+    background: rgba(248, 251, 255, 0.96);
+}
+
+.team4all-contact-group__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.team4all-contact-group__header span {
+    min-width: 28px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(61, 106, 139, 0.10);
+    color: #3d6a8b;
+    text-align: center;
+    font-weight: 700;
+}
+
 .team4all-contact-item {
     display: flex;
     flex-direction: column;
@@ -168,6 +227,20 @@
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 14px;
     background: rgba(248, 251, 255, 0.96);
+}
+
+.team4all-contact-item--leader {
+    border-color: rgba(61, 106, 139, 0.28);
+    background: rgba(227, 240, 249, 0.95);
+}
+
+.team4all-contact-item em {
+    font-style: normal;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #3d6a8b;
 }
 
 .team4all-contact-item span {

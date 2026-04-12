@@ -19,7 +19,10 @@ style('team4all', 'main');
             <p class="team4all-eyebrow" style="margin:0;">Funktionsbereich</p>
         </div>
         <div class="team4all-toolbar__content">
-            <span>Hier entstehen die globalen Aktionen und Filter der App.</span>
+            <label class="team4all-search">
+                <span class="team4all-search__label">Kontakte suchen</span>
+                <input id="team4all-contact-search" type="search" placeholder="Name, Firma oder E-Mail" autocomplete="off" />
+            </label>
         </div>
     </section>
 
@@ -34,28 +37,64 @@ style('team4all', 'main');
             </div>
         </div>
         <p class="team4all-sidebar__copy">
-            Team4All liest diese Kontakte direkt aus dem Standard-Adressbuch <strong>contacts</strong> und filtert auf die Kontaktgruppe <strong>Team4All</strong>.
+            Team4All liest diese Kontakte direkt aus dem Standard-Adressbuch <strong>contacts</strong> und bildet daraus Gruppen ueber das Feld <strong>Firma</strong>.
         </p>
-		<?php $team4AllContacts = $_['team4AllContacts'] ?? []; ?>
+		<?php $team4AllGroups = $_['team4AllGroups'] ?? []; ?>
+		<?php $team4AllGroupCount = (int)($_['team4AllGroupCount'] ?? count($team4AllGroups)); ?>
 		<div class="team4all-contact-list">
 			<div class="team4all-contact-list__header">
-				<strong>Team4All-Kontakte</strong>
-				<span><?= count($team4AllContacts) ?></span>
+				<strong>Team4All-Gruppen</strong>
+				<span><?= $team4AllGroupCount ?></span>
 			</div>
-			<?php if ($team4AllContacts === []): ?>
+			<?php if ($team4AllGroups === []): ?>
 				<div class="team4all-contact-placeholder">
-					<strong>Keine Kontakte gefunden</strong>
-					<span>Im Adressbuch <code>contacts</code> ist aktuell kein sichtbarer Kontakt mit der Kontaktgruppe <code>Team4All</code> vorhanden.</span>
+					<strong>Keine Gruppen gefunden</strong>
+					<span>Fuer die Kontaktgruppe <code>Team4All</code> wurden noch keine Kontakte mit einem passenden Feld <code>Firma</code> gefunden.</span>
 				</div>
 			<?php else: ?>
-				<ul class="team4all-contact-items">
-					<?php foreach ($team4AllContacts as $contact): ?>
-						<li class="team4all-contact-item">
-							<strong><?= p($contact['name']) ?></strong>
-							<?php if ($contact['email'] !== ''): ?>
-								<span><?= p($contact['email']) ?></span>
+				<ul class="team4all-contact-groups">
+					<?php foreach ($team4AllGroups as $group): ?>
+						<?php
+							$searchText = mb_strtolower(
+								$group['company'] . ' ' .
+								($group['leader']['name'] ?? '') . ' ' .
+								($group['leader']['email'] ?? '') . ' ' .
+								implode(' ', array_map(static fn(array $member): string => $member['name'] . ' ' . $member['email'], $group['members']))
+							);
+						?>
+						<li class="team4all-contact-group" data-team4all-search="<?= p($searchText) ?>">
+							<div class="team4all-contact-group__header">
+								<strong><?= p($group['company']) ?></strong>
+								<span><?= count($group['members']) + ($group['leader'] !== null ? 1 : 0) ?></span>
+							</div>
+							<?php if ($group['leader'] !== null): ?>
+								<div class="team4all-contact-item team4all-contact-item--leader">
+									<em>Leader</em>
+									<strong><?= p($group['leader']['name']) ?></strong>
+									<?php if ($group['leader']['email'] !== ''): ?>
+										<span><?= p($group['leader']['email']) ?></span>
+									<?php endif; ?>
+								</div>
 							<?php else: ?>
-								<span>Keine E-Mail-Adresse</span>
+								<div class="team4all-contact-placeholder">
+									<strong>Kein Gruppenleader</strong>
+									<span>Es wurde kein Kontakt gefunden, bei dem Kontaktname und Firma uebereinstimmen.</span>
+								</div>
+							<?php endif; ?>
+							<?php if ($group['members'] !== []): ?>
+								<ul class="team4all-contact-items">
+									<?php foreach ($group['members'] as $member): ?>
+										<li class="team4all-contact-item">
+											<em>Member</em>
+											<strong><?= p($member['name']) ?></strong>
+											<?php if ($member['email'] !== ''): ?>
+												<span><?= p($member['email']) ?></span>
+											<?php else: ?>
+												<span>Keine E-Mail-Adresse</span>
+											<?php endif; ?>
+										</li>
+									<?php endforeach; ?>
+								</ul>
 							<?php endif; ?>
 						</li>
 					<?php endforeach; ?>

@@ -115,9 +115,13 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @return list<array{name: string, email: string, uri: string}>
+	 * @return list<array{
+	 *   company: string,
+	 *   leader: array{name: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, email: string, uri: string, company: string}>
+	 * }>
 	 */
-	public function getTeam4AllContacts(): array {
+	public function getTeam4AllContactGroups(): array {
 		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
 		if (!$provisioningUser instanceof IUser) {
 			return [];
@@ -154,6 +158,7 @@ class ContactGroupProvisioningService {
 
 			$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
 			$email = '';
+			$company = $this->extractCompany($vCard);
 
 			foreach ($vCard->select('EMAIL') as $emailProperty) {
 				$email = trim((string)$emailProperty->getValue());
@@ -166,15 +171,11 @@ class ContactGroupProvisioningService {
 				'name' => $name !== '' ? $name : '(Ohne Namen)',
 				'email' => $email,
 				'uri' => (string)($card['uri'] ?? ''),
+				'company' => $company,
 			];
 		}
 
-		usort(
-			$contacts,
-			static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name'])
-		);
-
-		return $contacts;
+		return $this->groupContactsByCompany($contacts);
 	}
 
 	private function resolveCardDavBackend(): ?object {
@@ -303,6 +304,69 @@ class ContactGroupProvisioningService {
 		}
 
 		return array_values(array_unique($categories));
+	}
+
+	private function extractCompany(VCard $vCard): string {
+		if (!isset($vCard->ORG)) {
+			return '';
+		}
+
+		$value = $vCard->ORG->getValue();
+		if (is_array($value)) {
+			$value = $value[0] ?? '';
+		}
+
+		return trim((string)$value);
+	}
+
+	/**
+	 * @param list<array{name: string, email: string, uri: string, company: string}> $contacts
+	 * @return list<array{
+	 *   company: string,
+	 *   leader: array{name: string, email: string, uri: string, company: string}|null,
+	 *   members: list<array{name: string, email: string, uri: string, company: string}>
+	 * }>
+	 */
+	private function groupContactsByCompany(array $contacts): array {
+		$grouped = [];
+
+		foreach ($contacts as $contact) {
+			$company = trim($contact['company']);
+			if ($company === '') {
+				continue;
+			}
+
+			if (!isset($grouped[$company])) {
+				$grouped[$company] = [
+					'company' => $company,
+					'leader' => null,
+					'members' => [],
+				];
+			}
+
+			if (strcasecmp($contact['name'], $company) === 0) {
+				$grouped[$company]['leader'] = $contact;
+				continue;
+			}
+
+			$grouped[$company]['members'][] = $contact;
+		}
+
+		foreach ($grouped as &$group) {
+			usort(
+				$group['members'],
+				static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name'])
+			);
+		}
+		unset($group);
+
+		$groups = array_values($grouped);
+		usort(
+			$groups,
+			static fn(array $left, array $right): int => strcasecmp($left['company'], $right['company'])
+		);
+
+		return $groups;
 	}
 
 	private function buildManagedContactUid(IUser $user): string {

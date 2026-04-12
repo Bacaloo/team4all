@@ -58,8 +58,11 @@ class PageController extends Controller {
 			]);
 		}
 
+		$team4AllGroups = $this->contactGroupProvisioningService->getTeam4AllContactGroups();
+
 		return new TemplateResponse($this->appName, 'main', [
-			'team4AllContacts' => $this->contactGroupProvisioningService->getTeam4AllContacts(),
+			'team4AllGroups' => $team4AllGroups,
+			'team4AllGroupCount' => count($team4AllGroups),
 		]);
 	}
 
