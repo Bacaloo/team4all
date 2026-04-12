@@ -60,7 +60,9 @@ style('team4all', 'main');
 									data-team4all-detail-prefix="<?= p(base64_encode($entry['person']['prefix'])) ?>"
 									data-team4all-detail-first-name="<?= p(base64_encode($entry['person']['firstName'])) ?>"
 									data-team4all-detail-last-name="<?= p(base64_encode($entry['person']['lastName'])) ?>"
-									data-team4all-detail-address="<?= p(base64_encode($entry['person']['address'])) ?>"
+									data-team4all-detail-street-address="<?= p(base64_encode($entry['person']['streetAddress'])) ?>"
+									data-team4all-detail-postal-code="<?= p(base64_encode($entry['person']['postalCode'])) ?>"
+									data-team4all-detail-locality="<?= p(base64_encode($entry['person']['locality'])) ?>"
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['person']['telephones'])) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['person']['emails'])) ?>"
 								>
@@ -90,7 +92,9 @@ style('team4all', 'main');
 									data-team4all-detail-prefix="<?= p(base64_encode($entry['leader']['prefix'])) ?>"
 									data-team4all-detail-first-name="<?= p(base64_encode($entry['leader']['firstName'])) ?>"
 									data-team4all-detail-last-name="<?= p(base64_encode($entry['leader']['lastName'])) ?>"
-									data-team4all-detail-address="<?= p(base64_encode($entry['leader']['address'])) ?>"
+									data-team4all-detail-street-address="<?= p(base64_encode($entry['leader']['streetAddress'])) ?>"
+									data-team4all-detail-postal-code="<?= p(base64_encode($entry['leader']['postalCode'])) ?>"
+									data-team4all-detail-locality="<?= p(base64_encode($entry['leader']['locality'])) ?>"
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 									data-team4all-leader-detail-title="<?= p($entry['leader']['name']) ?>"
@@ -98,7 +102,9 @@ style('team4all', 'main');
 									data-team4all-leader-detail-prefix="<?= p(base64_encode($entry['leader']['prefix'])) ?>"
 									data-team4all-leader-detail-first-name="<?= p(base64_encode($entry['leader']['firstName'])) ?>"
 									data-team4all-leader-detail-last-name="<?= p(base64_encode($entry['leader']['lastName'])) ?>"
-									data-team4all-leader-detail-address="<?= p(base64_encode($entry['leader']['address'])) ?>"
+									data-team4all-leader-detail-street-address="<?= p(base64_encode($entry['leader']['streetAddress'])) ?>"
+									data-team4all-leader-detail-postal-code="<?= p(base64_encode($entry['leader']['postalCode'])) ?>"
+									data-team4all-leader-detail-locality="<?= p(base64_encode($entry['leader']['locality'])) ?>"
 									data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
 									data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 								>
@@ -125,7 +131,9 @@ style('team4all', 'main');
 									data-team4all-detail-prefix="<?= p(base64_encode($entry['members'][0]['prefix'])) ?>"
 									data-team4all-detail-first-name="<?= p(base64_encode($entry['members'][0]['firstName'])) ?>"
 									data-team4all-detail-last-name="<?= p(base64_encode($entry['members'][0]['lastName'])) ?>"
-									data-team4all-detail-address="<?= p(base64_encode($entry['members'][0]['address'])) ?>"
+									data-team4all-detail-street-address="<?= p(base64_encode($entry['members'][0]['streetAddress'])) ?>"
+									data-team4all-detail-postal-code="<?= p(base64_encode($entry['members'][0]['postalCode'])) ?>"
+									data-team4all-detail-locality="<?= p(base64_encode($entry['members'][0]['locality'])) ?>"
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['members'][0]['telephones'])) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['members'][0]['emails'])) ?>"
 								>
@@ -158,7 +166,9 @@ style('team4all', 'main');
 											data-team4all-detail-prefix="<?= p(base64_encode($member['prefix'])) ?>"
 											data-team4all-detail-first-name="<?= p(base64_encode($member['firstName'])) ?>"
 											data-team4all-detail-last-name="<?= p(base64_encode($member['lastName'])) ?>"
-											data-team4all-detail-address="<?= p(base64_encode($member['address'])) ?>"
+											data-team4all-detail-street-address="<?= p(base64_encode($member['streetAddress'])) ?>"
+											data-team4all-detail-postal-code="<?= p(base64_encode($member['postalCode'])) ?>"
+											data-team4all-detail-locality="<?= p(base64_encode($member['locality'])) ?>"
 											data-team4all-detail-telephones="<?= p(base64_encode($member['telephones'])) ?>"
 											data-team4all-detail-emails="<?= p(base64_encode($member['emails'])) ?>"
 											<?php if ($entry['leader'] !== null): ?>
@@ -171,7 +181,9 @@ style('team4all', 'main');
 												data-team4all-leader-detail-prefix="<?= p(base64_encode($entry['leader']['prefix'])) ?>"
 												data-team4all-leader-detail-first-name="<?= p(base64_encode($entry['leader']['firstName'])) ?>"
 												data-team4all-leader-detail-last-name="<?= p(base64_encode($entry['leader']['lastName'])) ?>"
-												data-team4all-leader-detail-address="<?= p(base64_encode($entry['leader']['address'])) ?>"
+												data-team4all-leader-detail-street-address="<?= p(base64_encode($entry['leader']['streetAddress'])) ?>"
+												data-team4all-leader-detail-postal-code="<?= p(base64_encode($entry['leader']['postalCode'])) ?>"
+												data-team4all-leader-detail-locality="<?= p(base64_encode($entry['leader']['locality'])) ?>"
 												data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
 												data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 											<?php endif; ?>
@@ -197,7 +209,7 @@ style('team4all', 'main');
             <h1>Kontaktdaten</h1>
             <div id="team4all-details" class="team4all-details" data-mode="empty">
                 <div id="team4all-details-empty" class="team4all-contact-placeholder">
-                    <strong>Keine Kontaktdaten ausgewaehlt</strong>
+                    <strong>Keine Kontaktdaten ausgewählt</strong>
                     <span>Bitte links einen Kontakt oder Gruppenleader anklicken.</span>
                 </div>
                 <div id="team4all-details-single" class="team4all-details__single" hidden>
@@ -209,7 +221,7 @@ style('team4all', 'main');
                         <h3 id="team4all-details-single-title" class="team4all-details__title"></h3>
                         <div class="team4all-details__grid">
                             <label class="team4all-details__field">
-                                <span>Praefix</span>
+                                <span>Präfix</span>
                                 <input id="team4all-details-single-prefix" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field">
@@ -221,8 +233,16 @@ style('team4all', 'main');
                                 <input id="team4all-details-single-last-name" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
-                                <span>Adresse</span>
-                                <textarea id="team4all-details-single-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                                <span>Straße/Hausnummer</span>
+                                <textarea id="team4all-details-single-street-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>PLZ</span>
+                                <input id="team4all-details-single-postal-code" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--double">
+                                <span>Ort</span>
+                                <input id="team4all-details-single-locality" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
                                 <span>Telefonkontakte</span>
@@ -244,7 +264,7 @@ style('team4all', 'main');
                         <h3 id="team4all-details-leader-title" class="team4all-details__title"></h3>
                         <div class="team4all-details__grid">
                             <label class="team4all-details__field">
-                                <span>Praefix</span>
+                                <span>Präfix</span>
                                 <input id="team4all-details-leader-prefix" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field">
@@ -256,8 +276,16 @@ style('team4all', 'main');
                                 <input id="team4all-details-leader-last-name" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
-                                <span>Adresse</span>
-                                <textarea id="team4all-details-leader-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                                <span>Straße/Hausnummer</span>
+                                <textarea id="team4all-details-leader-street-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>PLZ</span>
+                                <input id="team4all-details-leader-postal-code" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--double">
+                                <span>Ort</span>
+                                <input id="team4all-details-leader-locality" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
                                 <span>Telefonkontakte</span>
@@ -277,7 +305,7 @@ style('team4all', 'main');
                         <h3 id="team4all-details-member-title" class="team4all-details__title"></h3>
                         <div class="team4all-details__grid">
                             <label class="team4all-details__field">
-                                <span>Praefix</span>
+                                <span>Präfix</span>
                                 <input id="team4all-details-member-prefix" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field">
@@ -289,8 +317,16 @@ style('team4all', 'main');
                                 <input id="team4all-details-member-last-name" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
-                                <span>Adresse</span>
-                                <textarea id="team4all-details-member-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                                <span>Straße/Hausnummer</span>
+                                <textarea id="team4all-details-member-street-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>PLZ</span>
+                                <input id="team4all-details-member-postal-code" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--double">
+                                <span>Ort</span>
+                                <input id="team4all-details-member-locality" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
                                 <span>Telefonkontakte</span>
@@ -333,7 +369,7 @@ style('team4all', 'main');
             <h2>Notizen</h2>
             <div id="team4all-notes" class="team4all-notes" data-mode="empty">
                 <div id="team4all-notes-empty" class="team4all-contact-placeholder">
-                    <strong>Keine Notiz ausgewaehlt</strong>
+                    <strong>Keine Notiz ausgewählt</strong>
                     <span>Bitte links einen Kontakt oder Gruppenleader anklicken.</span>
                 </div>
                 <div id="team4all-notes-single" class="team4all-notes__single" hidden>

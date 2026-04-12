@@ -42,7 +42,9 @@
                 prefix: document.getElementById('team4all-details-single-prefix'),
                 firstName: document.getElementById('team4all-details-single-first-name'),
                 lastName: document.getElementById('team4all-details-single-last-name'),
-                address: document.getElementById('team4all-details-single-address'),
+                streetAddress: document.getElementById('team4all-details-single-street-address'),
+                postalCode: document.getElementById('team4all-details-single-postal-code'),
+                locality: document.getElementById('team4all-details-single-locality'),
                 telephones: document.getElementById('team4all-details-single-telephones'),
                 emails: document.getElementById('team4all-details-single-emails'),
             },
@@ -54,7 +56,9 @@
                 prefix: document.getElementById('team4all-details-leader-prefix'),
                 firstName: document.getElementById('team4all-details-leader-first-name'),
                 lastName: document.getElementById('team4all-details-leader-last-name'),
-                address: document.getElementById('team4all-details-leader-address'),
+                streetAddress: document.getElementById('team4all-details-leader-street-address'),
+                postalCode: document.getElementById('team4all-details-leader-postal-code'),
+                locality: document.getElementById('team4all-details-leader-locality'),
                 telephones: document.getElementById('team4all-details-leader-telephones'),
                 emails: document.getElementById('team4all-details-leader-emails'),
             },
@@ -66,7 +70,9 @@
                 prefix: document.getElementById('team4all-details-member-prefix'),
                 firstName: document.getElementById('team4all-details-member-first-name'),
                 lastName: document.getElementById('team4all-details-member-last-name'),
-                address: document.getElementById('team4all-details-member-address'),
+                streetAddress: document.getElementById('team4all-details-member-street-address'),
+                postalCode: document.getElementById('team4all-details-member-postal-code'),
+                locality: document.getElementById('team4all-details-member-locality'),
                 telephones: document.getElementById('team4all-details-member-telephones'),
                 emails: document.getElementById('team4all-details-member-emails'),
             },
@@ -126,7 +132,9 @@
         prefix: decodeDataValue(trigger.getAttribute(`${prefix}-prefix`) || ''),
         firstName: decodeDataValue(trigger.getAttribute(`${prefix}-first-name`) || ''),
         lastName: decodeDataValue(trigger.getAttribute(`${prefix}-last-name`) || ''),
-        address: decodeDataValue(trigger.getAttribute(`${prefix}-address`) || ''),
+        streetAddress: decodeDataValue(trigger.getAttribute(`${prefix}-street-address`) || ''),
+        postalCode: decodeDataValue(trigger.getAttribute(`${prefix}-postal-code`) || ''),
+        locality: decodeDataValue(trigger.getAttribute(`${prefix}-locality`) || ''),
         telephones: decodeDataValue(trigger.getAttribute(`${prefix}-telephones`) || ''),
         emails: decodeDataValue(trigger.getAttribute(`${prefix}-emails`) || ''),
     });
@@ -237,7 +245,9 @@
             prefix: data.prefix || '',
             firstName: data.firstName || '',
             lastName: data.lastName || '',
-            address: data.address || '',
+            streetAddress: data.streetAddress || '',
+            postalCode: data.postalCode || '',
+            locality: data.locality || '',
             telephones: data.telephones || '',
             emails: data.emails || '',
         });
@@ -268,7 +278,9 @@
         editor.fields.prefix.value = data.prefix || '';
         editor.fields.firstName.value = data.firstName || '';
         editor.fields.lastName.value = data.lastName || '';
-        editor.fields.address.value = data.address || '';
+        editor.fields.streetAddress.value = data.streetAddress || '';
+        editor.fields.postalCode.value = data.postalCode || '';
+        editor.fields.locality.value = data.locality || '';
         editor.fields.telephones.value = data.telephones || '';
         editor.fields.emails.value = data.emails || '';
         assignDetailEditorState(editor, data);
@@ -278,7 +290,9 @@
         prefix: editor.fields.prefix.value || '',
         firstName: editor.fields.firstName.value || '',
         lastName: editor.fields.lastName.value || '',
-        address: editor.fields.address.value || '',
+        streetAddress: editor.fields.streetAddress.value || '',
+        postalCode: editor.fields.postalCode.value || '',
+        locality: editor.fields.locality.value || '',
         telephones: editor.fields.telephones.value || '',
         emails: editor.fields.emails.value || '',
     });
@@ -287,7 +301,9 @@
         editor.fields.prefix.value = values.prefix || '';
         editor.fields.firstName.value = values.firstName || '';
         editor.fields.lastName.value = values.lastName || '';
-        editor.fields.address.value = values.address || '';
+        editor.fields.streetAddress.value = values.streetAddress || '';
+        editor.fields.postalCode.value = values.postalCode || '';
+        editor.fields.locality.value = values.locality || '';
         editor.fields.telephones.value = values.telephones || '';
         editor.fields.emails.value = values.emails || '';
     };
@@ -320,7 +336,9 @@
                 prefix: values.prefix,
                 firstName: values.firstName,
                 lastName: values.lastName,
-                address: values.address,
+                streetAddress: values.streetAddress,
+                postalCode: values.postalCode,
+                locality: values.locality,
                 telephones: values.telephones,
                 emails: values.emails,
             });

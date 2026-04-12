@@ -87,7 +87,9 @@ class PageController extends Controller {
 		string $prefix = '',
 		string $firstName = '',
 		string $lastName = '',
-		string $address = '',
+		string $streetAddress = '',
+		string $postalCode = '',
+		string $locality = '',
 		string $telephones = '',
 		string $emails = '',
 	): JSONResponse {
@@ -103,7 +105,9 @@ class PageController extends Controller {
 			$prefix,
 			$firstName,
 			$lastName,
-			$address,
+			$streetAddress,
+			$postalCode,
+			$locality,
 			$telephones,
 			$emails,
 		);

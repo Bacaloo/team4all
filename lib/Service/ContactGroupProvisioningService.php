@@ -179,7 +179,9 @@ class ContactGroupProvisioningService {
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
 				'lastName' => $displayParts['lastName'],
-				'address' => $this->extractAddress($vCard),
+				'streetAddress' => $this->extractStreetAddress($vCard),
+				'postalCode' => $this->extractPostalCode($vCard),
+				'locality' => $this->extractLocality($vCard),
 				'telephones' => implode("\n", $telephones),
 				'emails' => implode("\n", $emails),
 			];
@@ -247,7 +249,9 @@ class ContactGroupProvisioningService {
 		string $prefix,
 		string $firstName,
 		string $lastName,
-		string $address,
+		string $streetAddress,
+		string $postalCode,
+		string $locality,
 		string $telephones,
 		string $emails,
 	): bool {
@@ -287,7 +291,9 @@ class ContactGroupProvisioningService {
 				trim($prefix),
 				trim($firstName),
 				trim($lastName),
-				$address,
+				trim($streetAddress),
+				trim($postalCode),
+				trim($locality),
 				$telephones,
 				$emails,
 			);
@@ -577,13 +583,13 @@ class ContactGroupProvisioningService {
 		];
 	}
 
-	private function extractAddress(VCard $vCard): string {
+	private function extractStreetAddress(VCard $vCard): string {
 		foreach ($vCard->select('ADR') as $addressProperty) {
 			$value = $addressProperty->getValue();
 			if (!is_array($value)) {
-				$address = trim((string)$value);
-				if ($address !== '') {
-					return $address;
+				$streetAddress = trim((string)$value);
+				if ($streetAddress !== '') {
+					return $streetAddress;
 				}
 				continue;
 			}
@@ -593,21 +599,40 @@ class ContactGroupProvisioningService {
 				trim((string)($value[1] ?? '')),
 				trim((string)($value[2] ?? '')),
 			], static fn(string $part): bool => $part !== ''));
-			$locality = trim((string)($value[3] ?? ''));
-			$region = trim((string)($value[4] ?? ''));
+			if ($streetLines !== []) {
+				return implode("\n", $streetLines);
+			}
+		}
+
+		return '';
+	}
+
+	private function extractPostalCode(VCard $vCard): string {
+		foreach ($vCard->select('ADR') as $addressProperty) {
+			$value = $addressProperty->getValue();
+			if (!is_array($value)) {
+				continue;
+			}
+
 			$postalCode = trim((string)($value[5] ?? ''));
-			$country = trim((string)($value[6] ?? ''));
-			$cityLine = trim(implode(' ', array_filter([$postalCode, $locality])));
+			if ($postalCode !== '') {
+				return $postalCode;
+			}
+		}
 
-			$lines = array_values(array_filter([
-				...$streetLines,
-				$cityLine,
-				$region,
-				$country,
-			], static fn(string $part): bool => $part !== ''));
+		return '';
+	}
 
-			if ($lines !== []) {
-				return implode("\n", $lines);
+	private function extractLocality(VCard $vCard): string {
+		foreach ($vCard->select('ADR') as $addressProperty) {
+			$value = $addressProperty->getValue();
+			if (!is_array($value)) {
+				continue;
+			}
+
+			$locality = trim((string)($value[3] ?? ''));
+			if ($locality !== '') {
+				return $locality;
 			}
 		}
 
@@ -770,7 +795,9 @@ class ContactGroupProvisioningService {
 				'prefix' => '',
 				'firstName' => '',
 				'lastName' => $company,
-				'address' => '',
+				'streetAddress' => '',
+				'postalCode' => '',
+				'locality' => '',
 				'telephones' => '',
 				'emails' => '',
 			];
@@ -823,7 +850,9 @@ class ContactGroupProvisioningService {
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
 				'lastName' => $displayParts['lastName'],
-				'address' => $this->extractAddress($vCard),
+				'streetAddress' => $this->extractStreetAddress($vCard),
+				'postalCode' => $this->extractPostalCode($vCard),
+				'locality' => $this->extractLocality($vCard),
 				'telephones' => implode("\n", $telephones),
 				'emails' => implode("\n", $emails),
 			];
@@ -862,7 +891,9 @@ class ContactGroupProvisioningService {
 		string $prefix,
 		string $firstName,
 		string $lastName,
-		string $address,
+		string $streetAddress,
+		string $postalCode,
+		string $locality,
 		string $telephones,
 		string $emails,
 	): void {
@@ -883,13 +914,9 @@ class ContactGroupProvisioningService {
 		}
 		$vCard->add('N', [$lastName, $firstName, '', $prefix, '']);
 
-		foreach ($vCard->select('ADR') as $addressProperty) {
-			unset($addressProperty);
-		}
 		$this->removeProperties($vCard, 'ADR');
-		$normalizedAddress = trim(str_replace("\r\n", "\n", $address));
-		if ($normalizedAddress !== '') {
-			$vCard->add('ADR', $this->buildAddressValue($normalizedAddress));
+		if ($streetAddress !== '' || $postalCode !== '' || $locality !== '') {
+			$vCard->add('ADR', ['', '', $streetAddress, $locality, '', $postalCode, '']);
 		}
 
 		$this->removeProperties($vCard, 'TEL');
@@ -919,45 +946,6 @@ class ContactGroupProvisioningService {
 			static fn(string $line): string => trim($line),
 			$lines
 		), static fn(string $line): bool => $line !== ''));
-	}
-
-	/**
-	 * @return array{0: string, 1: string, 2: string, 3: string, 4: string, 5: string, 6: string}
-	 */
-	private function buildAddressValue(string $address): array {
-		$lines = $this->splitMultilineValues($address);
-		$street = $lines[0] ?? '';
-		$locality = '';
-		$region = '';
-		$postalCode = '';
-		$country = '';
-
-		if (isset($lines[1]) && preg_match('/^(\S+)\s+(.+)$/u', $lines[1], $matches) === 1) {
-			$postalCode = trim($matches[1]);
-			$locality = trim($matches[2]);
-		} elseif (isset($lines[1])) {
-			$locality = $lines[1];
-		}
-
-		if (isset($lines[2])) {
-			$region = $lines[2];
-		}
-
-		if (isset($lines[3])) {
-			$country = $lines[3];
-		}
-
-		if (count($lines) > 4) {
-			$street = implode("\n", array_slice($lines, 0, count($lines) - 3));
-			if (preg_match('/^(\S+)\s+(.+)$/u', $lines[count($lines) - 3], $matches) === 1) {
-				$postalCode = trim($matches[1]);
-				$locality = trim($matches[2]);
-			}
-			$region = $lines[count($lines) - 2];
-			$country = $lines[count($lines) - 1];
-		}
-
-		return ['', '', $street, $locality, $region, $postalCode, $country];
 	}
 
 	private function isLeaderContact(string $rawName, string $effectiveName, string $company): bool {
