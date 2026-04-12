@@ -67,6 +67,14 @@ class ContactGroupProvisioningService {
 			$managedUri = $this->buildManagedContactUri($provisioningUser);
 			$matchingCard = $this->findMatchingCard($existingCards, $provisioningUser, $managedUid);
 
+			$this->logger->info('Evaluated provisioning contact candidate for Team4All contact group.', [
+				'uid' => $provisioningUser->getUID(),
+				'addressBookId' => $addressBookId,
+				'matchedExistingCard' => $matchingCard !== null,
+				'matchedCardUri' => $matchingCard['uri'] ?? null,
+				'managedCardUri' => $managedUri,
+			]);
+
 			if ($matchingCard !== null && $this->cardContainsTeam4AllCategory((string)$matchingCard['carddata'])) {
 				$this->logger->info('Verified Team4All provisioning contact in default contacts address book.', [
 					'uid' => $provisioningUser->getUID(),
@@ -245,10 +253,19 @@ class ContactGroupProvisioningService {
 	private function cardContainsTeam4AllCategory(string $cardData): bool {
 		$vCard = $this->parseVCard($cardData);
 		if (!$vCard instanceof VCard) {
+			$this->logger->warning('Could not inspect Team4All category state because the provisioning vCard could not be parsed.');
 			return false;
 		}
 
-		return in_array(self::CONTACT_GROUP_NAME, $this->extractCategories($vCard), true);
+		$categories = $this->extractCategories($vCard);
+		$hasCategory = in_array(self::CONTACT_GROUP_NAME, $categories, true);
+
+		$this->logger->info('Inspected Team4All category state on provisioning contact.', [
+			'hasTeam4AllCategory' => $hasCategory,
+			'categories' => $categories,
+		]);
+
+		return $hasCategory;
 	}
 
 	private function parseVCard(string $cardData): ?VCard {
