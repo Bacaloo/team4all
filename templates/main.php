@@ -238,11 +238,10 @@ style('team4all', 'main');
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
                                 <span>PLZ</span>
-                                <input id="team4all-details-single-postal-code" type="text" class="team4all-details__input" />
-                            </label>
-                            <label class="team4all-details__field team4all-details__field--full">
-                                <span>Ort</span>
-                                <input id="team4all-details-single-locality" type="text" class="team4all-details__input" />
+                                <div class="team4all-details__inline-row">
+                                    <input id="team4all-details-single-postal-code" type="text" class="team4all-details__input team4all-details__input--postal" />
+                                    <input id="team4all-details-single-locality" type="text" class="team4all-details__input" aria-label="Ort" />
+                                </div>
                             </label>
                             <div class="team4all-details__field team4all-details__field--full">
                                 <span>Telefonkontakte</span>

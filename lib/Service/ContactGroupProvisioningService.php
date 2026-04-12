@@ -584,59 +584,18 @@ class ContactGroupProvisioningService {
 	}
 
 	private function extractStreetAddress(VCard $vCard): string {
-		foreach ($vCard->select('ADR') as $addressProperty) {
-			$value = $addressProperty->getValue();
-			if (!is_array($value)) {
-				$streetAddress = trim((string)$value);
-				if ($streetAddress !== '') {
-					return $streetAddress;
-				}
-				continue;
-			}
-
-			$streetLines = array_values(array_filter([
-				trim((string)($value[0] ?? '')),
-				trim((string)($value[1] ?? '')),
-				trim((string)($value[2] ?? '')),
-			], static fn(string $part): bool => $part !== ''));
-			if ($streetLines !== []) {
-				return implode("\n", $streetLines);
-			}
-		}
-
-		return '';
+		$value = $this->getWorkAddressValue($vCard);
+		return trim((string)($value[2] ?? ''));
 	}
 
 	private function extractPostalCode(VCard $vCard): string {
-		foreach ($vCard->select('ADR') as $addressProperty) {
-			$value = $addressProperty->getValue();
-			if (!is_array($value)) {
-				continue;
-			}
-
-			$postalCode = trim((string)($value[5] ?? ''));
-			if ($postalCode !== '') {
-				return $postalCode;
-			}
-		}
-
-		return '';
+		$value = $this->getWorkAddressValue($vCard);
+		return trim((string)($value[5] ?? ''));
 	}
 
 	private function extractLocality(VCard $vCard): string {
-		foreach ($vCard->select('ADR') as $addressProperty) {
-			$value = $addressProperty->getValue();
-			if (!is_array($value)) {
-				continue;
-			}
-
-			$locality = trim((string)($value[3] ?? ''));
-			if ($locality !== '') {
-				return $locality;
-			}
-		}
-
-		return '';
+		$value = $this->getWorkAddressValue($vCard);
+		return trim((string)($value[3] ?? ''));
 	}
 
 	private function groupContactsByCompany(array $contacts): array {
@@ -914,9 +873,9 @@ class ContactGroupProvisioningService {
 		}
 		$vCard->add('N', [$lastName, $firstName, '', $prefix, '']);
 
-		$this->removeProperties($vCard, 'ADR');
+		$this->removeWorkAddressProperties($vCard);
 		if ($streetAddress !== '' || $postalCode !== '' || $locality !== '') {
-			$vCard->add('ADR', ['', '', $streetAddress, $locality, '', $postalCode, '']);
+			$vCard->add('ADR', ['', '', $streetAddress, $locality, '', $postalCode, ''], ['TYPE' => 'WORK']);
 		}
 
 		$this->removeProperties($vCard, 'TEL');
@@ -934,6 +893,43 @@ class ContactGroupProvisioningService {
 		while (isset($vCard->$propertyName)) {
 			unset($vCard->$propertyName);
 		}
+	}
+
+	private function getWorkAddressValue(VCard $vCard): array {
+		foreach ($vCard->select('ADR') as $addressProperty) {
+			if (!$this->isWorkAddressProperty($addressProperty)) {
+				continue;
+			}
+
+			$value = $addressProperty->getValue();
+			if (is_array($value)) {
+				return $value;
+			}
+		}
+
+		return ['', '', '', '', '', '', ''];
+	}
+
+	private function removeWorkAddressProperties(VCard $vCard): void {
+		foreach ($vCard->select('ADR') as $addressProperty) {
+			if ($this->isWorkAddressProperty($addressProperty)) {
+				unset($addressProperty);
+			}
+		}
+	}
+
+	private function isWorkAddressProperty($addressProperty): bool {
+		if (!isset($addressProperty['TYPE'])) {
+			return false;
+		}
+
+		$typeValue = (string)$addressProperty['TYPE']->getValue();
+		$typeParts = array_map(
+			static fn(string $part): string => mb_strtolower(trim($part)),
+			explode(',', $typeValue)
+		);
+
+		return in_array('work', $typeParts, true);
 	}
 
 	/**

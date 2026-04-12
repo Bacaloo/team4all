@@ -387,6 +387,17 @@ button.team4all-contact-trigger {
     color: inherit;
 }
 
+.team4all-details__inline-row {
+    display: grid;
+    grid-template-columns: 8ch minmax(0, 1fr);
+    gap: 10px;
+    width: 100%;
+}
+
+.team4all-details__input--postal {
+    text-align: left;
+}
+
 .team4all-details__textarea {
     min-height: 84px;
     resize: none;
