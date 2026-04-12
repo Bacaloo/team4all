@@ -667,7 +667,9 @@ class ContactGroupProvisioningService {
 	private function applyManagedGroupLeaderData(VCard $vCard, string $company, string $uid): void {
 		$vCard->UID = $uid;
 		$vCard->FN = $company;
+		$vCard->N = ['', $company, '', '', ''];
 		$vCard->ORG = $company;
+		$vCard->NOTE = 'Adresskarte automatisch durch Team4All angelegt.';
 		$vCard->add('CATEGORIES', self::CONTACT_GROUP_NAME);
 	}
 
