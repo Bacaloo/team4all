@@ -54,12 +54,27 @@
 .team4all-search {
     display: flex;
     align-items: center;
+    gap: 12px;
     width: 100%;
 }
 
 .team4all-search__label {
     color: var(--color-text-maxcontrast);
     white-space: nowrap;
+}
+
+.team4all-search__icon {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background-color: #f8fbff;
+    background-image: url('/core/img/actions/search.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 18px 18px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    box-sizing: border-box;
 }
 
 .team4all-search input {
