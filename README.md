@@ -19,3 +19,4 @@ Die Sichtbarkeit und Nutzbarkeit der App wird gruppenbasiert über die Kontengru
 - Für Version `0.4.0` wird zusätzlich ein Team-Ordner `Team4All` sichergestellt. Die Kontengruppe `Team4All` erhält darauf standardmäßig Nur-Lese-Zugriff.
 - Ab Version `0.4.1` arbeitet Team4All fachlich nur mit Adressbuchkontakten, die in der Kontaktgruppe `Team4All` liegen.
 - Bei jeder App-Aktivierung wird ausschließlich im Standard-Adressbuch `contacts` des Provisionierungs-/Admin-Benutzers geprüft, ob die Kontaktgruppe `Team4All` vorhanden ist. Wenn nicht, wird sie dort über den ersten Kontakt des Provisionierungs-/Admin-Benutzers hergestellt.
+- Für Team4All gilt die direkte CardDAV-/Adressbuchauswertung als fachliche Wahrheit. Die sichtbare Darstellung in der Contacts-App kann davon abweichen und ist für Team4All nicht maßgeblich.
