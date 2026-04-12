@@ -501,6 +501,17 @@ class ContactGroupProvisioningService {
 			return $candidate;
 		}
 
+		$currentLeaderIsGenerated = $this->isGeneratedGroupLeaderUri($currentLeader['uri']);
+		$candidateIsGenerated = $this->isGeneratedGroupLeaderUri($candidate['uri']);
+
+		if ($currentLeaderIsGenerated && !$candidateIsGenerated) {
+			return $candidate;
+		}
+
+		if (!$currentLeaderIsGenerated && $candidateIsGenerated) {
+			return $currentLeader;
+		}
+
 		$currentLeaderHasNote = trim($currentLeader['note']) !== '';
 		$candidateHasNote = trim($candidate['note']) !== '';
 
@@ -513,6 +524,10 @@ class ContactGroupProvisioningService {
 		}
 
 		return $currentLeader;
+	}
+
+	private function isGeneratedGroupLeaderUri(string $uri): bool {
+		return str_starts_with($uri, self::GROUP_LEADER_URI_PREFIX);
 	}
 
 	/**
