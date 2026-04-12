@@ -68,19 +68,12 @@
         setVisible(notesSplit, false);
     };
 
-    const prependUid = (uid, content) => {
-        const normalizedUid = uid && uid.trim() !== '' ? uid.trim() : '(keine UID)';
-        const normalizedContent = content && content.trim() !== '' ? content : 'Keine Notiz vorhanden.';
-
-        return `UID: ${normalizedUid}\n\n${normalizedContent}`;
-    };
-
     const showSingleNote = (title, uid, content) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, true);
         setVisible(notesSplit, false);
         setContent(notesSingleTitle, title, 'Notiz');
-        setContent(notesSingleContent, prependUid(uid, content), 'Keine Notiz vorhanden.');
+        setContent(notesSingleContent, content, 'Keine Notiz vorhanden.');
     };
 
     const showLeaderNote = (leaderTitle, leaderUid, leaderContent) => {
@@ -89,7 +82,7 @@
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, false);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
-        setContent(notesLeaderContent, prependUid(leaderUid, leaderContent), 'Keine Notiz vorhanden.');
+        setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
         setContent(notesMemberTitle, '', '');
         setContent(notesMemberContent, '', '');
     };
@@ -100,9 +93,9 @@
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, true);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
-        setContent(notesLeaderContent, prependUid(leaderUid, leaderContent), 'Keine Notiz vorhanden.');
+        setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
         setContent(notesMemberTitle, memberTitle, 'Notiz');
-        setContent(notesMemberContent, prependUid(memberUid, memberContent), 'Keine Notiz vorhanden.');
+        setContent(notesMemberContent, memberContent, 'Keine Notiz vorhanden.');
     };
 
     const applySearch = () => {
