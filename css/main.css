@@ -287,6 +287,17 @@ button.team4all-contact-trigger {
     line-height: 1.5;
 }
 
+.team4all-notes__editor {
+    resize: none;
+    font: inherit;
+    color: inherit;
+}
+
+.team4all-notes__editor:focus {
+    outline: 2px solid #3d6a8b;
+    outline-offset: 2px;
+}
+
 .team4all-missing-list {
     margin: 16px 0 0;
     padding-left: 20px;

@@ -20,6 +20,8 @@
     const notesMemberSection = document.getElementById('team4all-notes-member-section');
     const notesMemberTitle = document.getElementById('team4all-notes-member-title');
     const notesMemberContent = document.getElementById('team4all-notes-member-content');
+    const requestToken = document.head?.dataset?.requesttoken || '';
+    const saveUrl = `${window.OC?.webroot || ''}/apps/team4all/note`;
 
     const setVisible = (element, visible) => {
         if (!element) {
@@ -32,6 +34,12 @@
 
     const setContent = (element, value, fallback) => {
         if (!element) {
+            return;
+        }
+
+        if ('value' in element) {
+            element.value = value && value.trim() !== '' ? value : '';
+            element.placeholder = fallback;
             return;
         }
 
@@ -68,34 +76,114 @@
         setVisible(notesSplit, false);
     };
 
-    const showSingleNote = (title, uid, content) => {
+    const assignEditorState = (element, uri, value) => {
+        if (!element) {
+            return;
+        }
+
+        element.dataset.noteUri = uri || '';
+        element.dataset.originalValue = value || '';
+        element.dataset.saving = 'false';
+    };
+
+    const clearEditorState = (element) => {
+        if (!element) {
+            return;
+        }
+
+        element.dataset.noteUri = '';
+        element.dataset.originalValue = '';
+        element.dataset.saving = 'false';
+        element.value = '';
+    };
+
+    const saveEditorNote = async (element) => {
+        if (!element) {
+            return;
+        }
+
+        const uri = element.dataset.noteUri || '';
+        const originalValue = element.dataset.originalValue || '';
+        const currentValue = element.value || '';
+
+        if (uri === '' || currentValue === originalValue || element.dataset.saving === 'true') {
+            return;
+        }
+
+        element.dataset.saving = 'true';
+
+        try {
+            const body = new URLSearchParams({
+                uri,
+                note: currentValue,
+            });
+
+            const response = await fetch(saveUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    requesttoken: requestToken,
+                },
+                body: body.toString(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Saving note failed with status ${response.status}`);
+            }
+
+            element.dataset.originalValue = currentValue;
+        } catch (error) {
+            console.error(error);
+            element.value = originalValue;
+        } finally {
+            element.dataset.saving = 'false';
+        }
+    };
+
+    const registerEditor = (element) => {
+        if (!element) {
+            return;
+        }
+
+        element.addEventListener('blur', () => {
+            void saveEditorNote(element);
+        });
+    };
+
+    const showSingleNote = (title, uid, uri, content) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, true);
         setVisible(notesSplit, false);
         setContent(notesSingleTitle, title, 'Notiz');
         setContent(notesSingleContent, content, 'Keine Notiz vorhanden.');
+        assignEditorState(notesSingleContent, uri, content);
+        clearEditorState(notesLeaderContent);
+        clearEditorState(notesMemberContent);
     };
 
-    const showLeaderNote = (leaderTitle, leaderUid, leaderContent) => {
+    const showLeaderNote = (leaderTitle, leaderUid, leaderUri, leaderContent) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, false);
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, false);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
         setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
+        assignEditorState(notesLeaderContent, leaderUri, leaderContent);
         setContent(notesMemberTitle, '', '');
-        setContent(notesMemberContent, '', '');
+        clearEditorState(notesMemberContent);
     };
 
-    const showMemberNote = (leaderTitle, leaderUid, leaderContent, memberTitle, memberUid, memberContent) => {
+    const showMemberNote = (leaderTitle, leaderUid, leaderUri, leaderContent, memberTitle, memberUid, memberUri, memberContent) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, false);
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, true);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
         setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
+        assignEditorState(notesLeaderContent, leaderUri, leaderContent);
         setContent(notesMemberTitle, memberTitle, 'Notiz');
         setContent(notesMemberContent, memberContent, 'Keine Notiz vorhanden.');
+        assignEditorState(notesMemberContent, memberUri, memberContent);
     };
 
     const applySearch = () => {
@@ -139,6 +227,7 @@
                 showLeaderNote(
                     trigger.getAttribute('data-team4all-note-title') || trigger.getAttribute('data-team4all-leader-title') || '',
                     trigger.getAttribute('data-team4all-note-uid') || trigger.getAttribute('data-team4all-leader-uid') || '',
+                    trigger.getAttribute('data-team4all-note-uri') || trigger.getAttribute('data-team4all-leader-uri') || '',
                     decodeDataValue(trigger.getAttribute('data-team4all-note-content') || trigger.getAttribute('data-team4all-leader-content') || '')
                 );
                 return;
@@ -148,9 +237,11 @@
                 showMemberNote(
                     trigger.getAttribute('data-team4all-leader-title') || '',
                     trigger.getAttribute('data-team4all-leader-uid') || '',
+                    trigger.getAttribute('data-team4all-leader-uri') || '',
                     decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || ''),
                     trigger.getAttribute('data-team4all-note-title') || '',
                     trigger.getAttribute('data-team4all-note-uid') || '',
+                    trigger.getAttribute('data-team4all-note-uri') || '',
                     decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
                 );
                 return;
@@ -159,6 +250,7 @@
             showSingleNote(
                 trigger.getAttribute('data-team4all-note-title') || '',
                 trigger.getAttribute('data-team4all-note-uid') || '',
+                trigger.getAttribute('data-team4all-note-uri') || '',
                 decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
             );
         });
@@ -172,4 +264,7 @@
     }
 
     showEmptyNotes();
+    registerEditor(notesSingleContent);
+    registerEditor(notesLeaderContent);
+    registerEditor(notesMemberContent);
 })();

@@ -205,6 +205,54 @@ class ContactGroupProvisioningService {
 		return $this->groupContactsByCompany($contacts);
 	}
 
+	public function updateContactNoteByUri(string $uri, string $note): bool {
+		$uri = trim($uri);
+		if ($uri === '') {
+			return false;
+		}
+
+		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if (!$provisioningUser instanceof IUser) {
+			return false;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return false;
+		}
+
+		$principalUri = 'principals/users/' . $provisioningUser->getUID();
+		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
+		if ($addressBook === null || !isset($addressBook['id'])) {
+			return false;
+		}
+
+		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
+			if (($card['uri'] ?? '') !== $uri || !isset($card['carddata']) || !is_string($card['carddata'])) {
+				continue;
+			}
+
+			$vCard = $this->parseVCard($card['carddata']);
+			if (!$vCard instanceof VCard) {
+				return false;
+			}
+
+			while (isset($vCard->NOTE)) {
+				unset($vCard->NOTE);
+			}
+
+			if (trim($note) !== '') {
+				$vCard->add('NOTE', $note);
+			}
+
+			$cardDavBackend->updateCard((int)$addressBook['id'], $uri, $vCard->serialize());
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private function resolveCardDavBackend(): ?object {
 		if (!class_exists(self::CARD_DAV_BACKEND_CLASS)) {
 			return null;

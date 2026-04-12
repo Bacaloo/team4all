@@ -11,6 +11,7 @@ use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 
@@ -64,6 +65,21 @@ class PageController extends Controller {
 			'team4AllGroups' => $team4AllGroups,
 			'team4AllGroupCount' => count($team4AllGroups),
 		]);
+	}
+
+	public function updateNote(string $uri, string $note = ''): JSONResponse {
+		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+			return new JSONResponse([
+				'saved' => false,
+				'message' => 'Access denied.',
+			], Http::STATUS_FORBIDDEN);
+		}
+
+		$saved = $this->contactGroupProvisioningService->updateContactNoteByUri($uri, $note);
+
+		return new JSONResponse([
+			'saved' => $saved,
+		], $saved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
 	}
 
 	/**
