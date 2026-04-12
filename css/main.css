@@ -260,7 +260,10 @@ button.team4all-contact-trigger {
 
 .team4all-notes__section,
 .team4all-notes__single {
+    display: flex;
+    flex-direction: column;
     min-height: 0;
+    width: 100%;
 }
 
 .team4all-notes__section {
@@ -278,11 +281,13 @@ button.team4all-contact-trigger {
 .team4all-notes__content {
     flex: 1 1 auto;
     min-height: 0;
+    width: 100%;
     overflow: auto;
     padding: 14px;
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 14px;
     background: rgba(248, 251, 255, 0.96);
+    box-sizing: border-box;
     white-space: pre-wrap;
     line-height: 1.5;
 }
