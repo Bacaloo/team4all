@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\Controller;
 
+use OCA\Team4All\Service\ContactGroupProvisioningService;
 use OCA\Team4All\Service\GroupProvisioningService;
 use OCA\Team4All\Service\TeamFolderProvisioningService;
 use OCP\App\IAppManager;
@@ -30,6 +31,7 @@ class PageController extends Controller {
 		string $appName,
 		IRequest $request,
 		private IAppManager $appManager,
+		private ContactGroupProvisioningService $contactGroupProvisioningService,
 		private GroupProvisioningService $groupProvisioningService,
 		private TeamFolderProvisioningService $teamFolderProvisioningService,
 	) {
@@ -46,6 +48,7 @@ class PageController extends Controller {
 		}
 
 		$this->groupProvisioningService->ensureTeam4AllGroup();
+		$this->contactGroupProvisioningService->ensureTeam4AllContactGroup();
 		$this->teamFolderProvisioningService->ensureTeamFolderForUserContext();
 
 		$missingApps = $this->getMissingRequiredApps();

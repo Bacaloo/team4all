@@ -56,14 +56,12 @@ class GroupProvisioningService {
 		}
 
 		$group = $this->groupManager->get(self::GROUP_ID);
-		if (!$group instanceof IGroup) {
-			return null;
-		}
+		if ($group instanceof IGroup) {
+			$users = $group->getUsers();
 
-		$users = $group->getUsers();
-
-		if (isset($users[0]) && $users[0] instanceof IUser) {
-			return $users[0];
+			if (isset($users[0]) && $users[0] instanceof IUser) {
+				return $users[0];
+			}
 		}
 
 		$adminGroup = $this->groupManager->get(self::ADMIN_GROUP_ID);
