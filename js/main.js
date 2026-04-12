@@ -110,7 +110,7 @@
             return;
         }
 
-        const confirmed = window.confirm('Aenderungen an der Notiz speichern?');
+        const confirmed = window.confirm('Änderungen an der Notiz speichern?');
         if (!confirmed) {
             element.value = originalValue;
             return;
