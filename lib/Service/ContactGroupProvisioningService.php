@@ -63,25 +63,25 @@ class ContactGroupProvisioningService {
 
 			$addressBookId = (int)$addressBook['id'];
 			$existingCards = $cardDavBackend->getCards($addressBookId);
-
-			if ($this->contactGroupExists($existingCards)) {
-				$this->logger->info('Verified Team4All contact group in default contacts address book.', [
-					'uid' => $provisioningUser->getUID(),
-					'addressBookId' => $addressBookId,
-				]);
-				return;
-			}
-
 			$managedUid = $this->buildManagedContactUid($provisioningUser);
 			$managedUri = $this->buildManagedContactUri($provisioningUser);
 			$matchingCard = $this->findMatchingCard($existingCards, $provisioningUser, $managedUid);
+
+			if ($matchingCard !== null && $this->cardContainsTeam4AllCategory((string)$matchingCard['carddata'])) {
+				$this->logger->info('Verified Team4All provisioning contact in default contacts address book.', [
+					'uid' => $provisioningUser->getUID(),
+					'addressBookId' => $addressBookId,
+					'cardUri' => (string)$matchingCard['uri'],
+				]);
+				return;
+			}
 
 			if ($matchingCard !== null) {
 				$vCard = $this->parseVCard($matchingCard['carddata']);
 				if ($vCard instanceof VCard) {
 					$this->applyManagedContactData($vCard, $provisioningUser, $managedUid);
 					$cardDavBackend->updateCard($addressBookId, $matchingCard['uri'], $vCard->serialize());
-					$this->logger->info('Updated provisioning contact with Team4All contact group membership.', [
+					$this->logger->info('Updated provisioning contact in default contacts address book with Team4All contact group membership.', [
 						'uid' => $provisioningUser->getUID(),
 						'addressBookId' => $addressBookId,
 						'cardUri' => $matchingCard['uri'],
@@ -94,7 +94,7 @@ class ContactGroupProvisioningService {
 			$this->applyManagedContactData($vCard, $provisioningUser, $managedUid);
 			$cardDavBackend->createCard($addressBookId, $managedUri, $vCard->serialize());
 
-			$this->logger->info('Created provisioning contact with Team4All contact group membership.', [
+			$this->logger->info('Created provisioning contact in default contacts address book with Team4All contact group membership.', [
 				'uid' => $provisioningUser->getUID(),
 				'addressBookId' => $addressBookId,
 				'cardUri' => $managedUri,
@@ -147,29 +147,6 @@ class ContactGroupProvisioningService {
 		]);
 
 		return $cardDavBackend->getAddressBookById((int)$addressBookId);
-	}
-
-	/**
-	 * @param array<int, array<string, mixed>> $cards
-	 */
-	private function contactGroupExists(array $cards): bool {
-		foreach ($cards as $card) {
-			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
-				continue;
-			}
-
-			$vCard = $this->parseVCard($card['carddata']);
-			if (!$vCard instanceof VCard) {
-				continue;
-			}
-
-			$categories = $this->extractCategories($vCard);
-			if (in_array(self::CONTACT_GROUP_NAME, $categories, true)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
@@ -263,6 +240,15 @@ class ContactGroupProvisioningService {
 
 	private function buildManagedContactUri(IUser $user): string {
 		return self::MANAGED_CONTACT_URI_PREFIX . $user->getUID() . '.vcf';
+	}
+
+	private function cardContainsTeam4AllCategory(string $cardData): bool {
+		$vCard = $this->parseVCard($cardData);
+		if (!$vCard instanceof VCard) {
+			return false;
+		}
+
+		return in_array(self::CONTACT_GROUP_NAME, $this->extractCategories($vCard), true);
 	}
 
 	private function parseVCard(string $cardData): ?VCard {
