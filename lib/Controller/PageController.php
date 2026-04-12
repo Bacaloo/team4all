@@ -58,7 +58,9 @@ class PageController extends Controller {
 			]);
 		}
 
-		return new TemplateResponse($this->appName, 'main');
+		return new TemplateResponse($this->appName, 'main', [
+			'team4AllContacts' => $this->contactGroupProvisioningService->getTeam4AllContacts(),
+		]);
 	}
 
 	/**

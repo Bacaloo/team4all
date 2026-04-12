@@ -34,12 +34,34 @@ style('team4all', 'main');
             </div>
         </div>
         <p class="team4all-sidebar__copy">
-            Dieser Bereich ist für Daten aus der Contacts-App vorgesehen.
+            Team4All liest diese Kontakte direkt aus dem Standard-Adressbuch <strong>contacts</strong> und filtert auf die Kontaktgruppe <strong>Team4All</strong>.
         </p>
-        <div class="team4all-contact-placeholder">
-            <strong>Platzhalter</strong>
-            <span>Später folgen hier Kontaktlisten, Rollen oder Ansprechpersonen.</span>
-        </div>
+		<?php $team4AllContacts = $_['team4AllContacts'] ?? []; ?>
+		<div class="team4all-contact-list">
+			<div class="team4all-contact-list__header">
+				<strong>Team4All-Kontakte</strong>
+				<span><?= count($team4AllContacts) ?></span>
+			</div>
+			<?php if ($team4AllContacts === []): ?>
+				<div class="team4all-contact-placeholder">
+					<strong>Keine Kontakte gefunden</strong>
+					<span>Im Adressbuch <code>contacts</code> ist aktuell kein sichtbarer Kontakt mit der Kontaktgruppe <code>Team4All</code> vorhanden.</span>
+				</div>
+			<?php else: ?>
+				<ul class="team4all-contact-items">
+					<?php foreach ($team4AllContacts as $contact): ?>
+						<li class="team4all-contact-item">
+							<strong><?= p($contact['name']) ?></strong>
+							<?php if ($contact['email'] !== ''): ?>
+								<span><?= p($contact['email']) ?></span>
+							<?php else: ?>
+								<span>Keine E-Mail-Adresse</span>
+							<?php endif; ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+		</div>
     </aside>
 
     <main class="team4all-main" aria-label="Arbeitsbereich" style="padding:0;min-width:0;height:100%;min-height:0;">

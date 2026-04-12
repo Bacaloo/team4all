@@ -127,6 +127,54 @@
     line-height: 1.45;
 }
 
+.team4all-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.team4all-contact-list__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.team4all-contact-list__header span {
+    min-width: 28px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(61, 106, 139, 0.10);
+    color: #3d6a8b;
+    text-align: center;
+    font-weight: 700;
+}
+
+.team4all-contact-items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.team4all-contact-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 14px;
+    background: rgba(248, 251, 255, 0.96);
+}
+
+.team4all-contact-item span {
+    color: var(--color-text-maxcontrast);
+    line-height: 1.4;
+}
+
 .team4all-missing-list {
     margin: 16px 0 0;
     padding-left: 20px;

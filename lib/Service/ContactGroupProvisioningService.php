@@ -114,6 +114,69 @@ class ContactGroupProvisioningService {
 		}
 	}
 
+	/**
+	 * @return list<array{name: string, email: string, uri: string}>
+	 */
+	public function getTeam4AllContacts(): array {
+		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if (!$provisioningUser instanceof IUser) {
+			return [];
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return [];
+		}
+
+		$principalUri = 'principals/users/' . $provisioningUser->getUID();
+		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
+		if ($addressBook === null || !isset($addressBook['id'])) {
+			return [];
+		}
+
+		$contacts = [];
+		$cards = $cardDavBackend->getCards((int)$addressBook['id']);
+
+		foreach ($cards as $card) {
+			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+				continue;
+			}
+
+			$vCard = $this->parseVCard($card['carddata']);
+			if (!$vCard instanceof VCard) {
+				continue;
+			}
+
+			$categories = $this->extractCategories($vCard);
+			if (!in_array(self::CONTACT_GROUP_NAME, $categories, true)) {
+				continue;
+			}
+
+			$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
+			$email = '';
+
+			foreach ($vCard->select('EMAIL') as $emailProperty) {
+				$email = trim((string)$emailProperty->getValue());
+				if ($email !== '') {
+					break;
+				}
+			}
+
+			$contacts[] = [
+				'name' => $name !== '' ? $name : '(Ohne Namen)',
+				'email' => $email,
+				'uri' => (string)($card['uri'] ?? ''),
+			];
+		}
+
+		usort(
+			$contacts,
+			static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name'])
+		);
+
+		return $contacts;
+	}
+
 	private function resolveCardDavBackend(): ?object {
 		if (!class_exists(self::CARD_DAV_BACKEND_CLASS)) {
 			return null;
