@@ -65,13 +65,25 @@ style('team4all', 'main');
 										<span><?= p($group['leader']['email']) ?></span>
 									<?php endif; ?>
 								</div>
+							<?php elseif (count($group['members']) === 1): ?>
+								<div
+									class="team4all-contact-item team4all-contact-item--single"
+									data-team4all-contact-search="<?= p(mb_strtolower($group['company'] . ' ' . $group['members'][0]['name'] . ' ' . $group['members'][0]['email'])) ?>"
+								>
+									<strong><?= p($group['members'][0]['name']) ?></strong>
+									<?php if ($group['members'][0]['email'] !== ''): ?>
+										<span><?= p($group['members'][0]['email']) ?></span>
+									<?php else: ?>
+										<span>Keine E-Mail-Adresse</span>
+									<?php endif; ?>
+								</div>
 							<?php else: ?>
 								<div class="team4all-contact-placeholder">
 									<strong>Kein Gruppenleader</strong>
 									<span>Es wurde kein Kontakt gefunden, bei dem Kontaktname und Firma uebereinstimmen.</span>
 								</div>
 							<?php endif; ?>
-							<?php if ($group['members'] !== []): ?>
+							<?php if ($group['members'] !== [] && !($group['leader'] === null && count($group['members']) === 1)): ?>
 								<ul class="team4all-contact-items">
 									<?php foreach ($group['members'] as $member): ?>
 										<li

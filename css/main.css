@@ -234,6 +234,11 @@
     background: rgba(227, 240, 249, 0.95);
 }
 
+.team4all-contact-item--single {
+    border-color: rgba(15, 23, 42, 0.14);
+    background: rgba(255, 255, 255, 0.98);
+}
+
 .team4all-contact-item em {
     font-style: normal;
     font-size: 0.75rem;
