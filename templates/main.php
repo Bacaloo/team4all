@@ -54,6 +54,15 @@ style('team4all', 'main');
 									data-team4all-note-uid="<?= p($entry['person']['uid']) ?>"
 									data-team4all-note-uri="<?= p($entry['person']['uri']) ?>"
 									data-team4all-note-content="<?= p(base64_encode($entry['person']['note'])) ?>"
+									data-team4all-detail-mode="single"
+									data-team4all-detail-title="<?= p($entry['person']['name']) ?>"
+									data-team4all-detail-uri="<?= p($entry['person']['uri']) ?>"
+									data-team4all-detail-prefix="<?= p(base64_encode($entry['person']['prefix'])) ?>"
+									data-team4all-detail-first-name="<?= p(base64_encode($entry['person']['firstName'])) ?>"
+									data-team4all-detail-last-name="<?= p(base64_encode($entry['person']['lastName'])) ?>"
+									data-team4all-detail-address="<?= p(base64_encode($entry['person']['address'])) ?>"
+									data-team4all-detail-telephones="<?= p(base64_encode($entry['person']['telephones'])) ?>"
+									data-team4all-detail-emails="<?= p(base64_encode($entry['person']['emails'])) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
 								</button>
@@ -65,6 +74,7 @@ style('team4all', 'main');
 								<button
 									type="button"
 									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
+									data-team4all-contact-search="<?= p(mb_strtolower($entry['leader']['searchText'])) ?>"
 									data-team4all-note-mode="leader"
 									data-team4all-note-title="<?= p($entry['leader']['name']) ?>"
 									data-team4all-note-uid="<?= p($entry['leader']['uid']) ?>"
@@ -74,6 +84,23 @@ style('team4all', 'main');
 									data-team4all-leader-uid="<?= p($entry['leader']['uid']) ?>"
 									data-team4all-leader-uri="<?= p($entry['leader']['uri']) ?>"
 									data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
+									data-team4all-detail-mode="leader"
+									data-team4all-detail-title="<?= p($entry['leader']['name']) ?>"
+									data-team4all-detail-uri="<?= p($entry['leader']['uri']) ?>"
+									data-team4all-detail-prefix="<?= p(base64_encode($entry['leader']['prefix'])) ?>"
+									data-team4all-detail-first-name="<?= p(base64_encode($entry['leader']['firstName'])) ?>"
+									data-team4all-detail-last-name="<?= p(base64_encode($entry['leader']['lastName'])) ?>"
+									data-team4all-detail-address="<?= p(base64_encode($entry['leader']['address'])) ?>"
+									data-team4all-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
+									data-team4all-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
+									data-team4all-leader-detail-title="<?= p($entry['leader']['name']) ?>"
+									data-team4all-leader-detail-uri="<?= p($entry['leader']['uri']) ?>"
+									data-team4all-leader-detail-prefix="<?= p(base64_encode($entry['leader']['prefix'])) ?>"
+									data-team4all-leader-detail-first-name="<?= p(base64_encode($entry['leader']['firstName'])) ?>"
+									data-team4all-leader-detail-last-name="<?= p(base64_encode($entry['leader']['lastName'])) ?>"
+									data-team4all-leader-detail-address="<?= p(base64_encode($entry['leader']['address'])) ?>"
+									data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
+									data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 								>
 									<strong><?= p($entry['company']) ?></strong>
 								</button>
@@ -92,6 +119,15 @@ style('team4all', 'main');
 									data-team4all-note-uid="<?= p($entry['members'][0]['uid']) ?>"
 									data-team4all-note-uri="<?= p($entry['members'][0]['uri']) ?>"
 									data-team4all-note-content="<?= p(base64_encode($entry['members'][0]['note'])) ?>"
+									data-team4all-detail-mode="single"
+									data-team4all-detail-title="<?= p($entry['members'][0]['name']) ?>"
+									data-team4all-detail-uri="<?= p($entry['members'][0]['uri']) ?>"
+									data-team4all-detail-prefix="<?= p(base64_encode($entry['members'][0]['prefix'])) ?>"
+									data-team4all-detail-first-name="<?= p(base64_encode($entry['members'][0]['firstName'])) ?>"
+									data-team4all-detail-last-name="<?= p(base64_encode($entry['members'][0]['lastName'])) ?>"
+									data-team4all-detail-address="<?= p(base64_encode($entry['members'][0]['address'])) ?>"
+									data-team4all-detail-telephones="<?= p(base64_encode($entry['members'][0]['telephones'])) ?>"
+									data-team4all-detail-emails="<?= p(base64_encode($entry['members'][0]['emails'])) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
 								</button>
@@ -109,21 +145,38 @@ style('team4all', 'main');
 										<li>
 											<button
 												type="button"
-												class="team4all-contact-item team4all-contact-trigger"
-												data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
-												data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
-												data-team4all-note-title="<?= p($member['name']) ?>"
+											class="team4all-contact-item team4all-contact-trigger"
+											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
+											data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
+											data-team4all-note-title="<?= p($member['name']) ?>"
 												data-team4all-note-uid="<?= p($member['uid']) ?>"
-												data-team4all-note-uri="<?= p($member['uri']) ?>"
-												data-team4all-note-content="<?= p(base64_encode($member['note'])) ?>"
-												<?php if ($entry['leader'] !== null): ?>
-													data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
-													data-team4all-leader-uid="<?= p($entry['leader']['uid']) ?>"
-													data-team4all-leader-uri="<?= p($entry['leader']['uri']) ?>"
-													data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
-												<?php endif; ?>
-											>
-												<strong><?= p($member['name']) ?></strong>
+											data-team4all-note-uri="<?= p($member['uri']) ?>"
+											data-team4all-note-content="<?= p(base64_encode($member['note'])) ?>"
+											data-team4all-detail-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
+											data-team4all-detail-title="<?= p($member['name']) ?>"
+											data-team4all-detail-uri="<?= p($member['uri']) ?>"
+											data-team4all-detail-prefix="<?= p(base64_encode($member['prefix'])) ?>"
+											data-team4all-detail-first-name="<?= p(base64_encode($member['firstName'])) ?>"
+											data-team4all-detail-last-name="<?= p(base64_encode($member['lastName'])) ?>"
+											data-team4all-detail-address="<?= p(base64_encode($member['address'])) ?>"
+											data-team4all-detail-telephones="<?= p(base64_encode($member['telephones'])) ?>"
+											data-team4all-detail-emails="<?= p(base64_encode($member['emails'])) ?>"
+											<?php if ($entry['leader'] !== null): ?>
+												data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
+												data-team4all-leader-uid="<?= p($entry['leader']['uid']) ?>"
+												data-team4all-leader-uri="<?= p($entry['leader']['uri']) ?>"
+												data-team4all-leader-content="<?= p(base64_encode($entry['leader']['note'])) ?>"
+												data-team4all-leader-detail-title="<?= p($entry['leader']['name']) ?>"
+												data-team4all-leader-detail-uri="<?= p($entry['leader']['uri']) ?>"
+												data-team4all-leader-detail-prefix="<?= p(base64_encode($entry['leader']['prefix'])) ?>"
+												data-team4all-leader-detail-first-name="<?= p(base64_encode($entry['leader']['firstName'])) ?>"
+												data-team4all-leader-detail-last-name="<?= p(base64_encode($entry['leader']['lastName'])) ?>"
+												data-team4all-leader-detail-address="<?= p(base64_encode($entry['leader']['address'])) ?>"
+												data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
+												data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
+											<?php endif; ?>
+										>
+											<strong><?= p($member['name']) ?></strong>
 											</button>
 										</li>
 									<?php endforeach; ?>
@@ -141,10 +194,116 @@ style('team4all', 'main');
             class="team4all-main__panel"
             style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
-            <h1>Arbeitsbereich</h1>
-            <p>
-                Diese Spalte ist als erster freier Arbeitsbereich vorbereitet.
-            </p>
+            <h1>Kontaktdaten</h1>
+            <div id="team4all-details" class="team4all-details" data-mode="empty">
+                <div id="team4all-details-empty" class="team4all-contact-placeholder">
+                    <strong>Keine Kontaktdaten ausgewaehlt</strong>
+                    <span>Bitte links einen Kontakt oder Gruppenleader anklicken.</span>
+                </div>
+                <div id="team4all-details-single" class="team4all-details__single" hidden>
+                    <section
+                        id="team4all-details-single-editor"
+                        class="team4all-details__section"
+                        data-team4all-contact-editor="true"
+                    >
+                        <h3 id="team4all-details-single-title" class="team4all-details__title"></h3>
+                        <div class="team4all-details__grid">
+                            <label class="team4all-details__field">
+                                <span>Praefix</span>
+                                <input id="team4all-details-single-prefix" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>Vorname</span>
+                                <input id="team4all-details-single-first-name" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>Nachname</span>
+                                <input id="team4all-details-single-last-name" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Adresse</span>
+                                <textarea id="team4all-details-single-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Telefonkontakte</span>
+                                <textarea id="team4all-details-single-telephones" class="team4all-details__textarea" spellcheck="false"></textarea>
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Mailkontakte</span>
+                                <textarea id="team4all-details-single-emails" class="team4all-details__textarea" spellcheck="false"></textarea>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+                <div id="team4all-details-split" class="team4all-details__split" hidden>
+                    <section
+                        id="team4all-details-leader-editor"
+                        class="team4all-details__section"
+                        data-team4all-contact-editor="true"
+                    >
+                        <h3 id="team4all-details-leader-title" class="team4all-details__title"></h3>
+                        <div class="team4all-details__grid">
+                            <label class="team4all-details__field">
+                                <span>Praefix</span>
+                                <input id="team4all-details-leader-prefix" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>Vorname</span>
+                                <input id="team4all-details-leader-first-name" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>Nachname</span>
+                                <input id="team4all-details-leader-last-name" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Adresse</span>
+                                <textarea id="team4all-details-leader-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Telefonkontakte</span>
+                                <textarea id="team4all-details-leader-telephones" class="team4all-details__textarea" spellcheck="false"></textarea>
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Mailkontakte</span>
+                                <textarea id="team4all-details-leader-emails" class="team4all-details__textarea" spellcheck="false"></textarea>
+                            </label>
+                        </div>
+                    </section>
+                    <section
+                        id="team4all-details-member-editor"
+                        class="team4all-details__section"
+                        data-team4all-contact-editor="true"
+                    >
+                        <h3 id="team4all-details-member-title" class="team4all-details__title"></h3>
+                        <div class="team4all-details__grid">
+                            <label class="team4all-details__field">
+                                <span>Praefix</span>
+                                <input id="team4all-details-member-prefix" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>Vorname</span>
+                                <input id="team4all-details-member-first-name" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field">
+                                <span>Nachname</span>
+                                <input id="team4all-details-member-last-name" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Adresse</span>
+                                <textarea id="team4all-details-member-address" class="team4all-details__textarea team4all-details__textarea--address" spellcheck="true"></textarea>
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Telefonkontakte</span>
+                                <textarea id="team4all-details-member-telephones" class="team4all-details__textarea" spellcheck="false"></textarea>
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Mailkontakte</span>
+                                <textarea id="team4all-details-member-emails" class="team4all-details__textarea" spellcheck="false"></textarea>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
     </main>
 

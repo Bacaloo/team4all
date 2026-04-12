@@ -116,16 +116,6 @@ class ContactGroupProvisioningService {
 		}
 	}
 
-	/**
-	 * @return list<array{
-	 *   type: 'group'|'person',
-	 *   label: string,
-	 *   company: string,
-	 *   leader: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
-	 * }>
-	 */
 	public function getTeam4AllContactGroups(): array {
 		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
 		if (!$provisioningUser instanceof IUser) {
@@ -162,37 +152,36 @@ class ContactGroupProvisioningService {
 			}
 
 			$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
-			$structuredName = $this->extractStructuredName($vCard);
-			$email = '';
+			$nameParts = $this->extractStructuredNameParts($vCard);
 			$note = $this->extractNote($vCard);
 			$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
-			$telephone = '';
 			$company = $this->extractCompany($vCard);
 			$effectiveName = $name !== '' ? $name : $company;
-
-			foreach ($vCard->select('EMAIL') as $emailProperty) {
-				$email = trim((string)$emailProperty->getValue());
-				if ($email !== '') {
-					break;
-				}
-			}
-
-			foreach ($vCard->select('TEL') as $telephoneProperty) {
-				$telephone = trim((string)$telephoneProperty->getValue());
-				if ($telephone !== '') {
-					break;
-				}
-			}
+			$emails = $this->extractEmailValues($vCard);
+			$telephones = $this->extractTelephoneValues($vCard);
+			$displayParts = $this->buildEditableDisplayNameParts($name, $nameParts, $company);
 
 			$contacts[] = [
 				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
 				'rawName' => $name,
-				'searchText' => $this->buildContactSearchText($name, $structuredName, $company, $email, $telephone),
+				'searchText' => $this->buildContactSearchText(
+					$name,
+					$this->composeStructuredName($nameParts),
+					$company,
+					implode(' ', $emails),
+					implode(' ', $telephones),
+				),
 				'note' => $note,
 				'uid' => $uid,
-				'email' => $email,
+				'email' => $emails[0] ?? '',
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $company,
+				'prefix' => $displayParts['prefix'],
+				'firstName' => $displayParts['firstName'],
+				'lastName' => $displayParts['lastName'],
+				'address' => $this->extractAddress($vCard),
+				'telephones' => implode("\n", $telephones),
+				'emails' => implode("\n", $emails),
 			];
 		}
 
@@ -244,6 +233,64 @@ class ContactGroupProvisioningService {
 			if (trim($note) !== '') {
 				$vCard->add('NOTE', $note);
 			}
+
+			$cardDavBackend->updateCard((int)$addressBook['id'], $uri, $vCard->serialize());
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public function updateContactDetailsByUri(
+		string $uri,
+		string $prefix,
+		string $firstName,
+		string $lastName,
+		string $address,
+		string $telephones,
+		string $emails,
+	): bool {
+		$uri = trim($uri);
+		if ($uri === '') {
+			return false;
+		}
+
+		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if (!$provisioningUser instanceof IUser) {
+			return false;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return false;
+		}
+
+		$principalUri = 'principals/users/' . $provisioningUser->getUID();
+		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
+		if ($addressBook === null || !isset($addressBook['id'])) {
+			return false;
+		}
+
+		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
+			if (($card['uri'] ?? '') !== $uri || !isset($card['carddata']) || !is_string($card['carddata'])) {
+				continue;
+			}
+
+			$vCard = $this->parseVCard($card['carddata']);
+			if (!$vCard instanceof VCard) {
+				return false;
+			}
+
+			$this->applyEditableContactDetails(
+				$vCard,
+				trim($prefix),
+				trim($firstName),
+				trim($lastName),
+				$address,
+				$telephones,
+				$emails,
+			);
 
 			$cardDavBackend->updateCard((int)$addressBook['id'], $uri, $vCard->serialize());
 
@@ -407,35 +454,38 @@ class ContactGroupProvisioningService {
 		return $value;
 	}
 
-	private function extractStructuredName(VCard $vCard): string {
+	/**
+	 * @return array{lastName: string, firstName: string, additional: string, prefix: string, suffix: string}
+	 */
+	private function extractStructuredNameParts(VCard $vCard): array {
 		if (!isset($vCard->N)) {
-			return '';
+			return [
+				'lastName' => '',
+				'firstName' => '',
+				'additional' => '',
+				'prefix' => '',
+				'suffix' => '',
+			];
 		}
 
 		$value = $vCard->N->getValue();
 		if (!is_array($value)) {
-			return trim((string)$value);
+			return [
+				'lastName' => trim((string)$value),
+				'firstName' => '',
+				'additional' => '',
+				'prefix' => '',
+				'suffix' => '',
+			];
 		}
 
-		$parts = [];
-		foreach ($value as $part) {
-			if (is_array($part)) {
-				foreach ($part as $nestedPart) {
-					$nestedPart = trim((string)$nestedPart);
-					if ($nestedPart !== '') {
-						$parts[] = $nestedPart;
-					}
-				}
-				continue;
-			}
-
-			$part = trim((string)$part);
-			if ($part !== '') {
-				$parts[] = $part;
-			}
-		}
-
-		return implode(' ', $parts);
+		return [
+			'lastName' => trim((string)($value[0] ?? '')),
+			'firstName' => trim((string)($value[1] ?? '')),
+			'additional' => trim((string)($value[2] ?? '')),
+			'prefix' => trim((string)($value[3] ?? '')),
+			'suffix' => trim((string)($value[4] ?? '')),
+		];
 	}
 
 	private function buildContactSearchText(string $formattedName, string $structuredName, string $company, string $email, string $telephone): string {
@@ -460,16 +510,110 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}> $contacts
-	 * @return list<array{
-	 *   type: 'group'|'person',
-	 *   label: string,
-	 *   company: string,
-	 *   leader: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null,
-	 *   members: list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}>,
-	 *   person: array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
-	 * }>
+	 * @return list<string>
 	 */
+	private function extractEmailValues(VCard $vCard): array {
+		$emails = [];
+
+		foreach ($vCard->select('EMAIL') as $emailProperty) {
+			$email = trim((string)$emailProperty->getValue());
+			if ($email !== '') {
+				$emails[] = $email;
+			}
+		}
+
+		return array_values(array_unique($emails));
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function extractTelephoneValues(VCard $vCard): array {
+		$telephones = [];
+
+		foreach ($vCard->select('TEL') as $telephoneProperty) {
+			$telephone = trim((string)$telephoneProperty->getValue());
+			if ($telephone !== '') {
+				$telephones[] = $telephone;
+			}
+		}
+
+		return array_values(array_unique($telephones));
+	}
+
+	private function composeStructuredName(array $nameParts): string {
+		return trim(implode(' ', array_filter([
+			$nameParts['prefix'] ?? '',
+			$nameParts['firstName'] ?? '',
+			$nameParts['additional'] ?? '',
+			$nameParts['lastName'] ?? '',
+			$nameParts['suffix'] ?? '',
+		], static fn(string $value): bool => trim($value) !== '')));
+	}
+
+	/**
+	 * @param array{lastName: string, firstName: string, additional: string, prefix: string, suffix: string} $nameParts
+	 * @return array{prefix: string, firstName: string, lastName: string}
+	 */
+	private function buildEditableDisplayNameParts(string $formattedName, array $nameParts, string $company): array {
+		$prefix = $nameParts['prefix'];
+		$firstName = $nameParts['firstName'];
+		$lastName = $nameParts['lastName'];
+
+		if ($prefix === '' && $firstName === '' && $lastName === '') {
+			$fallback = trim($formattedName);
+			if ($fallback === '') {
+				$fallback = trim($company);
+			}
+			if ($fallback !== '') {
+				$lastName = $fallback;
+			}
+		}
+
+		return [
+			'prefix' => $prefix,
+			'firstName' => $firstName,
+			'lastName' => $lastName,
+		];
+	}
+
+	private function extractAddress(VCard $vCard): string {
+		foreach ($vCard->select('ADR') as $addressProperty) {
+			$value = $addressProperty->getValue();
+			if (!is_array($value)) {
+				$address = trim((string)$value);
+				if ($address !== '') {
+					return $address;
+				}
+				continue;
+			}
+
+			$streetLines = array_values(array_filter([
+				trim((string)($value[0] ?? '')),
+				trim((string)($value[1] ?? '')),
+				trim((string)($value[2] ?? '')),
+			], static fn(string $part): bool => $part !== ''));
+			$locality = trim((string)($value[3] ?? ''));
+			$region = trim((string)($value[4] ?? ''));
+			$postalCode = trim((string)($value[5] ?? ''));
+			$country = trim((string)($value[6] ?? ''));
+			$cityLine = trim(implode(' ', array_filter([$postalCode, $locality])));
+
+			$lines = array_values(array_filter([
+				...$streetLines,
+				$cityLine,
+				$region,
+				$country,
+			], static fn(string $part): bool => $part !== ''));
+
+			if ($lines !== []) {
+				return implode("\n", $lines);
+			}
+		}
+
+		return '';
+	}
+
 	private function groupContactsByCompany(array $contacts): array {
 		$grouped = [];
 		$entries = [];
@@ -545,10 +689,6 @@ class ContactGroupProvisioningService {
 		return $entries;
 	}
 
-	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}> $candidates
-	 * @return array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
-	 */
 	private function pickPreferredLeaderCandidate(array $candidates): ?array {
 		if ($candidates === []) {
 			return null;
@@ -568,9 +708,6 @@ class ContactGroupProvisioningService {
 		return str_starts_with($uri, self::GROUP_LEADER_URI_PREFIX);
 	}
 
-	/**
-	 * @param array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string} $candidate
-	 */
 	private function leaderCandidateScore(array $candidate): int {
 		$score = 0;
 
@@ -589,10 +726,6 @@ class ContactGroupProvisioningService {
 		return $score;
 	}
 
-	/**
-	 * @param list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}> $contacts
-	 * @return list<array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}>
-	 */
 	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): array {
 		$entries = $this->groupContactsByCompany($contacts);
 		$allCards = $cardDavBackend->getCards($addressBookId);
@@ -634,16 +767,18 @@ class ContactGroupProvisioningService {
 				'email' => '',
 				'uri' => $leaderUri,
 				'company' => $company,
+				'prefix' => '',
+				'firstName' => '',
+				'lastName' => $company,
+				'address' => '',
+				'telephones' => '',
+				'emails' => '',
 			];
 		}
 
 		return $contacts;
 	}
 
-	/**
-	 * @param array<int, array<string, mixed>> $cards
-	 * @return array{name: string, rawName: string, searchText: string, note: string, uid: string, email: string, uri: string, company: string}|null
-	 */
 	private function findExistingLeaderContact(array $cards, string $company): ?array {
 		$candidates = [];
 
@@ -665,31 +800,32 @@ class ContactGroupProvisioningService {
 				continue;
 			}
 
-			$email = '';
-			$telephone = '';
-			foreach ($vCard->select('EMAIL') as $emailProperty) {
-				$email = trim((string)$emailProperty->getValue());
-				if ($email !== '') {
-					break;
-				}
-			}
-
-			foreach ($vCard->select('TEL') as $telephoneProperty) {
-				$telephone = trim((string)$telephoneProperty->getValue());
-				if ($telephone !== '') {
-					break;
-				}
-			}
+			$nameParts = $this->extractStructuredNameParts($vCard);
+			$emails = $this->extractEmailValues($vCard);
+			$telephones = $this->extractTelephoneValues($vCard);
+			$displayParts = $this->buildEditableDisplayNameParts($rawName, $nameParts, $normalizedCompany);
 
 			$candidates[] = [
 				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
 				'rawName' => $rawName,
-				'searchText' => $this->buildContactSearchText($rawName, $this->extractStructuredName($vCard), $normalizedCompany, $email, $telephone),
+				'searchText' => $this->buildContactSearchText(
+					$rawName,
+					$this->composeStructuredName($nameParts),
+					$normalizedCompany,
+					implode(' ', $emails),
+					implode(' ', $telephones),
+				),
 				'note' => $this->extractNote($vCard),
 				'uid' => isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '',
-				'email' => $email,
+				'email' => $emails[0] ?? '',
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $normalizedCompany,
+				'prefix' => $displayParts['prefix'],
+				'firstName' => $displayParts['firstName'],
+				'lastName' => $displayParts['lastName'],
+				'address' => $this->extractAddress($vCard),
+				'telephones' => implode("\n", $telephones),
+				'emails' => implode("\n", $emails),
 			];
 		}
 
@@ -719,6 +855,109 @@ class ContactGroupProvisioningService {
 		$vCard->ORG = $company;
 		$vCard->NOTE = 'Adresskarte automatisch durch Team4All angelegt.';
 		$vCard->add('CATEGORIES', self::CONTACT_GROUP_NAME);
+	}
+
+	private function applyEditableContactDetails(
+		VCard $vCard,
+		string $prefix,
+		string $firstName,
+		string $lastName,
+		string $address,
+		string $telephones,
+		string $emails,
+	): void {
+		$composedName = trim(implode(' ', array_filter([$prefix, $firstName, $lastName], static fn(string $value): bool => $value !== '')));
+		$existingCompany = $this->extractCompany($vCard);
+		$existingFormattedName = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
+		$formattedName = $composedName !== '' ? $composedName : ($existingCompany !== '' ? $existingCompany : $existingFormattedName);
+
+		while (isset($vCard->FN)) {
+			unset($vCard->FN);
+		}
+		if ($formattedName !== '') {
+			$vCard->add('FN', $formattedName);
+		}
+
+		while (isset($vCard->N)) {
+			unset($vCard->N);
+		}
+		$vCard->add('N', [$lastName, $firstName, '', $prefix, '']);
+
+		foreach ($vCard->select('ADR') as $addressProperty) {
+			unset($addressProperty);
+		}
+		$this->removeProperties($vCard, 'ADR');
+		$normalizedAddress = trim(str_replace("\r\n", "\n", $address));
+		if ($normalizedAddress !== '') {
+			$vCard->add('ADR', $this->buildAddressValue($normalizedAddress));
+		}
+
+		$this->removeProperties($vCard, 'TEL');
+		foreach ($this->splitMultilineValues($telephones) as $telephone) {
+			$vCard->add('TEL', $telephone);
+		}
+
+		$this->removeProperties($vCard, 'EMAIL');
+		foreach ($this->splitMultilineValues($emails) as $email) {
+			$vCard->add('EMAIL', $email, ['TYPE' => 'INTERNET']);
+		}
+	}
+
+	private function removeProperties(VCard $vCard, string $propertyName): void {
+		while (isset($vCard->$propertyName)) {
+			unset($vCard->$propertyName);
+		}
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function splitMultilineValues(string $value): array {
+		$lines = preg_split('/\r\n|\r|\n/', $value) ?: [];
+
+		return array_values(array_filter(array_map(
+			static fn(string $line): string => trim($line),
+			$lines
+		), static fn(string $line): bool => $line !== ''));
+	}
+
+	/**
+	 * @return array{0: string, 1: string, 2: string, 3: string, 4: string, 5: string, 6: string}
+	 */
+	private function buildAddressValue(string $address): array {
+		$lines = $this->splitMultilineValues($address);
+		$street = $lines[0] ?? '';
+		$locality = '';
+		$region = '';
+		$postalCode = '';
+		$country = '';
+
+		if (isset($lines[1]) && preg_match('/^(\S+)\s+(.+)$/u', $lines[1], $matches) === 1) {
+			$postalCode = trim($matches[1]);
+			$locality = trim($matches[2]);
+		} elseif (isset($lines[1])) {
+			$locality = $lines[1];
+		}
+
+		if (isset($lines[2])) {
+			$region = $lines[2];
+		}
+
+		if (isset($lines[3])) {
+			$country = $lines[3];
+		}
+
+		if (count($lines) > 4) {
+			$street = implode("\n", array_slice($lines, 0, count($lines) - 3));
+			if (preg_match('/^(\S+)\s+(.+)$/u', $lines[count($lines) - 3], $matches) === 1) {
+				$postalCode = trim($matches[1]);
+				$locality = trim($matches[2]);
+			}
+			$region = $lines[count($lines) - 2];
+			$country = $lines[count($lines) - 1];
+		}
+
+		return ['', '', $street, $locality, $region, $postalCode, $country];
 	}
 
 	private function isLeaderContact(string $rawName, string $effectiveName, string $company): bool {

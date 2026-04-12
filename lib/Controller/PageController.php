@@ -82,6 +82,37 @@ class PageController extends Controller {
 		], $saved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
 	}
 
+	public function updateContact(
+		string $uri,
+		string $prefix = '',
+		string $firstName = '',
+		string $lastName = '',
+		string $address = '',
+		string $telephones = '',
+		string $emails = '',
+	): JSONResponse {
+		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+			return new JSONResponse([
+				'saved' => false,
+				'message' => 'Access denied.',
+			], Http::STATUS_FORBIDDEN);
+		}
+
+		$saved = $this->contactGroupProvisioningService->updateContactDetailsByUri(
+			$uri,
+			$prefix,
+			$firstName,
+			$lastName,
+			$address,
+			$telephones,
+			$emails,
+		);
+
+		return new JSONResponse([
+			'saved' => $saved,
+		], $saved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
+	}
+
 	/**
 	 * @return list<array{id: string, name: string}>
 	 */
