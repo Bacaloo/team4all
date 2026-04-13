@@ -95,6 +95,7 @@
 
     const readTriggerDetailData = (trigger, prefix = 'data-team4all-detail') => ({
         title: trigger.getAttribute(`${prefix}-title`) || '',
+        company: trigger.getAttribute(`${prefix}-company`) || '',
         uri: trigger.getAttribute(`${prefix}-uri`) || '',
         prefix: decodeDataValue(trigger.getAttribute(`${prefix}-prefix`) || ''),
         firstName: decodeDataValue(trigger.getAttribute(`${prefix}-first-name`) || ''),
@@ -318,12 +319,27 @@
 
     const splitMultilineValue = (value) => value.split(/\r\n|\r|\n/).map((entry) => entry.trim()).filter((entry) => entry !== '');
 
+    const buildDetailTitle = (title, company) => {
+        const trimmedTitle = (title || '').trim();
+        const trimmedCompany = (company || '').trim();
+
+        if (trimmedTitle === '') {
+            return trimmedCompany;
+        }
+
+        if (trimmedCompany === '') {
+            return trimmedTitle;
+        }
+
+        return `${trimmedTitle} (${trimmedCompany})`;
+    };
+
     const populateDetailEditor = (editor, title, data) => {
         if (!editor) {
             return;
         }
 
-        setContent(editor.title, title, 'Kontaktdaten');
+        setContent(editor.title, buildDetailTitle(title, data.company), 'Kontaktdaten');
         editor.fields.prefix.value = data.prefix || '';
         editor.fields.firstName.value = data.firstName || '';
         editor.fields.lastName.value = data.lastName || '';

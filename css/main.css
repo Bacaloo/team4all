@@ -367,6 +367,7 @@ button.team4all-contact-trigger {
 .team4all-details__title {
     margin: 0;
     font-size: 1rem;
+    font-weight: 400;
 }
 
 .team4all-details__grid {
