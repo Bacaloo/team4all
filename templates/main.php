@@ -4,7 +4,30 @@ declare(strict_types=1);
 
 script('team4all', 'main');
 style('team4all', 'main');
+
+$team4AllFaviconUrl = image_path('team4all', 'app.svg');
 ?>
+<script nonce="<?php p(\OCP\Util::getCSPNonce()); ?>">
+(function () {
+    const iconUrl = <?php print_unescaped(json_encode($team4AllFaviconUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>;
+    const rels = ['icon', 'shortcut icon', 'apple-touch-icon'];
+
+    rels.forEach((rel) => {
+        let link = document.head.querySelector(`link[rel="${rel}"]`);
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = rel;
+            document.head.appendChild(link);
+        }
+
+        link.href = iconUrl;
+
+        if (rel !== 'apple-touch-icon') {
+            link.type = 'image/svg+xml';
+        }
+    });
+})();
+</script>
 <div
     id="team4all-root"
     class="team4all-root"
