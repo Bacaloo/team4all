@@ -223,6 +223,10 @@
 }
 
 button.team4all-contact-trigger {
+    appearance: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
     font: inherit;
     color: inherit;
 }
@@ -251,6 +255,10 @@ button.team4all-contact-trigger {
 .team4all-contact-item strong,
 .team4all-contact-group__header strong {
     font-weight: 400;
+}
+
+.team4all-contact-item strong {
+    display: inline;
 }
 
 .team4all-contact-trigger:focus-visible {
