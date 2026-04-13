@@ -35,12 +35,14 @@ class Application extends App implements IBootstrap {
 			return;
 		}
 
-		$navigationManager->add(static function () use ($urlGenerator): array {
+		$iconVersion = (string)(@filemtime(__DIR__ . '/../../img/app.svg') ?: time());
+
+		$navigationManager->add(static function () use ($urlGenerator, $iconVersion): array {
 			return [
 				'id' => self::APP_ID,
 				'order' => 80,
 				'href' => $urlGenerator->linkToRoute('team4all.page.index'),
-				'icon' => $urlGenerator->getAbsoluteURL('/apps/' . self::APP_ID . '/img/app.svg'),
+				'icon' => $urlGenerator->getAbsoluteURL('/apps/' . self::APP_ID . '/img/app.svg?v=' . rawurlencode($iconVersion)),
 				'name' => 'Team4All',
 			];
 		});
