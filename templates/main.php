@@ -5,7 +5,7 @@ declare(strict_types=1);
 script('team4all', 'main');
 style('team4all', 'main');
 
-$team4AllFaviconUrl = image_path('team4all', 'app.svg');
+$team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 ?>
 <div
     id="team4all-root"

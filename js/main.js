@@ -7,14 +7,12 @@
     root.dataset.initialized = 'true';
 
     const iconUrl = root.dataset.team4allIconUrl || '';
-    const faviconSvg = `<svg viewBox="0 0 32 32" height="32" width="32" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"><rect x="2" y="2" width="28" height="28" rx="7" fill="#7f4f70"/><path d="M18 10.8c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/><path d="M9.5 22.3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/><path d="M18 22.3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/><path d="M26.5 22.3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/><path d="M14.9 12.8h2.2v4.1h7.1c.6 0 1.1.5 1.1 1.1 0 .6-.5 1.1-1.1 1.1h-1.1v2.1h-2.2v-2.1h-3.8v2.1h-2.2v-2.1h-3.8v2.1H8.9v-2.1H7.8c-.6 0-1.1-.5-1.1-1.1 0-.6.5-1.1 1.1-1.1h7.1v-4.1Z" style="fill:#fff;fill-rule:nonzero"/></svg>`;
-    const faviconUrl = `data:image/svg+xml,${encodeURIComponent(faviconSvg)}`;
 
     if (iconUrl !== '' && document.head) {
         [
-            { rel: 'icon', type: 'image/svg+xml', href: faviconUrl },
-            { rel: 'shortcut icon', type: 'image/svg+xml', href: faviconUrl },
-            { rel: 'apple-touch-icon', type: '', href: faviconUrl },
+            { rel: 'icon', type: 'image/svg+xml', href: iconUrl },
+            { rel: 'shortcut icon', type: 'image/svg+xml', href: iconUrl },
+            { rel: 'apple-touch-icon', type: '', href: iconUrl },
         ].forEach(({ rel, type }) => {
             let link = document.head.querySelector(`link[rel="${rel}"]`);
             if (!link) {
@@ -23,7 +21,7 @@
                 document.head.appendChild(link);
             }
 
-            link.href = faviconUrl;
+            link.href = iconUrl;
 
             if (type !== '') {
                 link.type = type;
