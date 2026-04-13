@@ -156,6 +156,7 @@ class ContactGroupProvisioningService {
 			$note = $this->extractNote($vCard);
 			$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
 			$companies = $this->extractCompanies($vCard);
+			$displayCompany = $this->extractDisplayCompany($vCard);
 			$company = $companies[0] ?? '';
 			$effectiveName = $name !== '' ? $name : $company;
 			$emails = $this->extractEmailValues($vCard);
@@ -181,6 +182,7 @@ class ContactGroupProvisioningService {
 				'email' => $emails[0] ?? '',
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $company,
+				'companyDisplay' => $displayCompany,
 				'companies' => $companies,
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
@@ -448,6 +450,19 @@ class ContactGroupProvisioningService {
 		$companies = $this->extractCompanies($vCard);
 
 		return $companies[0] ?? '';
+	}
+
+	private function extractDisplayCompany(VCard $vCard): string {
+		if (!isset($vCard->ORG)) {
+			return '';
+		}
+
+		$value = $vCard->ORG->getValue();
+		if (is_array($value)) {
+			$value = $value[0] ?? '';
+		}
+
+		return $this->sanitizeVCardDisplayValue((string)$value);
 	}
 
 	/**
@@ -855,6 +870,7 @@ class ContactGroupProvisioningService {
 				'email' => '',
 				'uri' => $leaderUri,
 				'company' => $company,
+				'companyDisplay' => $company,
 				'companies' => [$company],
 				'prefix' => '',
 				'firstName' => '',
@@ -887,6 +903,7 @@ class ContactGroupProvisioningService {
 
 			$rawName = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
 			$companies = $this->extractCompanies($vCard);
+			$displayCompany = $this->extractDisplayCompany($vCard);
 			if (!in_array($company, $companies, true)) {
 				continue;
 			}
@@ -922,6 +939,7 @@ class ContactGroupProvisioningService {
 				'email' => $emails[0] ?? '',
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $normalizedCompany,
+				'companyDisplay' => $displayCompany,
 				'companies' => $companies,
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
