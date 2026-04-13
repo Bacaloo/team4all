@@ -14,11 +14,20 @@
   <bugs>https://github.com/bacaloo/team4all/issues</bugs>
   <repository>https://github.com/bacaloo/team4all</repository>
   <dependencies>
-    <nextcloud min-version="32"/>
+    <nextcloud min-version="32" max-version="32"/>
   </dependencies>
   <repair-steps>
     <install>
       <step>OCA\Team4All\Repair\EnsureTeam4AllStructure</step>
     </install>
   </repair-steps>
+  <navigations>
+    <navigation>
+      <id>team4all</id>
+      <name>Team4All</name>
+      <route>team4all.page.index</route>
+      <order>10</order>
+      <type>link</type>
+    </navigation>
+  </navigations>
 </info>
