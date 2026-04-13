@@ -389,7 +389,7 @@ button.team4all-contact-trigger {
 
 .team4all-details__inline-row {
     display: grid;
-    grid-template-columns: 8ch minmax(0, 1fr);
+    grid-template-columns: 10ch minmax(0, 1fr);
     gap: 10px;
     align-items: stretch;
     width: 100%;
