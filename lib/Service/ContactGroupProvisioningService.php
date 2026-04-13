@@ -517,22 +517,37 @@ class ContactGroupProvisioningService {
 
 		$value = $vCard->N->getValue();
 		if (!is_array($value)) {
+			$parts = array_pad(explode(';', (string)$value, 5), 5, '');
+
 			return [
-				'lastName' => trim((string)$value),
-				'firstName' => '',
-				'additional' => '',
-				'prefix' => '',
-				'suffix' => '',
+				'lastName' => $this->sanitizeVCardDisplayValue((string)($parts[0] ?? '')),
+				'firstName' => $this->sanitizeVCardDisplayValue((string)($parts[1] ?? '')),
+				'additional' => $this->sanitizeVCardDisplayValue((string)($parts[2] ?? '')),
+				'prefix' => $this->sanitizeVCardDisplayValue((string)($parts[3] ?? '')),
+				'suffix' => $this->sanitizeVCardDisplayValue((string)($parts[4] ?? '')),
 			];
 		}
 
 		return [
-			'lastName' => trim((string)($value[0] ?? '')),
-			'firstName' => trim((string)($value[1] ?? '')),
-			'additional' => trim((string)($value[2] ?? '')),
-			'prefix' => trim((string)($value[3] ?? '')),
-			'suffix' => trim((string)($value[4] ?? '')),
+			'lastName' => $this->sanitizeVCardDisplayValue((string)($value[0] ?? '')),
+			'firstName' => $this->sanitizeVCardDisplayValue((string)($value[1] ?? '')),
+			'additional' => $this->sanitizeVCardDisplayValue((string)($value[2] ?? '')),
+			'prefix' => $this->sanitizeVCardDisplayValue((string)($value[3] ?? '')),
+			'suffix' => $this->sanitizeVCardDisplayValue((string)($value[4] ?? '')),
 		];
+	}
+
+	private function sanitizeVCardDisplayValue(string $value): string {
+		$value = str_replace(
+			['\\,', '\\;', '\\\\'],
+			[',', ' ', '\\'],
+			$value
+		);
+		$value = str_replace(';', ' ', $value);
+		$value = trim($value, " \t\n\r\0\x0B;");
+		$value = preg_replace('/\s+/', ' ', $value) ?? $value;
+
+		return $value;
 	}
 
 	private function buildContactSearchText(string $formattedName, string $structuredName, string $company, string $email, string $telephone): string {
