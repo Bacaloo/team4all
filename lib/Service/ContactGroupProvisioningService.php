@@ -185,6 +185,7 @@ class ContactGroupProvisioningService {
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
 				'lastName' => $displayParts['lastName'],
+				'addressType' => $this->extractAddressType($vCard),
 				'streetAddress' => $this->extractStreetAddress($vCard),
 				'postalCode' => $this->extractPostalCode($vCard),
 				'locality' => $this->extractLocality($vCard),
@@ -256,6 +257,7 @@ class ContactGroupProvisioningService {
 		string $prefix,
 		string $firstName,
 		string $lastName,
+		string $addressType,
 		string $streetAddress,
 		string $postalCode,
 		string $locality,
@@ -298,6 +300,7 @@ class ContactGroupProvisioningService {
 				trim($prefix),
 				trim($firstName),
 				trim($lastName),
+				trim($addressType),
 				trim($streetAddress),
 				trim($postalCode),
 				trim($locality),
@@ -673,18 +676,24 @@ class ContactGroupProvisioningService {
 	}
 
 	private function extractStreetAddress(VCard $vCard): string {
-		$value = $this->getWorkAddressValue($vCard);
+		$value = $this->getPreferredAddressValue($vCard);
 		return trim((string)($value[2] ?? ''));
 	}
 
 	private function extractPostalCode(VCard $vCard): string {
-		$value = $this->getWorkAddressValue($vCard);
+		$value = $this->getPreferredAddressValue($vCard);
 		return trim((string)($value[5] ?? ''));
 	}
 
 	private function extractLocality(VCard $vCard): string {
-		$value = $this->getWorkAddressValue($vCard);
+		$value = $this->getPreferredAddressValue($vCard);
 		return trim((string)($value[3] ?? ''));
+	}
+
+	private function extractAddressType(VCard $vCard): string {
+		$address = $this->getPreferredAddress($vCard);
+
+		return $address['type'];
 	}
 
 	private function groupContactsByCompany(array $contacts): array {
@@ -850,6 +859,7 @@ class ContactGroupProvisioningService {
 				'prefix' => '',
 				'firstName' => '',
 				'lastName' => $company,
+				'addressType' => 'work',
 				'streetAddress' => '',
 				'postalCode' => '',
 				'locality' => '',
@@ -916,6 +926,7 @@ class ContactGroupProvisioningService {
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
 				'lastName' => $displayParts['lastName'],
+				'addressType' => $this->extractAddressType($vCard),
 				'streetAddress' => $this->extractStreetAddress($vCard),
 				'postalCode' => $this->extractPostalCode($vCard),
 				'locality' => $this->extractLocality($vCard),
@@ -958,6 +969,7 @@ class ContactGroupProvisioningService {
 		string $prefix,
 		string $firstName,
 		string $lastName,
+		string $addressType,
 		string $streetAddress,
 		string $postalCode,
 		string $locality,
@@ -981,9 +993,10 @@ class ContactGroupProvisioningService {
 		}
 		$vCard->add('N', [$lastName, $firstName, '', $prefix, '']);
 
-		$this->removeWorkAddressProperties($vCard);
+		$addressType = $this->normalizeAddressType($addressType);
+		$this->removeAddressPropertiesByType($vCard, $addressType);
 		if ($streetAddress !== '' || $postalCode !== '' || $locality !== '') {
-			$vCard->add('ADR', ['', '', $streetAddress, $locality, '', $postalCode, ''], ['TYPE' => 'WORK']);
+			$vCard->add('ADR', ['', '', $streetAddress, $locality, '', $postalCode, ''], ['TYPE' => strtoupper($addressType)]);
 		}
 
 		$this->removeProperties($vCard, 'TEL');
@@ -1003,41 +1016,139 @@ class ContactGroupProvisioningService {
 		}
 	}
 
-	private function getWorkAddressValue(VCard $vCard): array {
+	/**
+	 * @return array{type:string,value:array{0:string,1:string,2:string,3:string,4:string,5:string,6:string}}
+	 */
+	private function getPreferredAddress(VCard $vCard): array {
+		$homeAddress = null;
+		$otherAddress = null;
+
 		foreach ($vCard->select('ADR') as $addressProperty) {
-			if (!$this->isWorkAddressProperty($addressProperty)) {
+			$type = $this->getAddressType($addressProperty);
+			$value = $this->normalizeAddressValue($addressProperty->getValue());
+
+			if ($type === 'work') {
+				return [
+					'type' => 'work',
+					'value' => $value,
+				];
+			}
+
+			if ($homeAddress === null && $type === 'home') {
+				$homeAddress = [
+					'type' => 'home',
+					'value' => $value,
+				];
 				continue;
 			}
 
-			$value = $addressProperty->getValue();
-			if (is_array($value)) {
-				return $value;
+			if ($otherAddress === null && $type === 'other') {
+				$otherAddress = [
+					'type' => 'other',
+					'value' => $value,
+				];
 			}
 		}
 
-		return ['', '', '', '', '', '', ''];
+		return $homeAddress
+			?? $otherAddress
+			?? [
+				'type' => 'work',
+				'value' => ['', '', '', '', '', '', ''],
+			];
 	}
 
-	private function removeWorkAddressProperties(VCard $vCard): void {
+	/**
+	 * @return array{0:string,1:string,2:string,3:string,4:string,5:string,6:string}
+	 */
+	private function getPreferredAddressValue(VCard $vCard): array {
+		return $this->getPreferredAddress($vCard)['value'];
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return array{0:string,1:string,2:string,3:string,4:string,5:string,6:string}
+	 */
+	private function normalizeAddressValue(mixed $value): array {
+		if (is_array($value)) {
+			$parts = $value;
+		} else {
+			$parts = preg_split('/(?<!\\\\);/', (string)$value) ?: [];
+		}
+
+		$parts = array_pad($parts, 7, '');
+
+		return [
+			$this->sanitizeVCardDisplayValue((string)($parts[0] ?? '')),
+			$this->sanitizeVCardDisplayValue((string)($parts[1] ?? '')),
+			$this->sanitizeVCardDisplayValue((string)($parts[2] ?? '')),
+			$this->sanitizeVCardDisplayValue((string)($parts[3] ?? '')),
+			$this->sanitizeVCardDisplayValue((string)($parts[4] ?? '')),
+			$this->sanitizeVCardDisplayValue((string)($parts[5] ?? '')),
+			$this->sanitizeVCardDisplayValue((string)($parts[6] ?? '')),
+		];
+	}
+
+	private function removeAddressPropertiesByType(VCard $vCard, string $addressType): void {
 		foreach ($vCard->select('ADR') as $addressProperty) {
-			if ($this->isWorkAddressProperty($addressProperty)) {
+			if ($this->getAddressType($addressProperty) === $addressType) {
 				unset($addressProperty);
 			}
 		}
 	}
 
 	private function isWorkAddressProperty($addressProperty): bool {
+		return $this->getAddressType($addressProperty) === 'work';
+	}
+
+	private function isHomeAddressProperty($addressProperty): bool {
+		return $this->getAddressType($addressProperty) === 'home';
+	}
+
+	private function isOtherAddressProperty($addressProperty): bool {
+		return $this->getAddressType($addressProperty) === 'other';
+	}
+
+	private function getAddressType($addressProperty): string {
+		$typeParts = $this->getAddressTypeParts($addressProperty);
+
+		if (in_array('work', $typeParts, true)) {
+			return 'work';
+		}
+
+		if (in_array('home', $typeParts, true)) {
+			return 'home';
+		}
+
+		if (in_array('other', $typeParts, true)) {
+			return 'other';
+		}
+
+		return 'work';
+	}
+
+	private function normalizeAddressType(string $addressType): string {
+		$addressType = mb_strtolower(trim($addressType));
+
+		return match ($addressType) {
+			'home', 'other' => $addressType,
+			default => 'work',
+		};
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function getAddressTypeParts($addressProperty): array {
 		if (!isset($addressProperty['TYPE'])) {
-			return false;
+			return [];
 		}
 
 		$typeValue = (string)$addressProperty['TYPE']->getValue();
-		$typeParts = array_map(
+		return array_map(
 			static fn(string $part): string => mb_strtolower(trim($part)),
 			explode(',', $typeValue)
 		);
-
-		return in_array('work', $typeParts, true);
 	}
 
 	/**
