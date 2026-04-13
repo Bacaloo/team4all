@@ -155,7 +155,8 @@ class ContactGroupProvisioningService {
 			$nameParts = $this->extractStructuredNameParts($vCard);
 			$note = $this->extractNote($vCard);
 			$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
-			$company = $this->extractCompany($vCard);
+			$companies = $this->extractCompanies($vCard);
+			$company = $companies[0] ?? '';
 			$effectiveName = $name !== '' ? $name : $company;
 			$emails = $this->extractEmailValues($vCard);
 			$telephoneEntries = $this->extractTelephoneEntries($vCard);
@@ -171,7 +172,7 @@ class ContactGroupProvisioningService {
 				'searchText' => $this->buildContactSearchText(
 					$name,
 					$this->composeStructuredName($nameParts),
-					$company,
+					implode(' ', $companies),
 					implode(' ', $emails),
 					implode(' ', $telephones),
 				),
@@ -180,6 +181,7 @@ class ContactGroupProvisioningService {
 				'email' => $emails[0] ?? '',
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $company,
+				'companies' => $companies,
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
 				'lastName' => $displayParts['lastName'],
@@ -440,16 +442,48 @@ class ContactGroupProvisioningService {
 	}
 
 	private function extractCompany(VCard $vCard): string {
+		$companies = $this->extractCompanies($vCard);
+
+		return $companies[0] ?? '';
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function extractCompanies(VCard $vCard): array {
 		if (!isset($vCard->ORG)) {
-			return '';
+			return [];
 		}
 
 		$value = $vCard->ORG->getValue();
-		if (is_array($value)) {
-			$value = $value[0] ?? '';
+		$rawCompanies = is_array($value) ? $value : [$value];
+		$companies = [];
+
+		foreach ($rawCompanies as $rawCompany) {
+			foreach ($this->splitCompanyValue((string)$rawCompany) as $companyPart) {
+				$company = $this->canonicalizeCompanyName($companyPart);
+				if ($company !== '') {
+					$companies[] = $company;
+				}
+			}
 		}
 
-		return $this->canonicalizeCompanyName((string)$value);
+		return array_values(array_unique($companies));
+	}
+
+	/**
+	 * Akzeptiert aus Kompatibilitätsgründen aktuell "," und "|".
+	 * Zukünftig ist "|" das führende Trennzeichen für mehrere Firmen.
+	 *
+	 * @return list<string>
+	 */
+	private function splitCompanyValue(string $value): array {
+		$parts = preg_split('/[,\|]/u', $value) ?: [];
+
+		return array_values(array_filter(array_map(
+			static fn(string $part): string => trim($part),
+			$parts
+		), static fn(string $part): bool => $part !== ''));
 	}
 
 	private function canonicalizeCompanyName(string $value): string {
@@ -641,8 +675,12 @@ class ContactGroupProvisioningService {
 		$entries = [];
 
 		foreach ($contacts as $contact) {
-			$company = trim($contact['company']);
-			if ($company === '') {
+			$companies = array_values(array_filter(
+				$contact['companies'] ?? [$contact['company']],
+				static fn(string $company): bool => trim($company) !== ''
+			));
+
+			if ($companies === []) {
 				$entries[] = [
 					'type' => 'person',
 					'label' => $contact['name'],
@@ -654,21 +692,23 @@ class ContactGroupProvisioningService {
 				continue;
 			}
 
-			if (!isset($grouped[$company])) {
-				$grouped[$company] = [
-					'company' => $company,
-					'leader' => null,
-					'leaderCandidates' => [],
-					'members' => [],
-				];
-			}
+			foreach ($companies as $company) {
+				if (!isset($grouped[$company])) {
+					$grouped[$company] = [
+						'company' => $company,
+						'leader' => null,
+						'leaderCandidates' => [],
+						'members' => [],
+					];
+				}
 
-			if ($this->isLeaderContact($contact['rawName'], $contact['name'], $company)) {
-				$grouped[$company]['leaderCandidates'][] = $contact;
-				continue;
-			}
+				if ($this->isLeaderContact($contact['rawName'], $contact['name'], $company)) {
+					$grouped[$company]['leaderCandidates'][] = $contact;
+					continue;
+				}
 
-			$grouped[$company]['members'][] = $contact;
+				$grouped[$company]['members'][] = $contact;
+			}
 		}
 
 		foreach ($grouped as &$group) {
@@ -789,6 +829,7 @@ class ContactGroupProvisioningService {
 				'email' => '',
 				'uri' => $leaderUri,
 				'company' => $company,
+				'companies' => [$company],
 				'prefix' => '',
 				'firstName' => '',
 				'lastName' => $company,
@@ -818,7 +859,12 @@ class ContactGroupProvisioningService {
 			}
 
 			$rawName = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
-			$normalizedCompany = $this->extractCompany($vCard);
+			$companies = $this->extractCompanies($vCard);
+			if (!in_array($company, $companies, true)) {
+				continue;
+			}
+
+			$normalizedCompany = $company;
 			$effectiveName = $rawName !== '' ? $rawName : $normalizedCompany;
 
 			if (!$this->isLeaderContact($rawName, $effectiveName, $company)) {
@@ -840,7 +886,7 @@ class ContactGroupProvisioningService {
 				'searchText' => $this->buildContactSearchText(
 					$rawName,
 					$this->composeStructuredName($nameParts),
-					$normalizedCompany,
+					implode(' ', $companies),
 					implode(' ', $emails),
 					implode(' ', $telephones),
 				),
@@ -849,6 +895,7 @@ class ContactGroupProvisioningService {
 				'email' => $emails[0] ?? '',
 				'uri' => (string)($card['uri'] ?? ''),
 				'company' => $normalizedCompany,
+				'companies' => $companies,
 				'prefix' => $displayParts['prefix'],
 				'firstName' => $displayParts['firstName'],
 				'lastName' => $displayParts['lastName'],
