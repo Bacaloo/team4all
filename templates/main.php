@@ -90,6 +90,7 @@ $team4AllFaviconUrl = image_path('team4all', 'app.svg');
 									data-team4all-detail-postal-code="<?= p(base64_encode($entry['person']['postalCode'])) ?>"
 									data-team4all-detail-locality="<?= p(base64_encode($entry['person']['locality'])) ?>"
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['person']['telephones'])) ?>"
+									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['person']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['person']['emails'])) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
@@ -124,6 +125,7 @@ $team4AllFaviconUrl = image_path('team4all', 'app.svg');
 									data-team4all-detail-postal-code="<?= p(base64_encode($entry['leader']['postalCode'])) ?>"
 									data-team4all-detail-locality="<?= p(base64_encode($entry['leader']['locality'])) ?>"
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
+									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['leader']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 									data-team4all-leader-detail-title="<?= p($entry['leader']['name']) ?>"
 									data-team4all-leader-detail-uri="<?= p($entry['leader']['uri']) ?>"
