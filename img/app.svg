@@ -1,13 +1,8 @@
-<svg viewBox="0 0 32 32" height="32" width="32" xmlns="http://www.w3.org/2000/svg" xml:space="preserve">
-  <g fill="#ffffff">
-    <circle cx="16" cy="6.5" r="3.2"/>
-    <circle cx="7.5" cy="24.5" r="3.2"/>
-    <circle cx="16" cy="24.5" r="3.2"/>
-    <circle cx="24.5" cy="24.5" r="3.2"/>
-    <rect x="14.8" y="10.2" width="2.4" height="5.0" rx="1.2"/>
-    <rect x="7.5" y="14.0" width="17.0" height="2.4" rx="1.2"/>
-    <rect x="6.3" y="15.2" width="2.4" height="5.8" rx="1.2"/>
-    <rect x="14.8" y="15.2" width="2.4" height="5.8" rx="1.2"/>
-    <rect x="23.3" y="15.2" width="2.4" height="5.8" rx="1.2"/>
-  </g>
+<svg viewBox="0 0 32 32" height="32" width="32" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2">
+  <rect x="2" y="2" width="28" height="28" rx="7" fill="#7f4f70"/>
+  <path d="M18 10.8c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/>
+  <path d="M9.5 22.3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/>
+  <path d="M18 22.3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/>
+  <path d="M26.5 22.3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2Z" style="fill:#fff;fill-rule:nonzero"/>
+  <path d="M14.9 12.8h2.2v4.1h7.1c.6 0 1.1.5 1.1 1.1 0 .6-.5 1.1-1.1 1.1h-1.1v2.1h-2.2v-2.1h-3.8v2.1h-2.2v-2.1h-3.8v2.1H8.9v-2.1H7.8c-.6 0-1.1-.5-1.1-1.1 0-.6.5-1.1 1.1-1.1h7.1v-4.1Z" style="fill:#fff;fill-rule:nonzero"/>
 </svg>
