@@ -222,6 +222,11 @@
     cursor: pointer;
 }
 
+.team4all-contact-trigger--text {
+    display: inline-flex;
+    width: auto;
+}
+
 button.team4all-contact-trigger {
     appearance: none;
     padding: 0;

@@ -525,8 +525,7 @@
         });
     };
 
-    triggers.forEach((trigger) => {
-        trigger.addEventListener('click', () => {
+    const activateTrigger = (trigger) => {
             const noteMode = trigger.getAttribute('data-team4all-note-mode') || 'single';
             showSingleDetails(
                 trigger.getAttribute('data-team4all-detail-title') || '',
@@ -559,6 +558,20 @@
                 trigger.getAttribute('data-team4all-note-uri') || '',
                 decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
             );
+    };
+
+    triggers.forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            activateTrigger(trigger);
+        });
+
+        trigger.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+
+            event.preventDefault();
+            activateTrigger(trigger);
         });
     });
 

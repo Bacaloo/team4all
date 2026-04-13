@@ -45,9 +45,10 @@ style('team4all', 'main');
 					<?php foreach ($team4AllGroups as $entry): ?>
 						<?php if ($entry['type'] === 'person' && $entry['person'] !== null): ?>
 							<li class="team4all-contact-group team4all-contact-group--person">
-								<button
-									type="button"
-									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger"
+								<span
+									role="button"
+									tabindex="0"
+									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger team4all-contact-trigger--text"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['searchText'])) ?>"
 									data-team4all-note-mode="single"
 									data-team4all-note-title="<?= p($entry['person']['name']) ?>"
@@ -67,7 +68,7 @@ style('team4all', 'main');
 									data-team4all-detail-emails="<?= p(base64_encode($entry['person']['emails'])) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
-								</button>
+								</span>
 							</li>
 							<?php continue; ?>
 						<?php endif; ?>
@@ -117,9 +118,10 @@ style('team4all', 'main');
 								</div>
 							<?php endif; ?>
 							<?php if ($entry['leader'] === null && count($entry['members']) === 1): ?>
-								<button
-									type="button"
-									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger"
+								<span
+									role="button"
+									tabindex="0"
+									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger team4all-contact-trigger--text"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['members'][0]['searchText'])) ?>"
 									data-team4all-note-mode="single"
 									data-team4all-note-title="<?= p($entry['members'][0]['name']) ?>"
@@ -140,7 +142,7 @@ style('team4all', 'main');
 									data-team4all-detail-emails="<?= p(base64_encode($entry['members'][0]['emails'])) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
-								</button>
+								</span>
 							<?php else: ?>
 								<?php if ($entry['leader'] === null): ?>
 									<div class="team4all-contact-placeholder">
@@ -153,9 +155,10 @@ style('team4all', 'main');
 								<ul class="team4all-contact-items<?= $entry['leader'] !== null ? ' team4all-contact-items--indented' : '' ?>">
 									<?php foreach ($entry['members'] as $member): ?>
 										<li>
-											<button
-												type="button"
-											class="team4all-contact-item team4all-contact-trigger"
+											<span
+											role="button"
+											tabindex="0"
+											class="team4all-contact-item team4all-contact-trigger team4all-contact-trigger--text"
 											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
 											data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
 											data-team4all-note-title="<?= p($member['name']) ?>"
@@ -193,7 +196,7 @@ style('team4all', 'main');
 											<?php endif; ?>
 										>
 											<strong><?= p($member['name']) ?></strong>
-											</button>
+											</span>
 										</li>
 									<?php endforeach; ?>
 								</ul>
