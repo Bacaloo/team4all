@@ -6,6 +6,31 @@
 
     root.dataset.initialized = 'true';
 
+    const iconUrl = root.dataset.team4allIconUrl || '';
+
+    if (iconUrl !== '' && document.head) {
+        [
+            { rel: 'icon', type: 'image/svg+xml' },
+            { rel: 'shortcut icon', type: 'image/svg+xml' },
+            { rel: 'apple-touch-icon', type: '' },
+        ].forEach(({ rel, type }) => {
+            let link = document.head.querySelector(`link[rel="${rel}"]`);
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = rel;
+                document.head.appendChild(link);
+            }
+
+            link.href = iconUrl;
+
+            if (type !== '') {
+                link.type = type;
+            } else {
+                link.removeAttribute('type');
+            }
+        });
+    }
+
     const search = document.getElementById('team4all-contact-search');
     const groups = Array.from(root.querySelectorAll('.team4all-contact-group'));
     const triggers = Array.from(root.querySelectorAll('.team4all-contact-trigger'));

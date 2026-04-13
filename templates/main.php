@@ -7,12 +7,10 @@ style('team4all', 'main');
 
 $team4AllFaviconUrl = image_path('team4all', 'app.svg');
 ?>
-<link rel="icon" href="<?= p($team4AllFaviconUrl) ?>" type="image/svg+xml">
-<link rel="shortcut icon" href="<?= p($team4AllFaviconUrl) ?>" type="image/svg+xml">
-<link rel="apple-touch-icon" href="<?= p($team4AllFaviconUrl) ?>">
 <div
     id="team4all-root"
     class="team4all-root"
+    data-team4all-icon-url="<?= p($team4AllFaviconUrl) ?>"
     style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:50px minmax(0,1fr);gap:18px;padding:18px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
 >
     <section
