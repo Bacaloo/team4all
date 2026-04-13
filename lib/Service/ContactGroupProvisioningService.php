@@ -481,13 +481,15 @@ class ContactGroupProvisioningService {
 		$parts = preg_split('/[,\|]/u', $value) ?: [];
 
 		return array_values(array_filter(array_map(
-			static fn(string $part): string => trim($part),
+			static fn(string $part): string => trim(str_replace(';', ' ', $part), " \t\n\r\0\x0B;"),
 			$parts
 		), static fn(string $part): bool => $part !== ''));
 	}
 
 	private function canonicalizeCompanyName(string $value): string {
-		$value = trim($value);
+		$value = str_replace(';', ' ', $value);
+		$value = trim($value, " \t\n\r\0\x0B;");
+		$value = preg_replace('/\s+/', ' ', $value) ?? $value;
 		if ($value === '') {
 			return '';
 		}
@@ -1052,10 +1054,11 @@ class ContactGroupProvisioningService {
 	private function normalizeComparableValue(string $value): string {
 		$value = str_replace(
 			['\\,', '\\;', '\\\\'],
-			[',', ';', '\\'],
+			[',', ' ', '\\'],
 			$value
 		);
-		$value = mb_strtolower(trim($value));
+		$value = str_replace(';', ' ', $value);
+		$value = mb_strtolower(trim($value, " \t\n\r\0\x0B;"));
 		$value = preg_replace('/\s+/', ' ', $value) ?? $value;
 
 		return $value;
