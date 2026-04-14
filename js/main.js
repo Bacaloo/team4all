@@ -394,7 +394,7 @@
                 ? 'Andere'
                 : 'Arbeit';
 
-        return `Herkunft der Anschrift (${label})`;
+        return `Anschrift (${label})`;
     };
 
     const fetchContactByUri = async (uri) => {
