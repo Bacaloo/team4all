@@ -895,6 +895,7 @@ class ContactGroupProvisioningService {
 						if (!in_array(self::CONTACT_GROUP_NAME, $categories, true)) {
 							$vCard->add('CATEGORIES', self::CONTACT_GROUP_NAME);
 							$cardDavBackend->updateCard($addressBookId, (string)$card['uri'], $vCard->serialize());
+							$allCards = $cardDavBackend->getCards($addressBookId);
 						}
 
 						$createdLeader = true;
@@ -906,12 +907,32 @@ class ContactGroupProvisioningService {
 				continue;
 			}
 
-			if ($entry['leader'] !== null || count($entry['members']) <= 1) {
+			if ($entry['leader'] !== null) {
 				continue;
 			}
 
 			$leaderUri = $this->buildGroupLeaderContactUri($company);
 			$leaderUid = $this->buildGroupLeaderContactUid($company);
+
+			foreach ($allCards as $card) {
+				if (($card['uri'] ?? '') !== $leaderUri || !isset($card['carddata']) || !is_string($card['carddata'])) {
+					continue;
+				}
+
+				$vCard = $this->parseVCard($card['carddata']);
+				if (!$vCard instanceof VCard) {
+					break;
+				}
+
+				$this->applyManagedGroupLeaderData($vCard, $company, $leaderUid);
+				$cardDavBackend->updateCard($addressBookId, $leaderUri, $vCard->serialize());
+				$createdLeader = true;
+				$knownUris[] = $leaderUri;
+				$allCards = $cardDavBackend->getCards($addressBookId);
+
+				continue 2;
+			}
+
 			$vCard = new VCard();
 			$this->applyManagedGroupLeaderData($vCard, $company, $leaderUid);
 			$cardDavBackend->createCard($addressBookId, $leaderUri, $vCard->serialize());
@@ -922,6 +943,8 @@ class ContactGroupProvisioningService {
 				'cardUri' => $leaderUri,
 			]);
 			$createdLeader = true;
+			$knownUris[] = $leaderUri;
+			$allCards = $cardDavBackend->getCards($addressBookId);
 		}
 
 		return $createdLeader;
