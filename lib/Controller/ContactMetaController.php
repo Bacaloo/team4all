@@ -21,6 +21,7 @@ class ContactMetaController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
+	#[Http\Attribute\NoCSRFRequired]
 	public function show(string $contactUid = ''): JSONResponse {
 		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
 			return new JSONResponse([
