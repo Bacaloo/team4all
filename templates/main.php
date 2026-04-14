@@ -255,6 +255,14 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
                         <h3 id="team4all-details-single-title" class="team4all-details__title"></h3>
                         <div class="team4all-details__grid">
                             <label class="team4all-details__field team4all-details__field--full">
+                                <span>Anrede</span>
+                                <input id="team4all-details-single-anrede" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
+                                <span>Briefanrede</span>
+                                <input id="team4all-details-single-briefanrede" type="text" class="team4all-details__input" />
+                            </label>
+                            <label class="team4all-details__field team4all-details__field--full">
                                 <span>Titel</span>
                                 <input id="team4all-details-single-prefix" type="text" class="team4all-details__input" />
                             </label>

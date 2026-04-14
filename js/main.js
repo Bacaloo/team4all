@@ -38,6 +38,7 @@
     const noteSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/note`;
     const contactSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/contact`;
     const contactFetchUrl = `${window.OC?.webroot || ''}/apps/team4all/contact/fetch`;
+    const contactMetaUrl = `${window.OC?.webroot || ''}/apps/team4all/contact-meta`;
 
     const notesEmpty = document.getElementById('team4all-notes-empty');
     const notesSingle = document.getElementById('team4all-notes-single');
@@ -62,6 +63,8 @@
             title: detailsSingleTitle,
             addressOrigin: detailsSingleAddressOrigin,
             fields: {
+                anrede: document.getElementById('team4all-details-single-anrede'),
+                briefanrede: document.getElementById('team4all-details-single-briefanrede'),
                 prefix: document.getElementById('team4all-details-single-prefix'),
                 firstName: document.getElementById('team4all-details-single-first-name'),
                 lastName: document.getElementById('team4all-details-single-last-name'),
@@ -282,7 +285,10 @@
         }
 
         editor.container.dataset.contactUri = data.uri || '';
+        editor.container.dataset.contactUid = data.contactUid || '';
         editor.container.dataset.originalValue = JSON.stringify({
+            anrede: data.anrede || '',
+            briefanrede: data.briefanrede || '',
             prefix: data.prefix || '',
             firstName: data.firstName || '',
             lastName: data.lastName || '',
@@ -306,10 +312,11 @@
         }
 
         editor.container.dataset.contactUri = '';
+        editor.container.dataset.contactUid = '';
         editor.container.dataset.originalValue = '';
         editor.container.dataset.saving = 'false';
         editor.container.dataset.dirty = 'false';
-        ['prefix', 'firstName', 'lastName', 'streetAddress', 'postalCode', 'locality'].forEach((fieldName) => {
+        ['anrede', 'briefanrede', 'prefix', 'firstName', 'lastName', 'streetAddress', 'postalCode', 'locality'].forEach((fieldName) => {
             const field = editor.fields[fieldName];
             if (field && 'value' in field) {
                 field.value = '';
@@ -491,6 +498,7 @@
         return {
             title: payload.contact.name || '',
             company: payload.contact.companyDisplay || payload.contact.company || '',
+            contactUid: payload.contact.uid || uid || '',
             uri: payload.contact.uri || '',
             prefix: payload.contact.prefix || '',
             firstName: payload.contact.firstName || '',
@@ -505,6 +513,33 @@
             emails: payload.contact.emails || '',
             contactGroups: Array.isArray(payload.contact.contactGroups) ? payload.contact.contactGroups : [],
             note: payload.contact.note || '',
+        };
+    };
+
+    const fetchContactMeta = async (contactUid) => {
+        if (!contactUid) {
+            return {
+                anrede: '',
+                briefanrede: '',
+            };
+        }
+
+        const response = await fetch(`${contactMetaUrl}?contactUid=${encodeURIComponent(contactUid)}`, {
+            method: 'GET',
+            headers: {
+                requesttoken: requestToken,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Fetching contact meta failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+
+        return {
+            anrede: payload?.meta?.anrede || '',
+            briefanrede: payload?.meta?.briefanrede || '',
         };
     };
 
@@ -531,6 +566,8 @@
         }
 
         setContent(editor.title, buildDetailTitle(title, data.company), 'Kontaktdaten');
+        editor.fields.anrede.value = data.anrede || '';
+        editor.fields.briefanrede.value = data.briefanrede || '';
         editor.fields.prefix.value = data.prefix || '';
         editor.fields.firstName.value = data.firstName || '';
         editor.fields.lastName.value = data.lastName || '';
@@ -546,6 +583,8 @@
     };
 
     const readDetailEditorValues = (editor) => ({
+        anrede: editor.fields.anrede.value || '',
+        briefanrede: editor.fields.briefanrede.value || '',
         prefix: editor.fields.prefix.value || '',
         firstName: editor.fields.firstName.value || '',
         lastName: editor.fields.lastName.value || '',
@@ -561,6 +600,8 @@
     });
 
     const restoreDetailEditorValues = (editor, values) => {
+        editor.fields.anrede.value = values.anrede || '';
+        editor.fields.briefanrede.value = values.briefanrede || '';
         editor.fields.prefix.value = values.prefix || '';
         editor.fields.firstName.value = values.firstName || '';
         editor.fields.lastName.value = values.lastName || '';
@@ -580,6 +621,7 @@
         }
 
         const uri = editor.container.dataset.contactUri || '';
+        const contactUid = editor.container.dataset.contactUid || '';
         const originalValue = editor.container.dataset.originalValue || '';
         const currentValue = JSON.stringify(readDetailEditorValues(editor));
 
@@ -603,7 +645,7 @@
 
         try {
             const values = readDetailEditorValues(editor);
-            const body = new URLSearchParams({
+            const contactBody = new URLSearchParams({
                 uri,
                 prefix: values.prefix,
                 firstName: values.firstName,
@@ -616,17 +658,38 @@
                 emails: values.emails,
             });
 
-            const response = await fetch(contactSaveUrl, {
+            const contactResponse = await fetch(contactSaveUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     requesttoken: requestToken,
                 },
-                body: body.toString(),
+                body: contactBody.toString(),
             });
 
-            if (!response.ok) {
-                throw new Error(`Saving contact failed with status ${response.status}`);
+            if (!contactResponse.ok) {
+                throw new Error(`Saving contact failed with status ${contactResponse.status}`);
+            }
+
+            if (contactUid !== '') {
+                const metaBody = new URLSearchParams({
+                    contactUid,
+                    anrede: values.anrede,
+                    briefanrede: values.briefanrede,
+                });
+
+                const metaResponse = await fetch(contactMetaUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        requesttoken: requestToken,
+                    },
+                    body: metaBody.toString(),
+                });
+
+                if (!metaResponse.ok) {
+                    throw new Error(`Saving contact meta failed with status ${metaResponse.status}`);
+                }
             }
 
             editor.container.dataset.originalValue = JSON.stringify(values);
@@ -795,7 +858,10 @@
                 uri: detailData.uri,
             });
             if (freshDetail !== null) {
+                const meta = await fetchContactMeta(freshDetail.contactUid || noteData.uid);
                 detailData = freshDetail;
+                detailData.anrede = meta.anrede;
+                detailData.briefanrede = meta.briefanrede;
                 noteData = {
                     title: freshDetail.title,
                     uid: trigger.getAttribute('data-team4all-note-uid') || '',
@@ -810,12 +876,15 @@
                     uri: leaderData.uri || noteData.uri,
                 });
                 if (freshLeader !== null) {
+                    const leaderMeta = await fetchContactMeta(freshLeader.contactUid || leaderData.uid);
                     leaderData = {
                         title: freshLeader.title,
                         uid: leaderData.uid,
                         uri: freshLeader.uri,
                         content: freshLeader.note,
                     };
+                    freshLeader.anrede = leaderMeta.anrede;
+                    freshLeader.briefanrede = leaderMeta.briefanrede;
 
                     if (noteMode === 'leader') {
                         detailData = freshLeader;
