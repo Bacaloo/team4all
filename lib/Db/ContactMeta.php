@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\Db;
 
-use DateTimeImmutable;
+use DateTime;
 use OCP\AppFramework\Db\Entity;
 
 class ContactMeta extends Entity {
@@ -12,8 +12,8 @@ class ContactMeta extends Entity {
 	protected string $contactUid = '';
 	protected ?string $anrede = null;
 	protected ?string $briefanrede = null;
-	protected ?DateTimeImmutable $createdAt = null;
-	protected ?DateTimeImmutable $updatedAt = null;
+	protected ?DateTime $createdAt = null;
+	protected ?DateTime $updatedAt = null;
 
 	public function __construct() {
 		$this->addType('id', 'integer');
