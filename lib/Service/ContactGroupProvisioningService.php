@@ -824,6 +824,10 @@ class ContactGroupProvisioningService {
 		$entries = $this->groupContactsByCompany($contacts);
 		$allCards = $cardDavBackend->getCards($addressBookId);
 		$createdLeader = false;
+		$knownUris = array_map(
+			static fn(array $contact): string => (string)($contact['uri'] ?? ''),
+			$contacts
+		);
 
 		foreach ($entries as $entry) {
 			if ($entry['type'] !== 'group' || $entry['company'] === '') {
@@ -833,6 +837,29 @@ class ContactGroupProvisioningService {
 			$company = $entry['company'];
 			$existingLeaderContact = $this->findExistingLeaderContact($allCards, $company);
 			if ($existingLeaderContact !== null && ($entry['leader'] === null || $this->isGeneratedGroupLeaderUri($entry['leader']['uri']))) {
+				if (!in_array((string)$existingLeaderContact['uri'], $knownUris, true)) {
+					foreach ($allCards as $card) {
+						if (($card['uri'] ?? '') !== $existingLeaderContact['uri'] || !isset($card['carddata']) || !is_string($card['carddata'])) {
+							continue;
+						}
+
+						$vCard = $this->parseVCard($card['carddata']);
+						if (!$vCard instanceof VCard) {
+							break;
+						}
+
+						$categories = $this->extractCategories($vCard);
+						if (!in_array(self::CONTACT_GROUP_NAME, $categories, true)) {
+							$vCard->add('CATEGORIES', self::CONTACT_GROUP_NAME);
+							$cardDavBackend->updateCard($addressBookId, (string)$card['uri'], $vCard->serialize());
+						}
+
+						$createdLeader = true;
+						$knownUris[] = (string)$card['uri'];
+						break;
+					}
+				}
+
 				continue;
 			}
 

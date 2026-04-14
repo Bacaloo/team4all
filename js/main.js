@@ -397,6 +397,46 @@
         return `Herkunft der Anschrift (${label})`;
     };
 
+    const fetchContactByUri = async (uri) => {
+        if (!uri) {
+            return null;
+        }
+
+        const response = await fetch(`${contactFetchUrl}?uri=${encodeURIComponent(uri)}`, {
+            method: 'GET',
+            headers: {
+                requesttoken: requestToken,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Fetching contact failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        if (!payload?.found || !payload.contact) {
+            return null;
+        }
+
+        return {
+            title: payload.contact.name || '',
+            company: payload.contact.companyDisplay || payload.contact.company || '',
+            uri: payload.contact.uri || '',
+            prefix: payload.contact.prefix || '',
+            firstName: payload.contact.firstName || '',
+            lastName: payload.contact.lastName || '',
+            addressType: payload.contact.addressType || 'work',
+            streetAddress: payload.contact.streetAddress || '',
+            postalCode: payload.contact.postalCode || '',
+            locality: payload.contact.locality || '',
+            telephones: payload.contact.telephones || '',
+            telephoneEntries: Array.isArray(payload.contact.telephoneEntries) ? payload.contact.telephoneEntries : [],
+            emails: payload.contact.emails || '',
+            contactGroups: Array.isArray(payload.contact.contactGroups) ? payload.contact.contactGroups : [],
+            note: payload.contact.note || '',
+        };
+    };
+
     const splitMultilineValue = (value) => value.split(/\r\n|\r|\n/).map((entry) => entry.trim()).filter((entry) => entry !== '');
 
     const buildDetailTitle = (title, company) => {
@@ -528,16 +568,6 @@
                 return;
             }
 
-            field.addEventListener('blur', () => {
-                window.setTimeout(() => {
-                    if (editor.container.contains(document.activeElement)) {
-                        return;
-                    }
-
-                    void saveDetailEditor(editor);
-                }, 0);
-            });
-
             field.addEventListener('keydown', (event) => {
                 if (event.key !== 'Escape') {
                     return;
@@ -547,6 +577,16 @@
                 restoreDetailEditorValues(editor, JSON.parse(editor.container.dataset.originalValue || '{}'));
                 field.blur();
             });
+        });
+
+        editor.container.addEventListener('focusout', () => {
+            window.setTimeout(() => {
+                if (editor.container.contains(document.activeElement)) {
+                    return;
+                }
+
+                void saveDetailEditor(editor);
+            }, 0);
         });
     };
 
@@ -630,44 +670,90 @@
         });
     };
 
-    const activateTrigger = (trigger) => {
-            const noteMode = trigger.getAttribute('data-team4all-note-mode') || 'single';
-            showSingleDetails(
-                trigger.getAttribute('data-team4all-detail-title') || '',
-                readTriggerDetailData(trigger)
-            );
+    const activateTrigger = async (trigger) => {
+        await saveDetailEditor(detailEditors.single);
 
-            if (noteMode === 'leader') {
-                showLeaderNote(
-                    trigger.getAttribute('data-team4all-note-title') || trigger.getAttribute('data-team4all-leader-title') || '',
-                    trigger.getAttribute('data-team4all-note-uri') || trigger.getAttribute('data-team4all-leader-uri') || '',
-                    decodeDataValue(trigger.getAttribute('data-team4all-note-content') || trigger.getAttribute('data-team4all-leader-content') || '')
-                );
-                return;
+        const noteMode = trigger.getAttribute('data-team4all-note-mode') || 'single';
+        let detailData = readTriggerDetailData(trigger);
+        let noteData = {
+            title: trigger.getAttribute('data-team4all-note-title') || '',
+            uri: trigger.getAttribute('data-team4all-note-uri') || '',
+            content: decodeDataValue(trigger.getAttribute('data-team4all-note-content') || ''),
+        };
+        let leaderData = {
+            title: trigger.getAttribute('data-team4all-leader-title') || '',
+            uri: trigger.getAttribute('data-team4all-leader-uri') || '',
+            content: decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || ''),
+        };
+
+        try {
+            const freshDetail = await fetchContactByUri(detailData.uri);
+            if (freshDetail !== null) {
+                detailData = freshDetail;
+                noteData = {
+                    title: freshDetail.title,
+                    uri: freshDetail.uri,
+                    content: freshDetail.note,
+                };
             }
 
-            if (noteMode === 'member') {
-                showMemberNote(
-                    trigger.getAttribute('data-team4all-leader-title') || '',
-                    trigger.getAttribute('data-team4all-leader-uri') || '',
-                    decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || ''),
-                    trigger.getAttribute('data-team4all-note-title') || '',
-                    trigger.getAttribute('data-team4all-note-uri') || '',
-                    decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
-                );
-                return;
-            }
+            if (noteMode === 'member' || noteMode === 'leader') {
+                const leaderUri = leaderData.uri || noteData.uri;
+                const freshLeader = await fetchContactByUri(leaderUri);
+                if (freshLeader !== null) {
+                    leaderData = {
+                        title: freshLeader.title,
+                        uri: freshLeader.uri,
+                        content: freshLeader.note,
+                    };
 
-            showSingleNote(
-                trigger.getAttribute('data-team4all-note-title') || '',
-                trigger.getAttribute('data-team4all-note-uri') || '',
-                decodeDataValue(trigger.getAttribute('data-team4all-note-content') || '')
+                    if (noteMode === 'leader') {
+                        detailData = freshLeader;
+                        noteData = {
+                            title: freshLeader.title,
+                            uri: freshLeader.uri,
+                            content: freshLeader.note,
+                        };
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        showSingleDetails(detailData.title || trigger.getAttribute('data-team4all-detail-title') || '', detailData);
+
+        if (noteMode === 'leader') {
+            showLeaderNote(
+                leaderData.title || noteData.title,
+                leaderData.uri || noteData.uri,
+                leaderData.content || noteData.content
             );
+            return;
+        }
+
+        if (noteMode === 'member') {
+            showMemberNote(
+                leaderData.title,
+                leaderData.uri,
+                leaderData.content,
+                noteData.title,
+                noteData.uri,
+                noteData.content
+            );
+            return;
+        }
+
+        showSingleNote(
+            noteData.title,
+            noteData.uri,
+            noteData.content
+        );
     };
 
     triggers.forEach((trigger) => {
         trigger.addEventListener('click', () => {
-            activateTrigger(trigger);
+            void activateTrigger(trigger);
         });
 
         trigger.addEventListener('keydown', (event) => {
@@ -676,7 +762,7 @@
             }
 
             event.preventDefault();
-            activateTrigger(trigger);
+            void activateTrigger(trigger);
         });
     });
 

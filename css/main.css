@@ -140,6 +140,7 @@
 }
 
 .team4all-main__panel h1,
+.team4all-main__panel h2,
 .team4all-sidebar h2 {
     margin: 0;
 }
@@ -370,6 +371,13 @@ button.team4all-contact-trigger {
     font-weight: 400;
 }
 
+.team4all-details__subtitle {
+    margin: -4px 0 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--color-text-maxcontrast);
+}
+
 .team4all-details__grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -388,6 +396,17 @@ button.team4all-contact-trigger {
     font-size: 0.85rem;
     font-weight: 600;
     color: #3d6a8b;
+}
+
+.team4all-details__groups {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.team4all-details__group {
+    color: var(--color-text-maxcontrast);
+    line-height: 1.4;
 }
 
 .team4all-details__field--full {

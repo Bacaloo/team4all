@@ -11,7 +11,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     id="team4all-root"
     class="team4all-root"
     data-team4all-icon-url="<?= p($team4AllFaviconUrl) ?>"
-    style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:50px minmax(0,1fr);gap:18px;padding:18px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
+    style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:50px minmax(0,1fr);gap:12px;padding:8px 12px 12px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
 >
     <section
         class="team4all-toolbar"
@@ -232,7 +232,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     <main class="team4all-main" aria-label="Arbeitsbereich" style="padding:0;min-width:0;height:100%;min-height:0;">
         <div
             class="team4all-main__panel"
-            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:16px 18px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
+            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:10px 14px 14px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
             <h2>Kontaktdaten</h2>
             <div id="team4all-details" class="team4all-details" data-mode="empty">
@@ -298,7 +298,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     >
         <div
             class="team4all-main__panel"
-            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:16px 18px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
+            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:10px 14px 14px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
             <h2>Reserviert</h2>
             <p>Hier kann später ein weiterer Funktionsbereich entstehen.</p>
@@ -312,7 +312,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     >
         <div
             class="team4all-main__panel"
-            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:16px 18px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
+            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:10px 14px 14px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
             <h2>Notizen</h2>
             <div id="team4all-notes" class="team4all-notes" data-mode="empty">
