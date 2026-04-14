@@ -12,8 +12,8 @@ class ContactMeta extends Entity {
 	protected string $contactUid = '';
 	protected ?string $anrede = null;
 	protected ?string $briefanrede = null;
-	protected DateTimeImmutable $createdAt;
-	protected DateTimeImmutable $updatedAt;
+	protected ?DateTimeImmutable $createdAt = null;
+	protected ?DateTimeImmutable $updatedAt = null;
 
 	public function __construct() {
 		$this->addType('id', 'integer');
