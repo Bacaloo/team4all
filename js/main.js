@@ -129,6 +129,7 @@
     const readTriggerDetailData = (trigger, prefix = 'data-team4all-detail') => ({
         title: trigger.getAttribute(`${prefix}-title`) || '',
         company: trigger.getAttribute(`${prefix}-company`) || '',
+        contactUid: trigger.getAttribute(`${prefix}-uid`) || '',
         uri: trigger.getAttribute(`${prefix}-uri`) || '',
         prefix: decodeDataValue(trigger.getAttribute(`${prefix}-prefix`) || ''),
         firstName: decodeDataValue(trigger.getAttribute(`${prefix}-first-name`) || ''),
@@ -858,7 +859,7 @@
                 uri: detailData.uri,
             });
             if (freshDetail !== null) {
-                const meta = await fetchContactMeta(freshDetail.contactUid || noteData.uid);
+                const meta = await fetchContactMeta(freshDetail.contactUid || detailData.contactUid || noteData.uid);
                 detailData = freshDetail;
                 detailData.anrede = meta.anrede;
                 detailData.briefanrede = meta.briefanrede;
@@ -876,7 +877,8 @@
                     uri: leaderData.uri || noteData.uri,
                 });
                 if (freshLeader !== null) {
-                    const leaderMeta = await fetchContactMeta(freshLeader.contactUid || leaderData.uid);
+                    const leaderDetailData = readTriggerDetailData(trigger, 'data-team4all-leader-detail');
+                    const leaderMeta = await fetchContactMeta(freshLeader.contactUid || leaderDetailData.contactUid || leaderData.uid);
                     leaderData = {
                         title: freshLeader.title,
                         uid: leaderData.uid,

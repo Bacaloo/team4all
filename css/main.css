@@ -363,6 +363,9 @@ button.team4all-contact-trigger {
     flex-direction: column;
     gap: 12px;
     min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
 }
 
 .team4all-details__title {
