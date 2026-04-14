@@ -281,6 +281,7 @@
             contactGroups: data.contactGroups || [],
         });
         editor.container.dataset.saving = 'false';
+        editor.container.dataset.dirty = 'false';
     };
 
     const clearDetailEditorState = (editor) => {
@@ -291,6 +292,7 @@
         editor.container.dataset.contactUri = '';
         editor.container.dataset.originalValue = '';
         editor.container.dataset.saving = 'false';
+        editor.container.dataset.dirty = 'false';
         ['prefix', 'firstName', 'lastName', 'streetAddress', 'postalCode', 'locality'].forEach((fieldName) => {
             const field = editor.fields[fieldName];
             if (field && 'value' in field) {
@@ -356,7 +358,7 @@
         values.forEach((value) => {
             const link = document.createElement('a');
             link.className = 'team4all-details__link';
-            link.textContent = `mailto:${value}`;
+            link.textContent = value;
             link.href = buildMailHref(value);
             link.dataset.mailto = `mailto:${value}`;
             element.appendChild(link);
@@ -517,13 +519,19 @@
         const originalValue = editor.container.dataset.originalValue || '';
         const currentValue = JSON.stringify(readDetailEditorValues(editor));
 
-        if (uri === '' || currentValue === originalValue || editor.container.dataset.saving === 'true') {
+        if (
+            uri === ''
+            || editor.container.dataset.dirty !== 'true'
+            || currentValue === originalValue
+            || editor.container.dataset.saving === 'true'
+        ) {
             return;
         }
 
         const confirmed = window.confirm('Änderungen an den Kontaktdaten speichern?');
         if (!confirmed) {
             restoreDetailEditorValues(editor, JSON.parse(originalValue || '{}'));
+            editor.container.dataset.dirty = 'false';
             return;
         }
 
@@ -558,9 +566,11 @@
             }
 
             editor.container.dataset.originalValue = JSON.stringify(values);
+            editor.container.dataset.dirty = 'false';
         } catch (error) {
             console.error(error);
             restoreDetailEditorValues(editor, JSON.parse(originalValue || '{}'));
+            editor.container.dataset.dirty = 'false';
         } finally {
             editor.container.dataset.saving = 'false';
         }
@@ -583,7 +593,16 @@
 
                 event.preventDefault();
                 restoreDetailEditorValues(editor, JSON.parse(editor.container.dataset.originalValue || '{}'));
+                editor.container.dataset.dirty = 'false';
                 field.blur();
+            });
+
+            field.addEventListener('input', () => {
+                editor.container.dataset.dirty = 'true';
+            });
+
+            field.addEventListener('change', () => {
+                editor.container.dataset.dirty = 'true';
             });
         });
 
