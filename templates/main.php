@@ -282,7 +282,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
                             </div>
                             <div class="team4all-details__field team4all-details__field--full">
                                 <span>Kontaktgruppen</span>
-                                <div id="team4all-details-single-contact-groups" class="team4all-details__groups"></div>
+                                <div id="team4all-details-single-contact-groups" class="team4all-details__links"></div>
                             </div>
                         </div>
                     </section>

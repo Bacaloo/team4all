@@ -398,12 +398,6 @@ button.team4all-contact-trigger {
     color: #3d6a8b;
 }
 
-.team4all-details__groups {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
 .team4all-details__group {
     color: var(--color-text-maxcontrast);
     line-height: 1.4;
