@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\Service;
 
-use DateTimeImmutable;
+use DateTime;
 use DateTimeZone;
 use OCA\Team4All\Db\ContactMeta;
 use OCA\Team4All\Db\ContactMetaMapper;
@@ -43,7 +43,7 @@ class ContactMetaService {
 		?string $briefanrede,
 	): array {
 		$meta = $this->contactMetaMapper->findOneByNcUserIdAndContactUid($ncUserId, $contactUid);
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$now = new DateTime('now', new DateTimeZone('UTC'));
 
 		if (!$meta instanceof ContactMeta) {
 			$meta = new ContactMeta();
