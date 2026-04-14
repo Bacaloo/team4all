@@ -29,7 +29,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     <aside
         class="team4all-sidebar"
         aria-label="Kontaktebereich"
-        style="display:flex;flex-direction:column;gap:20px;height:100%;min-height:0;padding:28px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
+        style="display:flex;flex-direction:column;gap:12px;height:100%;min-height:0;padding:14px 16px 16px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
         <div class="team4all-sidebar__header">
             <div>
@@ -72,6 +72,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['person']['telephones'])) ?>"
 									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['person']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['person']['emails'])) ?>"
+									data-team4all-detail-contact-groups="<?= p(base64_encode(json_encode($entry['person']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
 								</span>
@@ -107,6 +108,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
 									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['leader']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
+									data-team4all-detail-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-leader-detail-title="<?= p($entry['leader']['name']) ?>"
 									data-team4all-leader-detail-uri="<?= p($entry['leader']['uri']) ?>"
 									data-team4all-leader-detail-prefix="<?= p(base64_encode($entry['leader']['prefix'])) ?>"
@@ -119,6 +121,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 									data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
 									data-team4all-leader-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['leader']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
+									data-team4all-leader-detail-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 								>
 									<strong><?= p($entry['company']) ?></strong>
 								</button>
@@ -152,6 +155,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 									data-team4all-detail-telephones="<?= p(base64_encode($entry['members'][0]['telephones'])) ?>"
 									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['members'][0]['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['members'][0]['emails'])) ?>"
+									data-team4all-detail-contact-groups="<?= p(base64_encode(json_encode($entry['members'][0]['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 								>
 									<strong><?= p($entry['members'][0]['name']) ?></strong>
 								</span>
@@ -191,6 +195,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 											data-team4all-detail-telephones="<?= p(base64_encode($member['telephones'])) ?>"
 											data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($member['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											data-team4all-detail-emails="<?= p(base64_encode($member['emails'])) ?>"
+											data-team4all-detail-contact-groups="<?= p(base64_encode(json_encode($member['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											<?php if ($entry['leader'] !== null): ?>
 												data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
 												data-team4all-leader-uid="<?= p($entry['leader']['uid']) ?>"
@@ -208,6 +213,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 												data-team4all-leader-detail-telephones="<?= p(base64_encode($entry['leader']['telephones'])) ?>"
 												data-team4all-leader-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['leader']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 												data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
+												data-team4all-leader-detail-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											<?php endif; ?>
 										>
 											<strong><?= p($member['name']) ?></strong>
@@ -226,7 +232,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     <main class="team4all-main" aria-label="Arbeitsbereich" style="padding:0;min-width:0;height:100%;min-height:0;">
         <div
             class="team4all-main__panel"
-            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
+            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:16px 18px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
             <h2>Kontaktdaten</h2>
             <div id="team4all-details" class="team4all-details" data-mode="empty">
@@ -241,9 +247,10 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
                         data-team4all-contact-editor="true"
                     >
                         <h3 id="team4all-details-single-title" class="team4all-details__title"></h3>
+                        <p id="team4all-details-single-address-origin" class="team4all-details__subtitle"></p>
                         <div class="team4all-details__grid">
                             <label class="team4all-details__field team4all-details__field--full">
-                                <span>Präfix</span>
+                                <span>Titel</span>
                                 <input id="team4all-details-single-prefix" type="text" class="team4all-details__input" />
                             </label>
                             <label class="team4all-details__field team4all-details__field--full">
@@ -273,6 +280,10 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
                                 <span>Mailkontakte</span>
                                 <div id="team4all-details-single-emails" class="team4all-details__links"></div>
                             </div>
+                            <div class="team4all-details__field team4all-details__field--full">
+                                <span>Kontaktgruppen</span>
+                                <div id="team4all-details-single-contact-groups" class="team4all-details__groups"></div>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -287,7 +298,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     >
         <div
             class="team4all-main__panel"
-            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
+            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:16px 18px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
             <h2>Reserviert</h2>
             <p>Hier kann später ein weiterer Funktionsbereich entstehen.</p>
@@ -301,7 +312,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     >
         <div
             class="team4all-main__panel"
-            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:32px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
+            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:16px 18px 18px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
         >
             <h2>Notizen</h2>
             <div id="team4all-notes" class="team4all-notes" data-mode="empty">

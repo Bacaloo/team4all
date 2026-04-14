@@ -37,6 +37,7 @@
     const requestToken = document.head?.dataset?.requesttoken || '';
     const noteSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/note`;
     const contactSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/contact`;
+    const contactFetchUrl = `${window.OC?.webroot || ''}/apps/team4all/contact/fetch`;
 
     const notesEmpty = document.getElementById('team4all-notes-empty');
     const notesSingle = document.getElementById('team4all-notes-single');
@@ -53,11 +54,13 @@
     const detailsSingle = document.getElementById('team4all-details-single');
     const detailsSingleEditor = document.getElementById('team4all-details-single-editor');
     const detailsSingleTitle = document.getElementById('team4all-details-single-title');
+    const detailsSingleAddressOrigin = document.getElementById('team4all-details-single-address-origin');
 
     const detailEditors = {
         single: {
             container: detailsSingleEditor,
             title: detailsSingleTitle,
+            addressOrigin: detailsSingleAddressOrigin,
             fields: {
                 prefix: document.getElementById('team4all-details-single-prefix'),
                 firstName: document.getElementById('team4all-details-single-first-name'),
@@ -67,6 +70,7 @@
                 locality: document.getElementById('team4all-details-single-locality'),
                 telephones: document.getElementById('team4all-details-single-telephones'),
                 emails: document.getElementById('team4all-details-single-emails'),
+                contactGroups: document.getElementById('team4all-details-single-contact-groups'),
             },
         },
     };
@@ -145,6 +149,20 @@
             }
         })(),
         emails: decodeDataValue(trigger.getAttribute(`${prefix}-emails`) || ''),
+        contactGroups: (() => {
+            const encoded = trigger.getAttribute(`${prefix}-contact-groups`) || '';
+
+            if (encoded === '') {
+                return [];
+            }
+
+            try {
+                const parsed = JSON.parse(decodeDataValue(encoded));
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        })(),
     });
 
     const showEmptyNotes = () => {
@@ -260,6 +278,7 @@
             telephones: data.telephones || '',
             telephoneEntries: data.telephoneEntries || [],
             emails: data.emails || '',
+            contactGroups: data.contactGroups || [],
         });
         editor.container.dataset.saving = 'false';
     };
@@ -280,6 +299,8 @@
         });
         renderTelephoneEntries(editor.fields.telephones, []);
         renderMailLinks(editor.fields.emails, []);
+        renderContactGroups(editor.fields.contactGroups, []);
+        setContent(editor.addressOrigin, '', '');
     };
 
     const buildMailHref = (email) => `${window.OC?.webroot || ''}/apps/mail/compose?to=${encodeURIComponent(email)}`;
@@ -342,6 +363,40 @@
         });
     };
 
+    const renderContactGroups = (element, values) => {
+        if (!element) {
+            return;
+        }
+
+        element.replaceChildren();
+
+        if (!values.length) {
+            const empty = document.createElement('span');
+            empty.className = 'team4all-details__link-empty';
+            empty.textContent = 'Keine weitere Kontaktgruppe vorhanden.';
+            element.appendChild(empty);
+            return;
+        }
+
+        values.forEach((value) => {
+            const item = document.createElement('span');
+            item.className = 'team4all-details__group';
+            item.textContent = value;
+            element.appendChild(item);
+        });
+    };
+
+    const formatAddressOrigin = (addressType) => {
+        const normalized = (addressType || '').trim().toLowerCase();
+        const label = normalized === 'home'
+            ? 'Privat'
+            : normalized === 'other'
+                ? 'Andere'
+                : 'Arbeit';
+
+        return `Herkunft der Anschrift (${label})`;
+    };
+
     const splitMultilineValue = (value) => value.split(/\r\n|\r|\n/).map((entry) => entry.trim()).filter((entry) => entry !== '');
 
     const buildDetailTitle = (title, company) => {
@@ -373,6 +428,8 @@
         editor.fields.locality.value = data.locality || '';
         renderTelephoneEntries(editor.fields.telephones, data.telephoneEntries || []);
         renderMailLinks(editor.fields.emails, splitMultilineValue(data.emails || ''));
+        renderContactGroups(editor.fields.contactGroups, data.contactGroups || []);
+        setContent(editor.addressOrigin, formatAddressOrigin(data.addressType), 'Herkunft der Anschrift');
         assignDetailEditorState(editor, data);
     };
 
@@ -387,6 +444,7 @@
         telephones: JSON.parse(editor.container.dataset.originalValue || '{}').telephones || '',
         telephoneEntries: JSON.parse(editor.container.dataset.originalValue || '{}').telephoneEntries || [],
         emails: JSON.parse(editor.container.dataset.originalValue || '{}').emails || '',
+        contactGroups: JSON.parse(editor.container.dataset.originalValue || '{}').contactGroups || [],
     });
 
     const restoreDetailEditorValues = (editor, values) => {
@@ -398,6 +456,8 @@
         editor.fields.locality.value = values.locality || '';
         renderTelephoneEntries(editor.fields.telephones, values.telephoneEntries || []);
         renderMailLinks(editor.fields.emails, splitMultilineValue(values.emails || ''));
+        renderContactGroups(editor.fields.contactGroups, values.contactGroups || []);
+        setContent(editor.addressOrigin, formatAddressOrigin(values.addressType), 'Herkunft der Anschrift');
     };
 
     const saveDetailEditor = async (editor) => {

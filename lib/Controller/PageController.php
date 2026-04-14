@@ -82,6 +82,27 @@ class PageController extends Controller {
 		], $saved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
 	}
 
+	public function fetchContact(string $uri = ''): JSONResponse {
+		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+			return new JSONResponse([
+				'found' => false,
+				'message' => 'Access denied.',
+			], Http::STATUS_FORBIDDEN);
+		}
+
+		$contact = $this->contactGroupProvisioningService->getContactByUri($uri);
+		if ($contact === null) {
+			return new JSONResponse([
+				'found' => false,
+			], Http::STATUS_NOT_FOUND);
+		}
+
+		return new JSONResponse([
+			'found' => true,
+			'contact' => $contact,
+		]);
+	}
+
 	public function updateContact(
 		string $uri,
 		string $prefix = '',

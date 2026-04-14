@@ -133,77 +133,58 @@ class ContactGroupProvisioningService {
 			return [];
 		}
 
-		$contacts = [];
 		$cards = $cardDavBackend->getCards((int)$addressBook['id']);
+		$contacts = $this->collectTeam4AllContactsFromCards($cards);
 
-		foreach ($cards as $card) {
-			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+		$createdLeader = $this->ensureMissingGroupLeaderContacts(
+			$cardDavBackend,
+			(int)$addressBook['id'],
+			$contacts,
+		);
+		if ($createdLeader) {
+			$cards = $cardDavBackend->getCards((int)$addressBook['id']);
+			$contacts = $this->collectTeam4AllContactsFromCards($cards);
+		}
+
+		return $this->groupContactsByCompany($contacts);
+	}
+
+	public function getContactByUri(string $uri): ?array {
+		$uri = trim($uri);
+		if ($uri === '') {
+			return null;
+		}
+
+		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if (!$provisioningUser instanceof IUser) {
+			return null;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return null;
+		}
+
+		$principalUri = 'principals/users/' . $provisioningUser->getUID();
+		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
+		if ($addressBook === null || !isset($addressBook['id'])) {
+			return null;
+		}
+
+		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
+			if (($card['uri'] ?? '') !== $uri || !isset($card['carddata']) || !is_string($card['carddata'])) {
 				continue;
 			}
 
 			$vCard = $this->parseVCard($card['carddata']);
 			if (!$vCard instanceof VCard) {
-				continue;
+				return null;
 			}
 
-			$categories = $this->extractCategories($vCard);
-			if (!in_array(self::CONTACT_GROUP_NAME, $categories, true)) {
-				continue;
-			}
-
-			$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
-			$nameParts = $this->extractStructuredNameParts($vCard);
-			$note = $this->extractNote($vCard);
-			$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
-			$companies = $this->extractCompanies($vCard);
-			$displayCompany = $this->extractDisplayCompany($vCard);
-			$company = $companies[0] ?? '';
-			$effectiveName = $name !== '' ? $name : $company;
-			$emails = $this->extractEmailValues($vCard);
-			$telephoneEntries = $this->extractTelephoneEntries($vCard);
-			$telephones = array_map(
-				static fn(array $entry): string => $entry['value'],
-				$telephoneEntries
-			);
-			$displayParts = $this->buildEditableDisplayNameParts($name, $nameParts, $company);
-
-			$contacts[] = [
-				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
-				'rawName' => $name,
-				'searchText' => $this->buildContactSearchText(
-					$name,
-					$this->composeStructuredName($nameParts),
-					implode(' ', $companies),
-					implode(' ', $emails),
-					implode(' ', $telephones),
-				),
-				'note' => $note,
-				'uid' => $uid,
-				'email' => $emails[0] ?? '',
-				'uri' => (string)($card['uri'] ?? ''),
-				'company' => $company,
-				'companyDisplay' => $displayCompany,
-				'companies' => $companies,
-				'prefix' => $displayParts['prefix'],
-				'firstName' => $displayParts['firstName'],
-				'lastName' => $displayParts['lastName'],
-				'addressType' => $this->extractAddressType($vCard),
-				'streetAddress' => $this->extractStreetAddress($vCard),
-				'postalCode' => $this->extractPostalCode($vCard),
-				'locality' => $this->extractLocality($vCard),
-				'telephoneEntries' => $telephoneEntries,
-				'telephones' => implode("\n", $telephones),
-				'emails' => implode("\n", $emails),
-			];
+			return $this->buildContactDataFromCard($vCard, (string)$card['uri']);
 		}
 
-		$contacts = $this->ensureMissingGroupLeaderContacts(
-			$cardDavBackend,
-			(int)$addressBook['id'],
-			$contacts,
-		);
-
-		return $this->groupContactsByCompany($contacts);
+		return null;
 	}
 
 	public function updateContactNoteByUri(string $uri, string $note): bool {
@@ -444,6 +425,16 @@ class ContactGroupProvisioningService {
 		}
 
 		return array_values(array_unique($categories));
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function extractVisibleContactGroups(VCard $vCard): array {
+		return array_values(array_filter(
+			$this->extractCategories($vCard),
+			static fn(string $category): bool => $category !== self::CONTACT_GROUP_NAME
+		));
 	}
 
 	private function extractCompany(VCard $vCard): string {
@@ -829,9 +820,10 @@ class ContactGroupProvisioningService {
 		return $score;
 	}
 
-	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): array {
+	private function ensureMissingGroupLeaderContacts(object $cardDavBackend, int $addressBookId, array $contacts): bool {
 		$entries = $this->groupContactsByCompany($contacts);
 		$allCards = $cardDavBackend->getCards($addressBookId);
+		$createdLeader = false;
 
 		foreach ($entries as $entry) {
 			if ($entry['type'] !== 'group' || $entry['company'] === '') {
@@ -841,7 +833,6 @@ class ContactGroupProvisioningService {
 			$company = $entry['company'];
 			$existingLeaderContact = $this->findExistingLeaderContact($allCards, $company);
 			if ($existingLeaderContact !== null && ($entry['leader'] === null || $this->isGeneratedGroupLeaderUri($entry['leader']['uri']))) {
-				$contacts[] = $existingLeaderContact;
 				continue;
 			}
 
@@ -860,32 +851,10 @@ class ContactGroupProvisioningService {
 				'company' => $company,
 				'cardUri' => $leaderUri,
 			]);
-
-			$contacts[] = [
-				'name' => $company,
-				'rawName' => $company,
-				'searchText' => $company,
-				'note' => '',
-				'uid' => $leaderUid,
-				'email' => '',
-				'uri' => $leaderUri,
-				'company' => $company,
-				'companyDisplay' => $company,
-				'companies' => [$company],
-				'prefix' => '',
-				'firstName' => '',
-				'lastName' => $company,
-				'addressType' => 'work',
-				'streetAddress' => '',
-				'postalCode' => '',
-				'locality' => '',
-				'telephoneEntries' => [],
-				'telephones' => '',
-				'emails' => '',
-			];
+			$createdLeader = true;
 		}
 
-		return $contacts;
+		return $createdLeader;
 	}
 
 	private function findExistingLeaderContact(array $cards, string $company): ?array {
@@ -915,43 +884,11 @@ class ContactGroupProvisioningService {
 				continue;
 			}
 
-			$nameParts = $this->extractStructuredNameParts($vCard);
-			$emails = $this->extractEmailValues($vCard);
-			$telephoneEntries = $this->extractTelephoneEntries($vCard);
-			$telephones = array_map(
-				static fn(array $entry): string => $entry['value'],
-				$telephoneEntries
-			);
-			$displayParts = $this->buildEditableDisplayNameParts($rawName, $nameParts, $normalizedCompany);
-
-			$candidates[] = [
-				'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
-				'rawName' => $rawName,
-				'searchText' => $this->buildContactSearchText(
-					$rawName,
-					$this->composeStructuredName($nameParts),
-					implode(' ', $companies),
-					implode(' ', $emails),
-					implode(' ', $telephones),
-				),
-				'note' => $this->extractNote($vCard),
-				'uid' => isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '',
-				'email' => $emails[0] ?? '',
-				'uri' => (string)($card['uri'] ?? ''),
-				'company' => $normalizedCompany,
-				'companyDisplay' => $displayCompany,
-				'companies' => $companies,
-				'prefix' => $displayParts['prefix'],
-				'firstName' => $displayParts['firstName'],
-				'lastName' => $displayParts['lastName'],
-				'addressType' => $this->extractAddressType($vCard),
-				'streetAddress' => $this->extractStreetAddress($vCard),
-				'postalCode' => $this->extractPostalCode($vCard),
-				'locality' => $this->extractLocality($vCard),
-				'telephoneEntries' => $telephoneEntries,
-				'telephones' => implode("\n", $telephones),
-				'emails' => implode("\n", $emails),
-			];
+			$candidate = $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''));
+			$candidate['company'] = $normalizedCompany;
+			$candidate['companyDisplay'] = $displayCompany;
+			$candidate['companies'] = $companies;
+			$candidates[] = $candidate;
 		}
 
 		return $this->pickPreferredLeaderCandidate($candidates);
@@ -976,10 +913,89 @@ class ContactGroupProvisioningService {
 	private function applyManagedGroupLeaderData(VCard $vCard, string $company, string $uid): void {
 		$vCard->UID = $uid;
 		$vCard->FN = $company;
-		$vCard->N = ['', $company, '', '', ''];
+		$vCard->N = [$company, '', '', '', ''];
 		$vCard->ORG = $company;
 		$vCard->NOTE = 'Adresskarte automatisch durch Team4All angelegt.';
 		$vCard->add('CATEGORIES', self::CONTACT_GROUP_NAME);
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $cards
+	 * @return list<array<string, mixed>>
+	 */
+	private function collectTeam4AllContactsFromCards(array $cards): array {
+		$contacts = [];
+
+		foreach ($cards as $card) {
+			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+				continue;
+			}
+
+			$vCard = $this->parseVCard($card['carddata']);
+			if (!$vCard instanceof VCard) {
+				continue;
+			}
+
+			$categories = $this->extractCategories($vCard);
+			if (!in_array(self::CONTACT_GROUP_NAME, $categories, true)) {
+				continue;
+			}
+
+			$contacts[] = $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''));
+		}
+
+		return $contacts;
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function buildContactDataFromCard(VCard $vCard, string $uri): array {
+		$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
+		$nameParts = $this->extractStructuredNameParts($vCard);
+		$note = $this->extractNote($vCard);
+		$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
+		$companies = $this->extractCompanies($vCard);
+		$displayCompany = $this->extractDisplayCompany($vCard);
+		$company = $companies[0] ?? '';
+		$effectiveName = $name !== '' ? $name : $company;
+		$emails = $this->extractEmailValues($vCard);
+		$telephoneEntries = $this->extractTelephoneEntries($vCard);
+		$telephones = array_map(
+			static fn(array $entry): string => $entry['value'],
+			$telephoneEntries
+		);
+		$displayParts = $this->buildEditableDisplayNameParts($name, $nameParts, $company);
+
+		return [
+			'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
+			'rawName' => $name,
+			'searchText' => $this->buildContactSearchText(
+				$name,
+				$this->composeStructuredName($nameParts),
+				implode(' ', $companies),
+				implode(' ', $emails),
+				implode(' ', $telephones),
+			),
+			'note' => $note,
+			'uid' => $uid,
+			'email' => $emails[0] ?? '',
+			'uri' => $uri,
+			'company' => $company,
+			'companyDisplay' => $displayCompany,
+			'companies' => $companies,
+			'prefix' => $displayParts['prefix'],
+			'firstName' => $displayParts['firstName'],
+			'lastName' => $displayParts['lastName'],
+			'addressType' => $this->extractAddressType($vCard),
+			'streetAddress' => $this->extractStreetAddress($vCard),
+			'postalCode' => $this->extractPostalCode($vCard),
+			'locality' => $this->extractLocality($vCard),
+			'telephoneEntries' => $telephoneEntries,
+			'telephones' => implode("\n", $telephones),
+			'emails' => implode("\n", $emails),
+			'contactGroups' => $this->extractVisibleContactGroups($vCard),
+		];
 	}
 
 	private function applyEditableContactDetails(
