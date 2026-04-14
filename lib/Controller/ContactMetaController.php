@@ -8,6 +8,7 @@ use OCA\Team4All\Service\ContactMetaService;
 use OCA\Team4All\Service\GroupProvisioningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 
@@ -21,7 +22,7 @@ class ContactMetaController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
-	#[Http\Attribute\NoCSRFRequired]
+	#[NoCSRFRequired]
 	public function show(string $contactUid = ''): JSONResponse {
 		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
 			return new JSONResponse([
