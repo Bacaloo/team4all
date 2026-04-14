@@ -6,6 +6,8 @@ return [
 	'routes' => [
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 		['name' => 'page#fetchContact', 'url' => '/contact/fetch', 'verb' => 'GET'],
+		['name' => 'contactMeta#show', 'url' => '/contact-meta', 'verb' => 'GET'],
+		['name' => 'contactMeta#save', 'url' => '/contact-meta', 'verb' => 'POST'],
 		['name' => 'page#updateNote', 'url' => '/note', 'verb' => 'POST'],
 		['name' => 'page#updateContact', 'url' => '/contact', 'verb' => 'POST'],
 	],
