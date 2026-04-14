@@ -372,9 +372,40 @@ button.team4all-contact-trigger {
 }
 
 .team4all-details__subtitle {
-    margin: -4px 0 0;
+    margin: 0 0 2px;
     font-size: 0.9rem;
     font-weight: 400;
+    color: var(--color-text-maxcontrast);
+}
+
+.team4all-details__addresses {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.team4all-details__address-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: rgba(248, 251, 255, 0.96);
+}
+
+.team4all-details__address-entry--current {
+    border: 1px solid rgba(61, 106, 139, 0.20);
+}
+
+.team4all-details__address-label {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #3d6a8b;
+}
+
+.team4all-details__address-value {
+    line-height: 1.4;
     color: var(--color-text-maxcontrast);
 }
 

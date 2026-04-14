@@ -68,6 +68,7 @@
                 streetAddress: document.getElementById('team4all-details-single-street-address'),
                 postalCode: document.getElementById('team4all-details-single-postal-code'),
                 locality: document.getElementById('team4all-details-single-locality'),
+                addresses: document.getElementById('team4all-details-single-addresses'),
                 telephones: document.getElementById('team4all-details-single-telephones'),
                 emails: document.getElementById('team4all-details-single-emails'),
                 contactGroups: document.getElementById('team4all-details-single-contact-groups'),
@@ -133,6 +134,20 @@
         streetAddress: decodeDataValue(trigger.getAttribute(`${prefix}-street-address`) || ''),
         postalCode: decodeDataValue(trigger.getAttribute(`${prefix}-postal-code`) || ''),
         locality: decodeDataValue(trigger.getAttribute(`${prefix}-locality`) || ''),
+        addresses: (() => {
+            const encoded = trigger.getAttribute(`${prefix}-addresses`) || '';
+
+            if (encoded === '') {
+                return [];
+            }
+
+            try {
+                const parsed = JSON.parse(decodeDataValue(encoded));
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        })(),
         telephones: decodeDataValue(trigger.getAttribute(`${prefix}-telephones`) || ''),
         telephoneEntries: (() => {
             const encoded = trigger.getAttribute(`${prefix}-telephone-entries`) || '';
@@ -275,6 +290,7 @@
             streetAddress: data.streetAddress || '',
             postalCode: data.postalCode || '',
             locality: data.locality || '',
+            addresses: data.addresses || [],
             telephones: data.telephones || '',
             telephoneEntries: data.telephoneEntries || [],
             emails: data.emails || '',
@@ -302,6 +318,7 @@
         renderTelephoneEntries(editor.fields.telephones, []);
         renderMailLinks(editor.fields.emails, []);
         renderContactGroups(editor.fields.contactGroups, []);
+        renderAddresses(editor.fields.addresses, [], 'work');
         setContent(editor.addressOrigin, '', '');
     };
 
@@ -399,6 +416,49 @@
         return `Anschrift (${label})`;
     };
 
+    const renderAddresses = (element, addresses, currentType) => {
+        if (!element) {
+            return;
+        }
+
+        element.replaceChildren();
+
+        const visibleAddresses = Array.isArray(addresses) ? addresses.filter((address) => {
+            return (address.streetAddress || '').trim() !== ''
+                || (address.postalCode || '').trim() !== ''
+                || (address.locality || '').trim() !== '';
+        }) : [];
+
+        if (visibleAddresses.length <= 1) {
+            element.hidden = true;
+            return;
+        }
+
+        element.hidden = false;
+
+        visibleAddresses.forEach((address) => {
+            const row = document.createElement('div');
+            row.className = 'team4all-details__address-entry';
+
+            if ((address.type || 'work') === (currentType || 'work')) {
+                row.classList.add('team4all-details__address-entry--current');
+            }
+
+            const label = document.createElement('span');
+            label.className = 'team4all-details__address-label';
+            label.textContent = address.label || 'Anschrift';
+
+            const value = document.createElement('span');
+            value.className = 'team4all-details__address-value';
+            value.textContent = [address.streetAddress || '', address.postalCode || '', address.locality || '']
+                .filter((part) => part.trim() !== '')
+                .join(', ');
+
+            row.append(label, value);
+            element.appendChild(row);
+        });
+    };
+
     const fetchContactByIdentity = async ({ uid = '', uri = '' }) => {
         if (!uid && !uri) {
             return null;
@@ -439,6 +499,7 @@
             streetAddress: payload.contact.streetAddress || '',
             postalCode: payload.contact.postalCode || '',
             locality: payload.contact.locality || '',
+            addresses: Array.isArray(payload.contact.addresses) ? payload.contact.addresses : [],
             telephones: payload.contact.telephones || '',
             telephoneEntries: Array.isArray(payload.contact.telephoneEntries) ? payload.contact.telephoneEntries : [],
             emails: payload.contact.emails || '',
@@ -476,6 +537,7 @@
         editor.fields.streetAddress.value = data.streetAddress || '';
         editor.fields.postalCode.value = data.postalCode || '';
         editor.fields.locality.value = data.locality || '';
+        renderAddresses(editor.fields.addresses, data.addresses || [], data.addressType);
         renderTelephoneEntries(editor.fields.telephones, data.telephoneEntries || []);
         renderMailLinks(editor.fields.emails, splitMultilineValue(data.emails || ''));
         renderContactGroups(editor.fields.contactGroups, data.contactGroups || []);
@@ -491,6 +553,7 @@
         postalCode: editor.fields.postalCode.value || '',
         locality: editor.fields.locality.value || '',
         addressType: JSON.parse(editor.container.dataset.originalValue || '{}').addressType || 'work',
+        addresses: JSON.parse(editor.container.dataset.originalValue || '{}').addresses || [],
         telephones: JSON.parse(editor.container.dataset.originalValue || '{}').telephones || '',
         telephoneEntries: JSON.parse(editor.container.dataset.originalValue || '{}').telephoneEntries || [],
         emails: JSON.parse(editor.container.dataset.originalValue || '{}').emails || '',
@@ -504,6 +567,7 @@
         editor.fields.streetAddress.value = values.streetAddress || '';
         editor.fields.postalCode.value = values.postalCode || '';
         editor.fields.locality.value = values.locality || '';
+        renderAddresses(editor.fields.addresses, values.addresses || [], values.addressType);
         renderTelephoneEntries(editor.fields.telephones, values.telephoneEntries || []);
         renderMailLinks(editor.fields.emails, splitMultilineValue(values.emails || ''));
         renderContactGroups(editor.fields.contactGroups, values.contactGroups || []);

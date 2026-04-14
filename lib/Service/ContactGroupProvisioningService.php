@@ -745,6 +745,36 @@ class ContactGroupProvisioningService {
 		return $address['type'];
 	}
 
+	/**
+	 * @return list<array{type:string,label:string,streetAddress:string,postalCode:string,locality:string}>
+	 */
+	private function extractAllAddresses(VCard $vCard): array {
+		$addresses = [];
+
+		foreach ($vCard->select('ADR') as $addressProperty) {
+			$type = $this->getAddressType($addressProperty);
+			$value = $this->normalizeAddressValue($addressProperty->getValue());
+			$addresses[] = [
+				'type' => $type,
+				'label' => match ($type) {
+					'home' => 'Privat',
+					'other' => 'Andere',
+					default => 'Arbeit',
+				},
+				'streetAddress' => trim((string)($value[2] ?? '')),
+				'postalCode' => trim((string)($value[5] ?? '')),
+				'locality' => trim((string)($value[3] ?? '')),
+			];
+		}
+
+		usort($addresses, static function (array $left, array $right): int {
+			$order = ['work' => 0, 'home' => 1, 'other' => 2];
+			return ($order[$left['type']] ?? 99) <=> ($order[$right['type']] ?? 99);
+		});
+
+		return $addresses;
+	}
+
 	private function groupContactsByCompany(array $contacts): array {
 		$grouped = [];
 		$entries = [];
@@ -1084,6 +1114,7 @@ class ContactGroupProvisioningService {
 			'streetAddress' => $this->extractStreetAddress($vCard),
 			'postalCode' => $this->extractPostalCode($vCard),
 			'locality' => $this->extractLocality($vCard),
+			'addresses' => $this->extractAllAddresses($vCard),
 			'telephoneEntries' => $telephoneEntries,
 			'telephones' => implode("\n", $telephones),
 			'emails' => implode("\n", $emails),
