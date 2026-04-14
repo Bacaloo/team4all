@@ -187,6 +187,49 @@ class ContactGroupProvisioningService {
 		return null;
 	}
 
+	public function getContactByUid(string $uid): ?array {
+		$uid = trim($uid);
+		if ($uid === '') {
+			return null;
+		}
+
+		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
+		if (!$provisioningUser instanceof IUser) {
+			return null;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return null;
+		}
+
+		$principalUri = 'principals/users/' . $provisioningUser->getUID();
+		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
+		if ($addressBook === null || !isset($addressBook['id'])) {
+			return null;
+		}
+
+		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
+			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+				continue;
+			}
+
+			$vCard = $this->parseVCard($card['carddata']);
+			if (!$vCard instanceof VCard) {
+				continue;
+			}
+
+			$currentUid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
+			if ($currentUid !== $uid) {
+				continue;
+			}
+
+			return $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''));
+		}
+
+		return null;
+	}
+
 	public function updateContactNoteByUri(string $uri, string $note): bool {
 		$uri = trim($uri);
 		if ($uri === '') {

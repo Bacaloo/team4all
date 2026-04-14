@@ -82,7 +82,7 @@ class PageController extends Controller {
 		], $saved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
 	}
 
-	public function fetchContact(string $uri = ''): JSONResponse {
+	public function fetchContact(string $uid = '', string $uri = ''): JSONResponse {
 		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'found' => false,
@@ -90,7 +90,9 @@ class PageController extends Controller {
 			], Http::STATUS_FORBIDDEN);
 		}
 
-		$contact = $this->contactGroupProvisioningService->getContactByUri($uri);
+		$contact = $uid !== ''
+			? $this->contactGroupProvisioningService->getContactByUid($uid)
+			: $this->contactGroupProvisioningService->getContactByUri($uri);
 		if ($contact === null) {
 			return new JSONResponse([
 				'found' => false,

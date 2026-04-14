@@ -397,12 +397,20 @@
         return `Anschrift (${label})`;
     };
 
-    const fetchContactByUri = async (uri) => {
-        if (!uri) {
+    const fetchContactByIdentity = async ({ uid = '', uri = '' }) => {
+        if (!uid && !uri) {
             return null;
         }
 
-        const response = await fetch(`${contactFetchUrl}?uri=${encodeURIComponent(uri)}`, {
+        const query = new URLSearchParams();
+        if (uid) {
+            query.set('uid', uid);
+        }
+        if (uri) {
+            query.set('uri', uri);
+        }
+
+        const response = await fetch(`${contactFetchUrl}?${query.toString()}`, {
             method: 'GET',
             headers: {
                 requesttoken: requestToken,
@@ -588,6 +596,16 @@
                 void saveDetailEditor(editor);
             }, 0);
         });
+
+        window.addEventListener('blur', () => {
+            void saveDetailEditor(editor);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                void saveDetailEditor(editor);
+            }
+        });
     };
 
     const showEmptyDetails = () => {
@@ -677,32 +695,41 @@
         let detailData = readTriggerDetailData(trigger);
         let noteData = {
             title: trigger.getAttribute('data-team4all-note-title') || '',
+            uid: trigger.getAttribute('data-team4all-note-uid') || '',
             uri: trigger.getAttribute('data-team4all-note-uri') || '',
             content: decodeDataValue(trigger.getAttribute('data-team4all-note-content') || ''),
         };
         let leaderData = {
             title: trigger.getAttribute('data-team4all-leader-title') || '',
+            uid: trigger.getAttribute('data-team4all-leader-uid') || '',
             uri: trigger.getAttribute('data-team4all-leader-uri') || '',
             content: decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || ''),
         };
 
         try {
-            const freshDetail = await fetchContactByUri(detailData.uri);
+            const freshDetail = await fetchContactByIdentity({
+                uid: noteData.uid,
+                uri: detailData.uri,
+            });
             if (freshDetail !== null) {
                 detailData = freshDetail;
                 noteData = {
                     title: freshDetail.title,
+                    uid: trigger.getAttribute('data-team4all-note-uid') || '',
                     uri: freshDetail.uri,
                     content: freshDetail.note,
                 };
             }
 
             if (noteMode === 'member' || noteMode === 'leader') {
-                const leaderUri = leaderData.uri || noteData.uri;
-                const freshLeader = await fetchContactByUri(leaderUri);
+                const freshLeader = await fetchContactByIdentity({
+                    uid: leaderData.uid,
+                    uri: leaderData.uri || noteData.uri,
+                });
                 if (freshLeader !== null) {
                     leaderData = {
                         title: freshLeader.title,
+                        uid: leaderData.uid,
                         uri: freshLeader.uri,
                         content: freshLeader.note,
                     };
