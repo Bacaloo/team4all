@@ -844,6 +844,10 @@ class ContactGroupProvisioningService {
 		unset($group);
 
 		foreach (array_values($grouped) as $group) {
+			if ($group['members'] === []) {
+				continue;
+			}
+
 			$entries[] = [
 				'type' => 'group',
 				'label' => $group['company'],
@@ -903,10 +907,51 @@ class ContactGroupProvisioningService {
 		$entries = $this->groupContactsByCompany($contacts);
 		$allCards = $cardDavBackend->getCards($addressBookId);
 		$createdLeader = false;
+		$activeCompanies = array_values(array_unique(array_map(
+			static fn(array $entry): string => (string)($entry['company'] ?? ''),
+			array_filter(
+				$entries,
+				static fn(array $entry): bool => $entry['type'] === 'group' && $entry['company'] !== '' && ($entry['members'] ?? []) !== []
+			)
+		)));
 		$knownUris = array_map(
 			static fn(array $contact): string => (string)($contact['uri'] ?? ''),
 			$contacts
 		);
+
+		foreach ($allCards as $card) {
+			$cardUri = (string)($card['uri'] ?? '');
+			if (!$this->isGeneratedGroupLeaderUri($cardUri) || !isset($card['carddata']) || !is_string($card['carddata'])) {
+				continue;
+			}
+
+			$vCard = $this->parseVCard($card['carddata']);
+			if (!$vCard instanceof VCard) {
+				continue;
+			}
+
+			$companies = $this->extractCompanies($vCard);
+			$hasActiveCompany = array_intersect($companies, $activeCompanies) !== [];
+			if ($hasActiveCompany) {
+				continue;
+			}
+
+			$categories = $this->extractCategories($vCard);
+			if (!in_array(self::CONTACT_GROUP_NAME, $categories, true)) {
+				continue;
+			}
+
+			$this->setCategories($vCard, array_values(array_filter(
+				$categories,
+				static fn(string $category): bool => $category !== self::CONTACT_GROUP_NAME
+			)));
+			$cardDavBackend->updateCard($addressBookId, $cardUri, $vCard->serialize());
+			$createdLeader = true;
+		}
+
+		if ($createdLeader) {
+			$allCards = $cardDavBackend->getCards($addressBookId);
+		}
 
 		foreach ($entries as $entry) {
 			if ($entry['type'] !== 'group' || $entry['company'] === '') {
@@ -1179,6 +1224,17 @@ class ContactGroupProvisioningService {
 	private function removeProperties(VCard $vCard, string $propertyName): void {
 		while (isset($vCard->$propertyName)) {
 			unset($vCard->$propertyName);
+		}
+	}
+
+	/**
+	 * @param list<string> $categories
+	 */
+	private function setCategories(VCard $vCard, array $categories): void {
+		$this->removeProperties($vCard, 'CATEGORIES');
+
+		if ($categories !== []) {
+			$vCard->add('CATEGORIES', implode(',', array_values(array_unique($categories))));
 		}
 	}
 
