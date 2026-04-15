@@ -828,18 +828,32 @@
         const query = search.value.trim().toLowerCase();
 
         groups.forEach((group) => {
-            const items = Array.from(group.querySelectorAll('[data-team4all-contact-search]'));
+            const leaderItem = group.querySelector('.team4all-contact-group__header[data-team4all-contact-search]');
+            const memberItems = Array.from(group.querySelectorAll('.team4all-contact-item[data-team4all-contact-search]'));
+            const leaderMatches = leaderItem
+                ? query === '' || ((leaderItem.getAttribute('data-team4all-contact-search') || '').toLowerCase().includes(query))
+                : false;
             let hasVisibleItems = false;
+            let hasVisibleMembers = false;
 
-            items.forEach((item) => {
+            memberItems.forEach((item) => {
                 const haystack = (item.getAttribute('data-team4all-contact-search') || '').toLowerCase();
                 const visible = query === '' || haystack.includes(query);
                 setVisible(item, visible);
 
                 if (visible) {
                     hasVisibleItems = true;
+                    hasVisibleMembers = true;
                 }
             });
+
+            if (leaderItem) {
+                const showLeader = leaderMatches || hasVisibleMembers || query === '';
+                setVisible(leaderItem, showLeader);
+                if (showLeader) {
+                    hasVisibleItems = true;
+                }
+            }
 
             const placeholder = group.querySelector('.team4all-contact-placeholder');
             if (placeholder) {
