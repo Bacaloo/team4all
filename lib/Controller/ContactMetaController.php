@@ -6,7 +6,6 @@ namespace OCA\Team4All\Controller;
 
 use OCA\Team4All\Service\AppAccessService;
 use OCA\Team4All\Service\ContactMetaService;
-use OCA\Team4All\Service\GroupProvisioningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -20,7 +19,6 @@ class ContactMetaController extends Controller {
 		IRequest $request,
 		private AppAccessService $appAccessService,
 		private ContactMetaService $contactMetaService,
-		private GroupProvisioningService $groupProvisioningService,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -35,8 +33,7 @@ class ContactMetaController extends Controller {
 			], Http::STATUS_FORBIDDEN);
 		}
 
-		$currentUser = $this->groupProvisioningService->getCurrentUser();
-		if ($contactUid === '' || $currentUser === null) {
+		if ($contactUid === '') {
 			return new JSONResponse([
 				'found' => false,
 			], Http::STATUS_BAD_REQUEST);
@@ -44,10 +41,7 @@ class ContactMetaController extends Controller {
 
 		return new JSONResponse([
 			'found' => true,
-			'meta' => $this->contactMetaService->getMetaByNcUserIdAndContactUid(
-				$currentUser->getUID(),
-				$contactUid,
-			),
+			'meta' => $this->contactMetaService->getMetaByContactUid($contactUid),
 		]);
 	}
 
@@ -64,8 +58,7 @@ class ContactMetaController extends Controller {
 			], Http::STATUS_FORBIDDEN);
 		}
 
-		$currentUser = $this->groupProvisioningService->getCurrentUser();
-		if ($contactUid === '' || $currentUser === null) {
+		if ($contactUid === '') {
 			return new JSONResponse([
 				'saved' => false,
 			], Http::STATUS_BAD_REQUEST);
@@ -73,12 +66,7 @@ class ContactMetaController extends Controller {
 
 		return new JSONResponse([
 			'saved' => true,
-			'meta' => $this->contactMetaService->saveMetaByNcUserIdAndContactUid(
-				$currentUser->getUID(),
-				$contactUid,
-				$anrede,
-				$briefanrede,
-			),
+			'meta' => $this->contactMetaService->saveMetaByContactUid($contactUid, $anrede, $briefanrede),
 		]);
 	}
 }

@@ -10,6 +10,8 @@ use OCA\Team4All\Db\ContactMeta;
 use OCA\Team4All\Db\ContactMetaMapper;
 
 class ContactMetaService {
+	private const SHARED_SCOPE = '__shared__';
+
 	public function __construct(
 		private ContactMetaMapper $contactMetaMapper,
 	) {
@@ -18,13 +20,13 @@ class ContactMetaService {
 	/**
 	 * @return array{ncUserId:string,contactUid:string,anrede:?string,briefanrede:?string,createdAt:?string,updatedAt:?string}
 	 */
-	public function getMetaByNcUserIdAndContactUid(string $ncUserId, string $contactUid): array {
-		$meta = $this->contactMetaMapper->findOneByNcUserIdAndContactUid($ncUserId, $contactUid);
+	public function getMetaByContactUid(string $contactUid): array {
+		$meta = $this->resolveSharedMeta($contactUid);
 
 		return $meta instanceof ContactMeta
 			? $this->toPayload($meta)
 			: [
-				'ncUserId' => $ncUserId,
+				'ncUserId' => self::SHARED_SCOPE,
 				'contactUid' => $contactUid,
 				'anrede' => null,
 				'briefanrede' => null,
@@ -36,22 +38,17 @@ class ContactMetaService {
 	/**
 	 * @return array{ncUserId:string,contactUid:string,anrede:?string,briefanrede:?string,createdAt:?string,updatedAt:?string}
 	 */
-	public function saveMetaByNcUserIdAndContactUid(
-		string $ncUserId,
-		string $contactUid,
-		?string $anrede,
-		?string $briefanrede,
-	): array {
-		$meta = $this->contactMetaMapper->findOneByNcUserIdAndContactUid($ncUserId, $contactUid);
+	public function saveMetaByContactUid(string $contactUid, ?string $anrede, ?string $briefanrede): array {
+		$meta = $this->resolveSharedMeta($contactUid);
 		$now = new DateTime('now', new DateTimeZone('UTC'));
 
 		if (!$meta instanceof ContactMeta) {
 			$meta = new ContactMeta();
-			$meta->setNcUserId($ncUserId);
 			$meta->setContactUid($contactUid);
 			$meta->setCreatedAt($now);
 		}
 
+		$meta->setNcUserId(self::SHARED_SCOPE);
 		$meta->setAnrede($this->normalizeNullableString($anrede));
 		$meta->setBriefanrede($this->normalizeNullableString($briefanrede));
 		$meta->setUpdatedAt($now);
@@ -63,6 +60,15 @@ class ContactMetaService {
 		}
 
 		return $this->toPayload($meta);
+	}
+
+	private function resolveSharedMeta(string $contactUid): ?ContactMeta {
+		$sharedMeta = $this->contactMetaMapper->findOneByNcUserIdAndContactUid(self::SHARED_SCOPE, $contactUid);
+		if ($sharedMeta instanceof ContactMeta) {
+			return $sharedMeta;
+		}
+
+		return $this->contactMetaMapper->findOneByContactUid($contactUid);
 	}
 
 	private function normalizeNullableString(?string $value): ?string {

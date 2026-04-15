@@ -131,6 +131,7 @@
         company: trigger.getAttribute(`${prefix}-company`) || '',
         contactUid: trigger.getAttribute(`${prefix}-uid`) || '',
         uri: trigger.getAttribute(`${prefix}-uri`) || '',
+        addressBookId: trigger.getAttribute(`${prefix}-address-book-id`) || '',
         prefix: decodeDataValue(trigger.getAttribute(`${prefix}-prefix`) || ''),
         firstName: decodeDataValue(trigger.getAttribute(`${prefix}-first-name`) || ''),
         lastName: decodeDataValue(trigger.getAttribute(`${prefix}-last-name`) || ''),
@@ -190,12 +191,14 @@
         setVisible(notesSplit, false);
     };
 
-    const assignNoteEditorState = (element, uri, value) => {
+    const assignNoteEditorState = (element, uid, uri, addressBookId, value) => {
         if (!element) {
             return;
         }
 
+        element.dataset.noteUid = uid || '';
         element.dataset.noteUri = uri || '';
+        element.dataset.noteAddressBookId = addressBookId || '';
         element.dataset.originalValue = value || '';
         element.dataset.saving = 'false';
     };
@@ -205,7 +208,9 @@
             return;
         }
 
+        element.dataset.noteUid = '';
         element.dataset.noteUri = '';
+        element.dataset.noteAddressBookId = '';
         element.dataset.originalValue = '';
         element.dataset.saving = 'false';
         element.value = '';
@@ -216,11 +221,13 @@
             return;
         }
 
+        const uid = element.dataset.noteUid || '';
         const uri = element.dataset.noteUri || '';
+        const addressBookId = element.dataset.noteAddressBookId || '';
         const originalValue = element.dataset.originalValue || '';
         const currentValue = element.value || '';
 
-        if (uri === '' || currentValue === originalValue || element.dataset.saving === 'true') {
+        if ((uid === '' && uri === '') || currentValue === originalValue || element.dataset.saving === 'true') {
             return;
         }
 
@@ -234,7 +241,9 @@
 
         try {
             const body = new URLSearchParams({
+                uid,
                 uri,
+                addressBookId,
                 note: currentValue,
             });
 
@@ -287,6 +296,7 @@
 
         editor.container.dataset.contactUri = data.uri || '';
         editor.container.dataset.contactUid = data.contactUid || '';
+        editor.container.dataset.contactAddressBookId = data.addressBookId || '';
         editor.container.dataset.originalValue = JSON.stringify({
             anrede: data.anrede || '',
             briefanrede: data.briefanrede || '',
@@ -314,6 +324,7 @@
 
         editor.container.dataset.contactUri = '';
         editor.container.dataset.contactUid = '';
+        editor.container.dataset.contactAddressBookId = '';
         editor.container.dataset.originalValue = '';
         editor.container.dataset.saving = 'false';
         editor.container.dataset.dirty = 'false';
@@ -467,7 +478,7 @@
         });
     };
 
-    const fetchContactByIdentity = async ({ uid = '', uri = '' }) => {
+    const fetchContactByIdentity = async ({ uid = '', uri = '', addressBookId = '' }) => {
         if (!uid && !uri) {
             return null;
         }
@@ -478,6 +489,9 @@
         }
         if (uri) {
             query.set('uri', uri);
+        }
+        if (addressBookId) {
+            query.set('addressBookId', addressBookId);
         }
 
         const response = await fetch(`${contactFetchUrl}?${query.toString()}`, {
@@ -501,6 +515,7 @@
             company: payload.contact.companyDisplay || payload.contact.company || '',
             contactUid: payload.contact.uid || uid || '',
             uri: payload.contact.uri || '',
+            addressBookId: String(payload.contact.addressBookId || addressBookId || ''),
             prefix: payload.contact.prefix || '',
             firstName: payload.contact.firstName || '',
             lastName: payload.contact.lastName || '',
@@ -623,11 +638,12 @@
 
         const uri = editor.container.dataset.contactUri || '';
         const contactUid = editor.container.dataset.contactUid || '';
+        const addressBookId = editor.container.dataset.contactAddressBookId || '';
         const originalValue = editor.container.dataset.originalValue || '';
         const currentValue = JSON.stringify(readDetailEditorValues(editor));
 
         if (
-            uri === ''
+            (contactUid === '' && uri === '')
             || editor.container.dataset.dirty !== 'true'
             || currentValue === originalValue
             || editor.container.dataset.saving === 'true'
@@ -647,7 +663,9 @@
         try {
             const values = readDetailEditorValues(editor);
             const contactBody = new URLSearchParams({
+                uid: contactUid,
                 uri,
+                addressBookId,
                 prefix: values.prefix,
                 firstName: values.firstName,
                 lastName: values.lastName,
@@ -766,40 +784,40 @@
         populateDetailEditor(detailEditors.single, title, data);
     };
 
-    const showSingleNote = (title, uri, content) => {
+    const showSingleNote = (title, uid, uri, addressBookId, content) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, true);
         setVisible(notesSplit, false);
         setContent(notesSingleTitle, title, 'Notiz');
         setContent(notesSingleContent, content, 'Keine Notiz vorhanden.');
-        assignNoteEditorState(notesSingleContent, uri, content);
+        assignNoteEditorState(notesSingleContent, uid, uri, addressBookId, content);
         clearNoteEditorState(notesLeaderContent);
         clearNoteEditorState(notesMemberContent);
     };
 
-    const showLeaderNote = (leaderTitle, leaderUri, leaderContent) => {
+    const showLeaderNote = (leaderTitle, leaderUid, leaderUri, leaderAddressBookId, leaderContent) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, false);
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, false);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
         setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
-        assignNoteEditorState(notesLeaderContent, leaderUri, leaderContent);
+        assignNoteEditorState(notesLeaderContent, leaderUid, leaderUri, leaderAddressBookId, leaderContent);
         setContent(notesMemberTitle, '', '');
         clearNoteEditorState(notesMemberContent);
     };
 
-    const showMemberNote = (leaderTitle, leaderUri, leaderContent, memberTitle, memberUri, memberContent) => {
+    const showMemberNote = (leaderTitle, leaderUid, leaderUri, leaderAddressBookId, leaderContent, memberTitle, memberUid, memberUri, memberAddressBookId, memberContent) => {
         setVisible(notesEmpty, false);
         setVisible(notesSingle, false);
         setVisible(notesSplit, true);
         setVisible(notesMemberSection, true);
         setContent(notesLeaderTitle, leaderTitle, 'Leader');
         setContent(notesLeaderContent, leaderContent, 'Keine Notiz vorhanden.');
-        assignNoteEditorState(notesLeaderContent, leaderUri, leaderContent);
+        assignNoteEditorState(notesLeaderContent, leaderUid, leaderUri, leaderAddressBookId, leaderContent);
         setContent(notesMemberTitle, memberTitle, 'Notiz');
         setContent(notesMemberContent, memberContent, 'Keine Notiz vorhanden.');
-        assignNoteEditorState(notesMemberContent, memberUri, memberContent);
+        assignNoteEditorState(notesMemberContent, memberUid, memberUri, memberAddressBookId, memberContent);
     };
 
     const applySearch = () => {
@@ -844,12 +862,14 @@
             title: trigger.getAttribute('data-team4all-note-title') || '',
             uid: trigger.getAttribute('data-team4all-note-uid') || '',
             uri: trigger.getAttribute('data-team4all-note-uri') || '',
+            addressBookId: trigger.getAttribute('data-team4all-note-address-book-id') || '',
             content: decodeDataValue(trigger.getAttribute('data-team4all-note-content') || ''),
         };
         let leaderData = {
             title: trigger.getAttribute('data-team4all-leader-title') || '',
             uid: trigger.getAttribute('data-team4all-leader-uid') || '',
             uri: trigger.getAttribute('data-team4all-leader-uri') || '',
+            addressBookId: trigger.getAttribute('data-team4all-leader-address-book-id') || '',
             content: decodeDataValue(trigger.getAttribute('data-team4all-leader-content') || ''),
         };
 
@@ -857,6 +877,7 @@
             const freshDetail = await fetchContactByIdentity({
                 uid: noteData.uid,
                 uri: detailData.uri,
+                addressBookId: detailData.addressBookId || noteData.addressBookId,
             });
             if (freshDetail !== null) {
                 const meta = await fetchContactMeta(freshDetail.contactUid || detailData.contactUid || noteData.uid);
@@ -865,8 +886,9 @@
                 detailData.briefanrede = meta.briefanrede;
                 noteData = {
                     title: freshDetail.title,
-                    uid: trigger.getAttribute('data-team4all-note-uid') || '',
+                    uid: freshDetail.contactUid || trigger.getAttribute('data-team4all-note-uid') || '',
                     uri: freshDetail.uri,
+                    addressBookId: freshDetail.addressBookId || noteData.addressBookId,
                     content: freshDetail.note,
                 };
             }
@@ -875,14 +897,16 @@
                 const freshLeader = await fetchContactByIdentity({
                     uid: leaderData.uid,
                     uri: leaderData.uri || noteData.uri,
+                    addressBookId: leaderData.addressBookId || noteData.addressBookId,
                 });
                 if (freshLeader !== null) {
                     const leaderDetailData = readTriggerDetailData(trigger, 'data-team4all-leader-detail');
                     const leaderMeta = await fetchContactMeta(freshLeader.contactUid || leaderDetailData.contactUid || leaderData.uid);
                     leaderData = {
                         title: freshLeader.title,
-                        uid: leaderData.uid,
+                        uid: freshLeader.contactUid || leaderData.uid,
                         uri: freshLeader.uri,
+                        addressBookId: freshLeader.addressBookId || leaderData.addressBookId,
                         content: freshLeader.note,
                     };
                     freshLeader.anrede = leaderMeta.anrede;
@@ -892,7 +916,9 @@
                         detailData = freshLeader;
                         noteData = {
                             title: freshLeader.title,
+                            uid: freshLeader.contactUid,
                             uri: freshLeader.uri,
+                            addressBookId: freshLeader.addressBookId,
                             content: freshLeader.note,
                         };
                     }
@@ -907,7 +933,9 @@
         if (noteMode === 'leader') {
             showLeaderNote(
                 leaderData.title || noteData.title,
+                leaderData.uid || noteData.uid,
                 leaderData.uri || noteData.uri,
+                leaderData.addressBookId || noteData.addressBookId,
                 leaderData.content || noteData.content
             );
             return;
@@ -916,10 +944,14 @@
         if (noteMode === 'member') {
             showMemberNote(
                 leaderData.title,
+                leaderData.uid,
                 leaderData.uri,
+                leaderData.addressBookId,
                 leaderData.content,
                 noteData.title,
+                noteData.uid,
                 noteData.uri,
+                noteData.addressBookId,
                 noteData.content
             );
             return;
@@ -927,7 +959,9 @@
 
         showSingleNote(
             noteData.title,
+            noteData.uid,
             noteData.uri,
+            noteData.addressBookId,
             noteData.content
         );
     };

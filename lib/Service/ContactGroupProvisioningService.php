@@ -25,6 +25,7 @@ class ContactGroupProvisioningService {
 
 	public function __construct(
 		private GroupProvisioningService $groupProvisioningService,
+		private AddressBookAccessService $addressBookAccessService,
 		private IServerContainer $serverContainer,
 		private LoggerInterface $logger,
 	) {
@@ -117,8 +118,8 @@ class ContactGroupProvisioningService {
 	}
 
 	public function getTeam4AllContactGroups(): array {
-		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
-		if (!$provisioningUser instanceof IUser) {
+		$currentUser = $this->groupProvisioningService->getCurrentUser();
+		if (!$currentUser instanceof IUser) {
 			return [];
 		}
 
@@ -127,36 +128,40 @@ class ContactGroupProvisioningService {
 			return [];
 		}
 
-		$principalUri = 'principals/users/' . $provisioningUser->getUID();
-		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
-		if ($addressBook === null || !isset($addressBook['id'])) {
+		$addressBooks = $this->addressBookAccessService->getReadableAddressBooksForCurrentUser($cardDavBackend);
+		if ($addressBooks === []) {
 			return [];
 		}
 
-		$cards = $cardDavBackend->getCards((int)$addressBook['id']);
-		$contacts = $this->collectTeam4AllContactsFromCards($cards);
+		$currentPrincipalUri = 'principals/users/' . $currentUser->getUID();
+		$contacts = [];
 
-		$createdLeader = $this->ensureMissingGroupLeaderContacts(
-			$cardDavBackend,
-			(int)$addressBook['id'],
-			$contacts,
-		);
-		if ($createdLeader) {
-			$cards = $cardDavBackend->getCards((int)$addressBook['id']);
-			$contacts = $this->collectTeam4AllContactsFromCards($cards);
+		foreach ($addressBooks as $addressBook) {
+			$addressBookId = (int)$addressBook['id'];
+			$cards = $cardDavBackend->getCards($addressBookId);
+			$bookContacts = $this->collectTeam4AllContactsFromCards($cards, $addressBookId);
+
+			if (($addressBook['principaluri'] ?? null) === $currentPrincipalUri) {
+				$createdLeader = $this->ensureMissingGroupLeaderContacts(
+					$cardDavBackend,
+					$addressBookId,
+					$bookContacts,
+				);
+				if ($createdLeader) {
+					$cards = $cardDavBackend->getCards($addressBookId);
+					$bookContacts = $this->collectTeam4AllContactsFromCards($cards, $addressBookId);
+				}
+			}
+
+			$contacts = array_merge($contacts, $bookContacts);
 		}
 
 		return $this->groupContactsByCompany($contacts);
 	}
 
-	public function getContactByUri(string $uri): ?array {
+	public function getContactByUri(string $uri, int $addressBookId = 0): ?array {
 		$uri = trim($uri);
 		if ($uri === '') {
-			return null;
-		}
-
-		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
-		if (!$provisioningUser instanceof IUser) {
 			return null;
 		}
 
@@ -165,79 +170,45 @@ class ContactGroupProvisioningService {
 			return null;
 		}
 
-		$principalUri = 'principals/users/' . $provisioningUser->getUID();
-		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
-		if ($addressBook === null || !isset($addressBook['id'])) {
+		$match = $this->findReadableCard($cardDavBackend, '', $uri, $addressBookId);
+		if ($match === null) {
 			return null;
 		}
 
-		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
-			if (($card['uri'] ?? '') !== $uri || !isset($card['carddata']) || !is_string($card['carddata'])) {
-				continue;
-			}
-
-			$vCard = $this->parseVCard($card['carddata']);
-			if (!$vCard instanceof VCard) {
-				return null;
-			}
-
-			return $this->buildContactDataFromCard($vCard, (string)$card['uri']);
-		}
-
-		return null;
+		return $this->buildContactDataFromCard(
+			$match['vCard'],
+			(string)($match['card']['uri'] ?? ''),
+			(int)$match['addressBook']['id'],
+		);
 	}
 
-	public function getContactByUid(string $uid): ?array {
+	public function getContactByUid(string $uid, int $addressBookId = 0): ?array {
 		$uid = trim($uid);
 		if ($uid === '') {
 			return null;
 		}
 
-		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
-		if (!$provisioningUser instanceof IUser) {
-			return null;
-		}
-
 		$cardDavBackend = $this->resolveCardDavBackend();
 		if ($cardDavBackend === null) {
 			return null;
 		}
 
-		$principalUri = 'principals/users/' . $provisioningUser->getUID();
-		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
-		if ($addressBook === null || !isset($addressBook['id'])) {
+		$match = $this->findReadableCard($cardDavBackend, $uid, '', $addressBookId);
+		if ($match === null) {
 			return null;
 		}
 
-		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
-			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
-				continue;
-			}
-
-			$vCard = $this->parseVCard($card['carddata']);
-			if (!$vCard instanceof VCard) {
-				continue;
-			}
-
-			$currentUid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
-			if ($currentUid !== $uid) {
-				continue;
-			}
-
-			return $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''));
-		}
-
-		return null;
+		return $this->buildContactDataFromCard(
+			$match['vCard'],
+			(string)($match['card']['uri'] ?? ''),
+			(int)$match['addressBook']['id'],
+		);
 	}
 
-	public function updateContactNoteByUri(string $uri, string $note): bool {
+	public function updateContactNoteByUri(string $uri, string $note, string $uid = '', int $addressBookId = 0): bool {
 		$uri = trim($uri);
-		if ($uri === '') {
-			return false;
-		}
-
-		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
-		if (!$provisioningUser instanceof IUser) {
+		$uid = trim($uid);
+		if ($uri === '' && $uid === '') {
 			return false;
 		}
 
@@ -246,36 +217,27 @@ class ContactGroupProvisioningService {
 			return false;
 		}
 
-		$principalUri = 'principals/users/' . $provisioningUser->getUID();
-		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
-		if ($addressBook === null || !isset($addressBook['id'])) {
+		$match = $this->findReadableCard($cardDavBackend, $uid, $uri, $addressBookId);
+		if ($match === null) {
 			return false;
 		}
 
-		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
-			if (($card['uri'] ?? '') !== $uri || !isset($card['carddata']) || !is_string($card['carddata'])) {
-				continue;
-			}
-
-			$vCard = $this->parseVCard($card['carddata']);
-			if (!$vCard instanceof VCard) {
-				return false;
-			}
-
-			while (isset($vCard->NOTE)) {
-				unset($vCard->NOTE);
-			}
-
-			if (trim($note) !== '') {
-				$vCard->add('NOTE', $note);
-			}
-
-			$cardDavBackend->updateCard((int)$addressBook['id'], $uri, $vCard->serialize());
-
-			return true;
+		$vCard = $match['vCard'];
+		while (isset($vCard->NOTE)) {
+			unset($vCard->NOTE);
 		}
 
-		return false;
+		if (trim($note) !== '') {
+			$vCard->add('NOTE', $note);
+		}
+
+		$cardDavBackend->updateCard(
+			(int)$match['addressBook']['id'],
+			(string)($match['card']['uri'] ?? $uri),
+			$vCard->serialize(),
+		);
+
+		return true;
 	}
 
 	public function updateContactDetailsByUri(
@@ -289,14 +251,12 @@ class ContactGroupProvisioningService {
 		string $locality,
 		string $telephones,
 		string $emails,
+		string $uid = '',
+		int $addressBookId = 0,
 	): bool {
 		$uri = trim($uri);
-		if ($uri === '') {
-			return false;
-		}
-
-		$provisioningUser = $this->groupProvisioningService->getProvisioningUser();
-		if (!$provisioningUser instanceof IUser) {
+		$uid = trim($uid);
+		if ($uri === '' && $uid === '') {
 			return false;
 		}
 
@@ -305,41 +265,32 @@ class ContactGroupProvisioningService {
 			return false;
 		}
 
-		$principalUri = 'principals/users/' . $provisioningUser->getUID();
-		$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
-		if ($addressBook === null || !isset($addressBook['id'])) {
+		$match = $this->findReadableCard($cardDavBackend, $uid, $uri, $addressBookId);
+		if ($match === null) {
 			return false;
 		}
 
-		foreach ($cardDavBackend->getCards((int)$addressBook['id']) as $card) {
-			if (($card['uri'] ?? '') !== $uri || !isset($card['carddata']) || !is_string($card['carddata'])) {
-				continue;
-			}
+		$vCard = $match['vCard'];
+		$this->applyEditableContactDetails(
+			$vCard,
+			trim($prefix),
+			trim($firstName),
+			trim($lastName),
+			trim($addressType),
+			trim($streetAddress),
+			trim($postalCode),
+			trim($locality),
+			$telephones,
+			$emails,
+		);
 
-			$vCard = $this->parseVCard($card['carddata']);
-			if (!$vCard instanceof VCard) {
-				return false;
-			}
+		$cardDavBackend->updateCard(
+			(int)$match['addressBook']['id'],
+			(string)($match['card']['uri'] ?? $uri),
+			$vCard->serialize(),
+		);
 
-			$this->applyEditableContactDetails(
-				$vCard,
-				trim($prefix),
-				trim($firstName),
-				trim($lastName),
-				trim($addressType),
-				trim($streetAddress),
-				trim($postalCode),
-				trim($locality),
-				$telephones,
-				$emails,
-			);
-
-			$cardDavBackend->updateCard((int)$addressBook['id'], $uri, $vCard->serialize());
-
-			return true;
-		}
-
-		return false;
+		return true;
 	}
 
 	private function resolveCardDavBackend(): ?object {
@@ -354,6 +305,61 @@ class ContactGroupProvisioningService {
 		}
 
 		return is_object($backend) ? $backend : null;
+	}
+
+	/**
+	 * @return array{addressBook: array<string, mixed>, card: array<string, mixed>, vCard: VCard}|null
+	 */
+	private function findReadableCard(object $cardDavBackend, string $uid = '', string $uri = '', int $addressBookId = 0): ?array {
+		$addressBooks = $this->addressBookAccessService->getReadableAddressBooksForCurrentUser($cardDavBackend);
+		if ($addressBooks === []) {
+			return null;
+		}
+
+		foreach ($addressBooks as $addressBook) {
+			$currentAddressBookId = (int)$addressBook['id'];
+			if ($addressBookId > 0 && $currentAddressBookId !== $addressBookId) {
+				continue;
+			}
+
+			foreach ($cardDavBackend->getCards($currentAddressBookId) as $card) {
+				if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+					continue;
+				}
+
+				$vCard = $this->parseVCard($card['carddata']);
+				if (!$vCard instanceof VCard) {
+					continue;
+				}
+
+				$currentUid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
+				$currentUri = (string)($card['uri'] ?? '');
+				$matchesUid = $uid !== '' && $currentUid === $uid;
+				$matchesUri = $uri !== '' && $currentUri === $uri;
+
+				if ($uid !== '' && $uri !== '') {
+					if (!$matchesUid && !$matchesUri) {
+						continue;
+					}
+				} elseif ($uid !== '') {
+					if (!$matchesUid) {
+						continue;
+					}
+				} elseif ($uri !== '') {
+					if (!$matchesUri) {
+						continue;
+					}
+				}
+
+				return [
+					'addressBook' => $addressBook,
+					'card' => $card,
+					'vCard' => $vCard,
+				];
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -821,11 +827,11 @@ class ContactGroupProvisioningService {
 			unset($group['leaderCandidates']);
 
 			if ($group['leader'] !== null) {
-				$leaderUri = $group['leader']['uri'];
+				$leaderSourceKey = (string)($group['leader']['sourceKey'] ?? $group['leader']['uri']);
 				$group['members'] = array_values(
 					array_filter(
 						$group['members'],
-						static fn(array $member): bool => $member['uri'] !== $leaderUri
+						static fn(array $member): bool => (string)($member['sourceKey'] ?? $member['uri']) !== $leaderSourceKey
 					)
 				);
 			}
@@ -908,7 +914,7 @@ class ContactGroupProvisioningService {
 			}
 
 			$company = $entry['company'];
-			$existingLeaderContact = $this->findExistingLeaderContact($allCards, $company);
+			$existingLeaderContact = $this->findExistingLeaderContact($allCards, $company, $addressBookId);
 			if ($existingLeaderContact !== null && ($entry['leader'] === null || $this->isGeneratedGroupLeaderUri($entry['leader']['uri']))) {
 				if (!in_array((string)$existingLeaderContact['uri'], $knownUris, true)) {
 					foreach ($allCards as $card) {
@@ -980,7 +986,7 @@ class ContactGroupProvisioningService {
 		return $createdLeader;
 	}
 
-	private function findExistingLeaderContact(array $cards, string $company): ?array {
+	private function findExistingLeaderContact(array $cards, string $company, int $addressBookId): ?array {
 		$candidates = [];
 
 		foreach ($cards as $card) {
@@ -1007,7 +1013,7 @@ class ContactGroupProvisioningService {
 				continue;
 			}
 
-			$candidate = $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''));
+			$candidate = $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''), $addressBookId);
 			$candidate['company'] = $normalizedCompany;
 			$candidate['companyDisplay'] = $displayCompany;
 			$candidate['companies'] = $companies;
@@ -1046,7 +1052,7 @@ class ContactGroupProvisioningService {
 	 * @param array<int, array<string, mixed>> $cards
 	 * @return list<array<string, mixed>>
 	 */
-	private function collectTeam4AllContactsFromCards(array $cards): array {
+	private function collectTeam4AllContactsFromCards(array $cards, int $addressBookId): array {
 		$contacts = [];
 
 		foreach ($cards as $card) {
@@ -1064,7 +1070,7 @@ class ContactGroupProvisioningService {
 				continue;
 			}
 
-			$contacts[] = $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''));
+			$contacts[] = $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''), $addressBookId);
 		}
 
 		return $contacts;
@@ -1073,7 +1079,7 @@ class ContactGroupProvisioningService {
 	/**
 	 * @return array<string, mixed>
 	 */
-	private function buildContactDataFromCard(VCard $vCard, string $uri): array {
+	private function buildContactDataFromCard(VCard $vCard, string $uri, int $addressBookId): array {
 		$name = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
 		$nameParts = $this->extractStructuredNameParts($vCard);
 		$note = $this->extractNote($vCard);
@@ -1104,6 +1110,8 @@ class ContactGroupProvisioningService {
 			'uid' => $uid,
 			'email' => $emails[0] ?? '',
 			'uri' => $uri,
+			'addressBookId' => $addressBookId,
+			'sourceKey' => $addressBookId . ':' . $uri,
 			'company' => $company,
 			'companyDisplay' => $displayCompany,
 			'companies' => $companies,

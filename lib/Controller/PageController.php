@@ -72,7 +72,7 @@ class PageController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	public function updateNote(string $uri, string $note = ''): JSONResponse {
+	public function updateNote(string $uri = '', string $note = '', string $uid = '', string $addressBookId = '0'): JSONResponse {
 		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'saved' => false,
@@ -80,7 +80,7 @@ class PageController extends Controller {
 			], Http::STATUS_FORBIDDEN);
 		}
 
-		$saved = $this->contactGroupProvisioningService->updateContactNoteByUri($uri, $note);
+		$saved = $this->contactGroupProvisioningService->updateContactNoteByUri($uri, $note, $uid, (int)$addressBookId);
 
 		return new JSONResponse([
 			'saved' => $saved,
@@ -88,7 +88,7 @@ class PageController extends Controller {
 	}
 
 	#[NoAdminRequired]
-	public function fetchContact(string $uid = '', string $uri = ''): JSONResponse {
+	public function fetchContact(string $uid = '', string $uri = '', string $addressBookId = '0'): JSONResponse {
 		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'found' => false,
@@ -96,9 +96,10 @@ class PageController extends Controller {
 			], Http::STATUS_FORBIDDEN);
 		}
 
+		$resolvedAddressBookId = (int)$addressBookId;
 		$contact = $uid !== ''
-			? $this->contactGroupProvisioningService->getContactByUid($uid)
-			: $this->contactGroupProvisioningService->getContactByUri($uri);
+			? $this->contactGroupProvisioningService->getContactByUid($uid, $resolvedAddressBookId)
+			: $this->contactGroupProvisioningService->getContactByUri($uri, $resolvedAddressBookId);
 		if ($contact === null) {
 			return new JSONResponse([
 				'found' => false,
@@ -113,7 +114,7 @@ class PageController extends Controller {
 
 	#[NoAdminRequired]
 	public function updateContact(
-		string $uri,
+		string $uri = '',
 		string $prefix = '',
 		string $firstName = '',
 		string $lastName = '',
@@ -123,6 +124,8 @@ class PageController extends Controller {
 		string $locality = '',
 		string $telephones = '',
 		string $emails = '',
+		string $uid = '',
+		string $addressBookId = '0',
 	): JSONResponse {
 		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
@@ -142,6 +145,8 @@ class PageController extends Controller {
 			$locality,
 			$telephones,
 			$emails,
+			$uid,
+			(int)$addressBookId,
 		);
 
 		return new JSONResponse([

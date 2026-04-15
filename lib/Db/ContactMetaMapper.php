@@ -30,4 +30,19 @@ class ContactMetaMapper extends QBMapper {
 			return null;
 		}
 	}
+
+	public function findOneByContactUid(string $contactUid): ?ContactMeta {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('contact_uid', $qb->createNamedParameter($contactUid)))
+			->orderBy('updated_at', 'DESC')
+			->setMaxResults(1);
+
+		try {
+			return $this->findEntity($qb);
+		} catch (DoesNotExistException|MultipleObjectsReturnedException) {
+			return null;
+		}
+	}
 }

@@ -42,17 +42,19 @@ Die Lösung soll so aufgebaut sein, dass später weitere Zusatzfelder ergänzt w
 
 ## Eindeutigkeit eines Datensatzes
 
-Ein Datensatz ist eindeutig über folgende Kombination definiert:
+Im aktuellen Team4All-Betriebsmodell werden diese Zusatzdaten innerhalb der App kontaktbezogen geteilt, damit berechtigte Nutzer dieselben Zusatzinformationen zum selben Kontakt sehen und bearbeiten können.
 
-- `nc_user_id`
+Ein Datensatz ist fachlich eindeutig über den jeweiligen Team4All-Kontaktkontext definiert.
+
+Technisch wird dies derzeit über die Kontakt-UID in einem gemeinsamen Team4All-Scope umgesetzt.
+
 - `contact_uid`
 
 ### Bedeutung
 
-- `nc_user_id` = Nextcloud-Benutzer, dem der Kontaktkontext zugeordnet ist
-- `contact_uid` = stabile UID des Kontakts aus dem Contacts-/vCard-Kontext
+- `contact_uid` = stabile UID des Kontakts aus dem Contacts-/vCard-Kontext innerhalb des in Team4All ausgewerteten Adressbuchkontexts
 
-Für dieselbe Kombination aus Benutzer und Kontakt darf es nur **einen** Datensatz geben.
+Für denselben in Team4All bearbeiteten Kontakt darf es nur **einen** Datensatz geben.
 
 ---
 
@@ -91,7 +93,7 @@ Es sollen mindestens folgende Datenbankregeln existieren:
 
 ### Lesen
 
-Wenn für eine Kombination aus `nc_user_id` und `contact_uid` ein Datensatz existiert, sollen die Zusatzfelder geladen und an die App zurückgegeben werden.
+Wenn für einen Team4All-Kontakt ein Datensatz existiert, sollen die Zusatzfelder geladen und an die App zurückgegeben werden.
 
 Wenn kein Datensatz existiert, soll die App einen leeren Ergebniszustand liefern, aber keinen Fehler werfen.
 
@@ -99,7 +101,7 @@ Wenn kein Datensatz existiert, soll die App einen leeren Ergebniszustand liefern
 
 Beim Speichern gilt:
 
-- Existiert noch kein Datensatz für `nc_user_id + contact_uid`, wird ein neuer Datensatz angelegt.
+- Existiert noch kein Datensatz für den Kontakt, wird ein neuer Datensatz angelegt.
 - Existiert bereits ein Datensatz, wird dieser aktualisiert.
 - Es dürfen keine Dubletten entstehen.
 
@@ -129,7 +131,7 @@ Die Zusatzdaten sollen über klar getrennte Klassen gekapselt werden, mindestens
 
 ## Schnittstelle
 
-Es soll eine einfache Schnittstelle geben, um Zusatzdaten anhand von `nc_user_id` und `contact_uid` zu laden und zu speichern.
+Es soll eine einfache Schnittstelle geben, um Zusatzdaten anhand des Team4All-Kontakts und seiner `contact_uid` zu laden und zu speichern.
 
 Diese Schnittstelle kann je nach vorhandener Projektstruktur z. B. sein:
 
