@@ -101,6 +101,25 @@ class AddressBookAccessService {
 	}
 
 	/**
+	 * @param list<array<string, mixed>> $addressBooks
+	 * @return array<string, mixed>|null
+	 */
+	public function findAddressBookByIdentity(array $addressBooks, string $identity): ?array {
+		$identity = trim($identity);
+		if ($identity === '') {
+			return null;
+		}
+
+		foreach ($addressBooks as $addressBook) {
+			if ($this->getAddressBookIdentity($addressBook) === $identity) {
+				return $addressBook;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * @param array<int, array<string, mixed>> $addressBooks
 	 * @return array<int, array<string, mixed>>
 	 */

@@ -26,6 +26,7 @@ class ContactGroupProvisioningService {
 	public function __construct(
 		private GroupProvisioningService $groupProvisioningService,
 		private AddressBookAccessService $addressBookAccessService,
+		private AddressBookSelectionService $addressBookSelectionService,
 		private IServerContainer $serverContainer,
 		private LoggerInterface $logger,
 	) {
@@ -50,7 +51,7 @@ class ContactGroupProvisioningService {
 			}
 
 			$principalUri = 'principals/users/' . $provisioningUser->getUID();
-			$addressBook = $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
+			$addressBook = $this->resolveProvisioningAddressBook($cardDavBackend, $principalUri);
 			if ($addressBook === null || !isset($addressBook['id'])) {
 				$this->logger->warning('Skipped Team4All contact group provisioning because the default contacts address book could not be resolved.', [
 					'uid' => $provisioningUser->getUID(),
@@ -389,6 +390,22 @@ class ContactGroupProvisioningService {
 		]);
 
 		return $cardDavBackend->getAddressBookById((int)$addressBookId);
+	}
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	private function resolveProvisioningAddressBook(object $cardDavBackend, string $principalUri): ?array {
+		$selectedIdentity = $this->addressBookSelectionService->getDefaultAddressBookId();
+		if ($selectedIdentity !== '') {
+			$addressBooks = $this->addressBookAccessService->getAddressBooksForPrincipal($cardDavBackend, $principalUri);
+			$selectedAddressBook = $this->addressBookAccessService->findAddressBookByIdentity($addressBooks, $selectedIdentity);
+			if ($selectedAddressBook !== null) {
+				return $selectedAddressBook;
+			}
+		}
+
+		return $this->resolveContactsAddressBook($cardDavBackend, $principalUri);
 	}
 
 	/**

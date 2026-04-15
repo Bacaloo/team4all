@@ -24,6 +24,7 @@ class AdminSettings implements ISettings {
 		return new TemplateResponse('team4all', 'admin', [
 			'addressBooks' => $this->teamAddressBookCatalogService->getSharedAddressBookOptionsForTeam(),
 			'selectedAddressBookIds' => $this->addressBookSelectionService->getSelectedAddressBookIds(),
+			'defaultAddressBookId' => $this->addressBookSelectionService->getDefaultAddressBookId(),
 			'pageTitle' => $this->l10n->t('Nutzbare Adressbücher'),
 			'saveUrl' => $this->urlGenerator->linkToRoute('team4all.adminSettings.save'),
 		]);

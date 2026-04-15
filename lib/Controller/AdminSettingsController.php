@@ -27,7 +27,7 @@ class AdminSettingsController extends Controller {
 	 */
 	#[AdminRequired]
 	#[NoCSRFRequired]
-	public function save(array|string|null $addressBookIds = null): RedirectResponse {
+	public function save(array|string|null $addressBookIds = null, string $defaultAddressBookId = ''): RedirectResponse {
 		$selected = [];
 		if (is_array($addressBookIds)) {
 			$selected = array_values($addressBookIds);
@@ -36,6 +36,7 @@ class AdminSettingsController extends Controller {
 		}
 
 		$this->addressBookSelectionService->saveSelectedAddressBookIds($selected);
+		$this->addressBookSelectionService->saveDefaultAddressBookId($defaultAddressBookId);
 
 		$target = $this->request->getHeader('Referer');
 		if (!is_string($target) || trim($target) === '') {

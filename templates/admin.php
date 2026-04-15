@@ -12,6 +12,7 @@
 
 	<form method="post" action="<?php p($_['saveUrl'] ?? ''); ?>">
 		<?php $selectedAddressBookIds = $_['selectedAddressBookIds'] ?? []; ?>
+		<?php $defaultAddressBookId = $_['defaultAddressBookId'] ?? ''; ?>
 		<?php $addressBooks = $_['addressBooks'] ?? []; ?>
 
 		<?php if ($addressBooks === []): ?>
@@ -36,6 +37,24 @@
 				</p>
 			<?php endforeach; ?>
 		<?php endif; ?>
+
+		<h3><?php p('Standardadressbuch fuer automatisch angelegte Datensaetze'); ?></h3>
+		<p><?php p('Hier wird festgelegt, in welchem der ausgewaehlten Adressbuecher automatisch erzeugte Team4All-Kontakte angelegt werden.'); ?></p>
+		<p>
+			<label for="team4all-default-address-book"><?php p('Standardadressbuch'); ?></label>
+			<br>
+			<select id="team4all-default-address-book" name="defaultAddressBookId">
+				<option value=""><?php p('Kein festes Standardadressbuch'); ?></option>
+				<?php foreach ($addressBooks as $addressBook): ?>
+					<option
+						value="<?php p($addressBook['id']); ?>"
+						<?php if ((string)$addressBook['id'] === (string)$defaultAddressBookId): ?>selected="selected"<?php endif; ?>
+					>
+						<?php p($addressBook['label']); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+		</p>
 
 		<p>
 			<button class="button button-primary" type="submit"><?php p('Auswahl speichern'); ?></button>

@@ -9,6 +9,7 @@ use OCP\IConfig;
 
 class AddressBookSelectionService {
 	private const CONFIG_KEY = 'allowed_address_books';
+	private const DEFAULT_CONFIG_KEY = 'default_address_book';
 
 	public function __construct(
 		private IConfig $config,
@@ -32,11 +33,35 @@ class AddressBookSelectionService {
 	 * @param list<string> $addressBookIds
 	 */
 	public function saveSelectedAddressBookIds(array $addressBookIds): void {
+		$normalizedIds = $this->normalizeAddressBookIds($addressBookIds);
 		$this->config->setAppValue(
 			Application::APP_ID,
 			self::CONFIG_KEY,
-			json_encode($this->normalizeAddressBookIds($addressBookIds), JSON_THROW_ON_ERROR),
+			json_encode($normalizedIds, JSON_THROW_ON_ERROR),
 		);
+
+		$defaultAddressBookId = $this->getDefaultAddressBookId();
+		if ($defaultAddressBookId !== '' && !in_array($defaultAddressBookId, $normalizedIds, true)) {
+			$this->clearDefaultAddressBookId();
+		}
+	}
+
+	public function getDefaultAddressBookId(): string {
+		return trim($this->config->getAppValue(Application::APP_ID, self::DEFAULT_CONFIG_KEY, ''));
+	}
+
+	public function saveDefaultAddressBookId(string $addressBookId): void {
+		$addressBookId = trim($addressBookId);
+		if ($addressBookId === '') {
+			$this->clearDefaultAddressBookId();
+			return;
+		}
+
+		$this->config->setAppValue(Application::APP_ID, self::DEFAULT_CONFIG_KEY, $addressBookId);
+	}
+
+	public function clearDefaultAddressBookId(): void {
+		$this->config->deleteAppValue(Application::APP_ID, self::DEFAULT_CONFIG_KEY);
 	}
 
 	/**
