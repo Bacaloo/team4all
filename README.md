@@ -12,9 +12,9 @@ Teamarbeit für alle im Unternehmen
 
 ## Pflegehinweise
 
-Die Sichtbarkeit und Nutzbarkeit der App wird gruppenbasiert über die Kontengruppe `Team4All` gesteuert.
-- Mitglieder der Gruppe `Team4All` sehen die App im Menü und dürfen sie nutzen.
-- Nichtmitglieder sehen die App nicht im Menü und dürfen sie nicht nutzen.
+Die Sichtbarkeit und Nutzbarkeit der App ist standardmäßig für alle angemeldeten Nextcloud-Nutzer freigegeben.
+- Zusätzliche Einschränkungen sollen künftig app-intern und funktionsbezogen umgesetzt werden, nicht über die bloße Mitgliedschaft in der Kontengruppe `Team4All`.
+- Die Kontengruppe `Team4All` bleibt für Provisioning und technische Zielstrukturen relevant.
 - Solange die Gruppe noch nicht existiert, darf ein Administrator die App einmalig aufrufen. Dabei wird die Gruppe `Team4All` angelegt und der angemeldete Administrator als erstes Mitglied hinzugefügt.
 - Für Version `0.4.0` wird zusätzlich ein Team-Ordner `Team4All` sichergestellt. Die Kontengruppe `Team4All` erhält darauf standardmäßig Nur-Lese-Zugriff.
 - Ab Version `0.4.1` arbeitet Team4All fachlich nur mit Adressbuchkontakten, die in der Kontaktgruppe `Team4All` liegen.

@@ -19,20 +19,6 @@ class GroupProvisioningService {
 	) {
 	}
 
-	public function canCurrentUserAccess(): bool {
-		$user = $this->userSession->getUser();
-		if (!$user instanceof IUser) {
-			return false;
-		}
-
-		$group = $this->groupManager->get(self::GROUP_ID);
-		if ($group instanceof IGroup) {
-			return $group->inGroup($user);
-		}
-
-		return $this->isAdminUser($user);
-	}
-
 	public function isCurrentUserAdmin(): bool {
 		$user = $this->userSession->getUser();
 

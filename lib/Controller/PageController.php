@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\Controller;
 
+use OCA\Team4All\Service\AppAccessService;
 use OCA\Team4All\Service\ContactGroupProvisioningService;
 use OCA\Team4All\Service\GroupProvisioningService;
 use OCA\Team4All\Service\TeamFolderProvisioningService;
@@ -33,6 +34,7 @@ class PageController extends Controller {
 		string $appName,
 		IRequest $request,
 		private IAppManager $appManager,
+		private AppAccessService $appAccessService,
 		private ContactGroupProvisioningService $contactGroupProvisioningService,
 		private GroupProvisioningService $groupProvisioningService,
 		private TeamFolderProvisioningService $teamFolderProvisioningService,
@@ -43,7 +45,7 @@ class PageController extends Controller {
 	#[NoCSRFRequired]
 	#[NoAdminRequired]
 	public function index(): TemplateResponse {
-		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
 			$response = new TemplateResponse($this->appName, 'access_denied');
 			$response->setStatus(Http::STATUS_FORBIDDEN);
 
@@ -69,8 +71,9 @@ class PageController extends Controller {
 		]);
 	}
 
+	#[NoAdminRequired]
 	public function updateNote(string $uri, string $note = ''): JSONResponse {
-		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'saved' => false,
 				'message' => 'Access denied.',
@@ -84,8 +87,9 @@ class PageController extends Controller {
 		], $saved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
 	}
 
+	#[NoAdminRequired]
 	public function fetchContact(string $uid = '', string $uri = ''): JSONResponse {
-		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'found' => false,
 				'message' => 'Access denied.',
@@ -107,6 +111,7 @@ class PageController extends Controller {
 		]);
 	}
 
+	#[NoAdminRequired]
 	public function updateContact(
 		string $uri,
 		string $prefix = '',
@@ -119,7 +124,7 @@ class PageController extends Controller {
 		string $telephones = '',
 		string $emails = '',
 	): JSONResponse {
-		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'saved' => false,
 				'message' => 'Access denied.',

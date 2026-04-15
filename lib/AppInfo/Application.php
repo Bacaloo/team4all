@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\AppInfo;
 
+use OCA\Team4All\Service\AppAccessService;
 use OCA\Team4All\Service\GroupProvisioningService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -29,9 +30,9 @@ class Application extends App implements IBootstrap {
 	public function registerNavigation(
 		INavigationManager $navigationManager,
 		IURLGenerator $urlGenerator,
-		GroupProvisioningService $groupProvisioningService,
+		AppAccessService $appAccessService,
 	): void {
-		if (!$groupProvisioningService->canCurrentUserAccess()) {
+		if (!$appAccessService->canCurrentUserAccess()) {
 			return;
 		}
 

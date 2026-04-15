@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\Controller;
 
+use OCA\Team4All\Service\AppAccessService;
 use OCA\Team4All\Service\ContactMetaService;
 use OCA\Team4All\Service\GroupProvisioningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -16,6 +18,7 @@ class ContactMetaController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
+		private AppAccessService $appAccessService,
 		private ContactMetaService $contactMetaService,
 		private GroupProvisioningService $groupProvisioningService,
 	) {
@@ -23,8 +26,9 @@ class ContactMetaController extends Controller {
 	}
 
 	#[NoCSRFRequired]
+	#[NoAdminRequired]
 	public function show(string $contactUid = ''): JSONResponse {
-		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'found' => false,
 				'message' => 'Access denied.',
@@ -47,12 +51,13 @@ class ContactMetaController extends Controller {
 		]);
 	}
 
+	#[NoAdminRequired]
 	public function save(
 		string $contactUid,
 		?string $anrede = null,
 		?string $briefanrede = null,
 	): JSONResponse {
-		if (!$this->groupProvisioningService->canCurrentUserAccess()) {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([
 				'saved' => false,
 				'message' => 'Access denied.',
