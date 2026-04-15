@@ -32,13 +32,13 @@
     }
 
     const search = document.getElementById('team4all-contact-search');
-    const groups = Array.from(root.querySelectorAll('.team4all-contact-group'));
-    const triggers = Array.from(root.querySelectorAll('.team4all-contact-trigger'));
+    const contactList = root.querySelector('.team4all-contact-list');
     const requestToken = document.head?.dataset?.requesttoken || '';
     const noteSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/note`;
     const contactSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/contact`;
     const contactFetchUrl = `${window.OC?.webroot || ''}/apps/team4all/contact/fetch`;
     const contactMetaUrl = `${window.OC?.webroot || ''}/apps/team4all/contact-meta`;
+    const contactListRefreshUrl = window.location.href;
 
     const notesEmpty = document.getElementById('team4all-notes-empty');
     const notesSingle = document.getElementById('team4all-notes-single');
@@ -839,6 +839,7 @@
         }
 
         const query = search.value.trim().toLowerCase();
+        const groups = Array.from(root.querySelectorAll('.team4all-contact-group'));
 
         groups.forEach((group) => {
             const leaderItem = group.querySelector('.team4all-contact-group__header[data-team4all-contact-search]');
@@ -878,6 +879,40 @@
 
             setVisible(group, hasVisibleItems);
         });
+    };
+
+    const refreshContactList = async () => {
+        if (!contactList) {
+            return;
+        }
+
+        try {
+            const response = await fetch(contactListRefreshUrl, {
+                method: 'GET',
+                headers: {
+                    requesttoken: requestToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Refreshing contact list failed with status ${response.status}`);
+            }
+
+            const html = await response.text();
+            const parser = new DOMParser();
+            const documentFragment = parser.parseFromString(html, 'text/html');
+            const refreshedContactList = documentFragment.querySelector('.team4all-contact-list');
+
+            if (!refreshedContactList) {
+                throw new Error('Refreshing contact list failed because no contact list was returned.');
+            }
+
+            contactList.replaceChildren(...Array.from(refreshedContactList.childNodes).map((node) => node.cloneNode(true)));
+            applySearch();
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const activateTrigger = async (trigger) => {
@@ -993,19 +1028,23 @@
         );
     };
 
-    triggers.forEach((trigger) => {
-        trigger.addEventListener('click', () => {
-            void activateTrigger(trigger);
-        });
+    root.addEventListener('click', (event) => {
+        const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger') : null;
+        if (!trigger) {
+            return;
+        }
 
-        trigger.addEventListener('keydown', (event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') {
-                return;
-            }
+        void activateTrigger(trigger);
+    });
 
-            event.preventDefault();
-            void activateTrigger(trigger);
-        });
+    root.addEventListener('keydown', (event) => {
+        const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger') : null;
+        if (!trigger || (event.key !== 'Enter' && event.key !== ' ')) {
+            return;
+        }
+
+        event.preventDefault();
+        void activateTrigger(trigger);
     });
 
     if (search) {
@@ -1021,4 +1060,12 @@
     registerNoteEditor(notesLeaderContent);
     registerNoteEditor(notesMemberContent);
     registerDetailEditor(detailEditors.single);
+
+    window.setInterval(() => {
+        if (document.visibilityState === 'hidden') {
+            return;
+        }
+
+        void refreshContactList();
+    }, 30000);
 })();
