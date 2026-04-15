@@ -15,7 +15,7 @@ use OCP\IURLGenerator;
 
 class AdminSettingsController extends Controller {
 	public function __construct(
-		private IRequest $request,
+		IRequest $request,
 		private AddressBookSelectionService $addressBookSelectionService,
 		private IURLGenerator $urlGenerator,
 	) {
