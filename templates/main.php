@@ -12,12 +12,12 @@ $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
     id="team4all-root"
     class="team4all-root"
     data-team4all-icon-url="<?= p($team4AllFaviconUrl) ?>"
-    style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:50px minmax(0,1fr);gap:12px;padding:8px 12px 12px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
+    style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);gap:12px;padding:8px 12px 12px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
 >
     <section
         class="team4all-toolbar"
         aria-label="Kontaktsuche"
-        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:stretch;gap:16px;min-height:50px;padding:10px 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
+        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:stretch;gap:16px;padding:10px 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;width:100%;"
     >
         <div class="team4all-toolbar__content">
             <?php if ($frontendFilterGroups !== []): ?>
