@@ -106,7 +106,7 @@
     padding: 4px 9px;
     border: 1px solid rgba(15, 23, 42, 0.14);
     border-radius: 999px;
-    background: #ffffff;
+    background: #eceff3;
     color: inherit;
     cursor: pointer;
     font-size: 0.75rem;
@@ -115,8 +115,8 @@
 }
 
 .team4all-filter-chip[aria-pressed="true"] {
-    border-color: #5f9a78;
-    background: #dff1e5;
+    border-color: #2f8f4e;
+    background: #6fd08d;
     font-weight: 700;
 }
 
