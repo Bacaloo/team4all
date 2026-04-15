@@ -103,6 +103,7 @@
 }
 
 .team4all-filter-chip {
+    appearance: none;
     padding: 4px 9px;
     border: 1px solid rgba(15, 23, 42, 0.14);
     border-radius: 999px;
@@ -114,10 +115,30 @@
     transition: background-color 120ms ease, border-color 120ms ease;
 }
 
+.team4all-filter-chip:hover,
+.team4all-filter-chip:focus,
+.team4all-filter-chip:focus-visible,
+.team4all-filter-chip:active {
+    background: #eceff3;
+    border-color: rgba(15, 23, 42, 0.14);
+    box-shadow: none;
+    outline: none;
+}
+
 .team4all-filter-chip[aria-pressed="true"] {
     border-color: #2f8f4e;
     background: #6fd08d;
     font-weight: 700;
+}
+
+.team4all-filter-chip[aria-pressed="true"]:hover,
+.team4all-filter-chip[aria-pressed="true"]:focus,
+.team4all-filter-chip[aria-pressed="true"]:focus-visible,
+.team4all-filter-chip[aria-pressed="true"]:active {
+    border-color: #2f8f4e;
+    background: #6fd08d;
+    box-shadow: none;
+    outline: none;
 }
 
 @media (max-width: 1100px) {
