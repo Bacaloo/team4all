@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\Team4All\Controller;
 
 use OCA\Team4All\Service\AppAccessService;
+use OCA\Team4All\Service\ContactGroupFilterService;
 use OCA\Team4All\Service\ContactGroupProvisioningService;
 use OCA\Team4All\Service\GroupProvisioningService;
 use OCA\Team4All\Service\TeamFolderProvisioningService;
@@ -35,6 +36,7 @@ class PageController extends Controller {
 		IRequest $request,
 		private IAppManager $appManager,
 		private AppAccessService $appAccessService,
+		private ContactGroupFilterService $contactGroupFilterService,
 		private ContactGroupProvisioningService $contactGroupProvisioningService,
 		private GroupProvisioningService $groupProvisioningService,
 		private TeamFolderProvisioningService $teamFolderProvisioningService,
@@ -68,6 +70,7 @@ class PageController extends Controller {
 		return new TemplateResponse($this->appName, 'main', [
 			'team4AllGroups' => $team4AllGroups,
 			'team4AllGroupCount' => count($team4AllGroups),
+			'frontendFilterGroups' => $this->contactGroupFilterService->getSelectedFrontendFilterGroups(),
 		]);
 	}
 

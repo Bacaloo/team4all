@@ -6,6 +6,7 @@ namespace OCA\Team4All\Controller;
 
 use OCA\Team4All\AppInfo\Application;
 use OCA\Team4All\Service\AddressBookSelectionService;
+use OCA\Team4All\Service\ContactGroupFilterService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -17,6 +18,7 @@ class AdminSettingsController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private AddressBookSelectionService $addressBookSelectionService,
+		private ContactGroupFilterService $contactGroupFilterService,
 		private IURLGenerator $urlGenerator,
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -26,10 +28,16 @@ class AdminSettingsController extends Controller {
 	 * @param array<string, array<int, string>|string>|null $addressBookIds
 	 * @param array<string, string>|null $defaultAddressBookId
 	 * @param array<int, string>|null $teamUserUids
+	 * @param array<int, string>|string|null $frontendFilterGroups
 	 */
 	#[AdminRequired]
 	#[NoCSRFRequired]
-	public function save(array|null $addressBookIds = null, array|null $defaultAddressBookId = null, array|null $teamUserUids = null): RedirectResponse {
+	public function save(
+		array|null $addressBookIds = null,
+		array|null $defaultAddressBookId = null,
+		array|null $teamUserUids = null,
+		array|string|null $frontendFilterGroups = null,
+	): RedirectResponse {
 		foreach ($teamUserUids ?? [] as $userUid) {
 			if (!is_string($userUid) || trim($userUid) === '') {
 				continue;
@@ -49,6 +57,15 @@ class AdminSettingsController extends Controller {
 				is_string($defaultAddressBookId[$userUid] ?? null) ? (string)$defaultAddressBookId[$userUid] : '',
 			);
 		}
+
+		$selectedFrontendFilterGroups = [];
+		if (is_array($frontendFilterGroups)) {
+			$selectedFrontendFilterGroups = array_values(array_filter($frontendFilterGroups, static fn(mixed $value): bool => is_string($value)));
+		} elseif (is_string($frontendFilterGroups) && trim($frontendFilterGroups) !== '') {
+			$selectedFrontendFilterGroups = [trim($frontendFilterGroups)];
+		}
+
+		$this->contactGroupFilterService->saveSelectedFrontendFilterGroups($selectedFrontendFilterGroups);
 
 		$target = $this->request->getHeader('Referer');
 		if (!is_string($target) || trim($target) === '') {

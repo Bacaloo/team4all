@@ -6,6 +6,7 @@ script('team4all', 'main');
 style('team4all', 'main');
 
 $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
+$frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
 ?>
 <div
     id="team4all-root"
@@ -16,13 +17,27 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
     <section
         class="team4all-toolbar"
         aria-label="Kontaktsuche"
-        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:stretch;gap:16px;height:50px;padding:0 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
+        style="grid-column:1 / -1;display:flex;align-items:center;justify-content:stretch;gap:16px;min-height:50px;padding:10px 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
         <div class="team4all-toolbar__content">
             <label class="team4all-search">
                 <span class="team4all-search__icon" aria-hidden="true"></span>
                 <input id="team4all-contact-search" type="search" placeholder="Kontakte suchen" autocomplete="off" aria-label="Kontakte suchen" />
             </label>
+            <?php if ($frontendFilterGroups !== []): ?>
+                <div class="team4all-toolbar__filters" aria-label="Kontaktgruppenfilter">
+                    <?php foreach ($frontendFilterGroups as $filterGroup): ?>
+                        <button
+                            type="button"
+                            class="team4all-filter-chip"
+                            data-team4all-filter-group="<?= p(mb_strtolower((string)$filterGroup)) ?>"
+                            aria-pressed="false"
+                        >
+                            <?= p((string)$filterGroup) ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </section>
 
@@ -53,6 +68,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 									tabindex="0"
 									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger team4all-contact-trigger--text"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['person']['searchText'])) ?>"
+									data-team4all-contact-groups="<?= p(base64_encode(json_encode($entry['person']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-note-mode="single"
 									data-team4all-note-title="<?= p($entry['person']['name']) ?>"
 									data-team4all-note-uid="<?= p($entry['person']['uid']) ?>"
@@ -89,6 +105,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 									type="button"
 									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['leader']['searchText'])) ?>"
+									data-team4all-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-note-mode="leader"
 									data-team4all-note-title="<?= p($entry['leader']['name']) ?>"
 									data-team4all-note-uid="<?= p($entry['leader']['uid']) ?>"
@@ -151,6 +168,7 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 											tabindex="0"
 											class="team4all-contact-item team4all-contact-trigger team4all-contact-trigger--text"
 											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
+											data-team4all-contact-groups="<?= p(base64_encode(json_encode($member['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
 											data-team4all-note-title="<?= p($member['name']) ?>"
 												data-team4all-note-uid="<?= p($member['uid']) ?>"

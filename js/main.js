@@ -33,6 +33,7 @@
 
     const search = document.getElementById('team4all-contact-search');
     const contactList = root.querySelector('.team4all-contact-list');
+    const filterChips = Array.from(root.querySelectorAll('.team4all-filter-chip'));
     const requestToken = document.head?.dataset?.requesttoken || '';
     const noteSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/note`;
     const contactSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/contact`;
@@ -104,6 +105,8 @@
         element.textContent = value && value.trim() !== '' ? value : fallback;
     };
 
+    const activeFilterGroups = new Set();
+
     const decodeDataValue = (value) => {
         if (!value) {
             return '';
@@ -125,6 +128,31 @@
             return decodeURIComponent(decoded);
         } catch (error) {
             return value;
+        }
+    };
+
+    const readContactGroups = (element) => {
+        if (!element) {
+            return [];
+        }
+
+        const encoded = element.getAttribute('data-team4all-contact-groups') || '';
+        if (encoded === '') {
+            return [];
+        }
+
+        try {
+            const parsed = JSON.parse(decodeDataValue(encoded));
+            if (!Array.isArray(parsed)) {
+                return [];
+            }
+
+            return parsed
+                .filter((value) => typeof value === 'string')
+                .map((value) => value.trim().toLowerCase())
+                .filter((value) => value !== '');
+        } catch (error) {
+            return [];
         }
     };
 
@@ -840,19 +868,30 @@
 
         const query = search.value.trim().toLowerCase();
         const groups = Array.from(root.querySelectorAll('.team4all-contact-group'));
+        const hasActiveGroupFilters = activeFilterGroups.size > 0;
 
         groups.forEach((group) => {
             const leaderItem = group.querySelector('.team4all-contact-group__header[data-team4all-contact-search]');
             const memberItems = Array.from(group.querySelectorAll('.team4all-contact-item[data-team4all-contact-search]'));
             const leaderMatches = leaderItem
-                ? query === '' || ((leaderItem.getAttribute('data-team4all-contact-search') || '').toLowerCase().includes(query))
+                ? (
+                    (query === '' || ((leaderItem.getAttribute('data-team4all-contact-search') || '').toLowerCase().includes(query)))
+                    && (
+                        !hasActiveGroupFilters
+                        || readContactGroups(leaderItem).some((groupName) => activeFilterGroups.has(groupName))
+                    )
+                )
                 : false;
             let hasVisibleItems = false;
             let hasVisibleMembers = false;
 
             memberItems.forEach((item) => {
                 const haystack = (item.getAttribute('data-team4all-contact-search') || '').toLowerCase();
-                const visible = query === '' || haystack.includes(query);
+                const visible = (query === '' || haystack.includes(query))
+                    && (
+                        !hasActiveGroupFilters
+                        || readContactGroups(item).some((groupName) => activeFilterGroups.has(groupName))
+                    );
                 setVisible(item, visible);
 
                 if (visible) {
@@ -862,7 +901,7 @@
             });
 
             if (leaderItem) {
-                const showLeader = leaderMatches || hasVisibleMembers || query === '';
+                const showLeader = leaderMatches || hasVisibleMembers || (query === '' && !hasActiveGroupFilters);
                 setVisible(leaderItem, showLeader);
                 if (showLeader) {
                     hasVisibleItems = true;
@@ -871,8 +910,8 @@
 
             const placeholder = group.querySelector('.team4all-contact-placeholder');
             if (placeholder) {
-                setVisible(placeholder, query === '');
-                if (query === '') {
+                setVisible(placeholder, query === '' && !hasActiveGroupFilters);
+                if (query === '' && !hasActiveGroupFilters) {
                     hasVisibleItems = true;
                 }
             }
@@ -1029,6 +1068,23 @@
     };
 
     root.addEventListener('click', (event) => {
+        const filterChip = event.target instanceof Element ? event.target.closest('.team4all-filter-chip') : null;
+        if (filterChip) {
+            const filterGroup = (filterChip.getAttribute('data-team4all-filter-group') || '').trim().toLowerCase();
+            if (filterGroup !== '') {
+                if (activeFilterGroups.has(filterGroup)) {
+                    activeFilterGroups.delete(filterGroup);
+                    filterChip.setAttribute('aria-pressed', 'false');
+                } else {
+                    activeFilterGroups.add(filterGroup);
+                    filterChip.setAttribute('aria-pressed', 'true');
+                }
+
+                applySearch();
+            }
+            return;
+        }
+
         const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger') : null;
         if (!trigger) {
             return;

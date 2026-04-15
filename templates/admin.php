@@ -2,6 +2,41 @@
 /** @var array $_ */
 ?>
 <div id="team4all-admin-settings" class="section">
+	<style>
+		.team4all-admin-pill-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-top: 8px;
+		}
+
+		.team4all-admin-pill-grid input[type="checkbox"] {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.team4all-admin-pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 6px 12px;
+			border: 1px solid rgba(15,23,42,.18);
+			border-radius: 999px;
+			background: #f8fbff;
+			cursor: pointer;
+			user-select: none;
+		}
+
+		.team4all-admin-pill input[type="checkbox"]:checked + span {
+			font-weight: 700;
+		}
+
+		.team4all-admin-pill:has(input[type="checkbox"]:checked) {
+			border-color: #3d6a8b;
+			background: rgba(61,106,139,.12);
+		}
+	</style>
 	<h2><?php p($_['pageTitle'] ?? 'Team4All'); ?></h2>
 	<p>
 		<?php p('Waehle fuer jeden Nutzer einzeln aus, welche fuer ihn sichtbaren freigegebenen Adressbuecher aus dem NC-Team Team4All in Team4All genutzt werden duerfen.'); ?>
@@ -14,6 +49,8 @@
 		<?php $selectedAddressBookIdsByUser = $_['selectedAddressBookIdsByUser'] ?? []; ?>
 		<?php $defaultAddressBookIdsByUser = $_['defaultAddressBookIdsByUser'] ?? []; ?>
 		<?php $addressBooksByUser = $_['addressBooksByUser'] ?? []; ?>
+		<?php $availableContactGroups = $_['availableContactGroups'] ?? []; ?>
+		<?php $selectedFrontendFilterGroups = $_['selectedFrontendFilterGroups'] ?? []; ?>
 
 		<?php if ($addressBooksByUser === []): ?>
 			<p><?php p('Aktuell wurden keine geteilten Adressbuecher im NC-Team Team4All gefunden.'); ?></p>
@@ -72,6 +109,28 @@
 					</p>
 				</fieldset>
 			<?php endforeach; ?>
+		<?php endif; ?>
+
+		<h3><?php p('Klickbare Frontend-Filter'); ?></h3>
+		<p><?php p('Waehle die Kontaktgruppen aus, die im Frontend als klickbare Filter angeboten werden sollen.'); ?></p>
+		<?php if ($availableContactGroups === []): ?>
+			<p><?php p('Aktuell wurden keine Kontaktgruppen fuer die Filterauswahl gefunden.'); ?></p>
+		<?php else: ?>
+			<div class="team4all-admin-pill-grid">
+				<?php foreach ($availableContactGroups as $contactGroup): ?>
+					<?php $inputId = 'team4all-filter-group-' . md5((string)$contactGroup); ?>
+					<label class="team4all-admin-pill" for="<?php p($inputId); ?>">
+						<input
+							id="<?php p($inputId); ?>"
+							type="checkbox"
+							name="frontendFilterGroups[]"
+							value="<?php p($contactGroup); ?>"
+							<?php if (in_array($contactGroup, $selectedFrontendFilterGroups, true)): ?>checked="checked"<?php endif; ?>
+						/>
+						<span><?php p($contactGroup); ?></span>
+					</label>
+				<?php endforeach; ?>
+			</div>
 		<?php endif; ?>
 
 		<p>

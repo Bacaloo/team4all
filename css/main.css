@@ -36,8 +36,8 @@
     align-items: center;
     justify-content: stretch;
     gap: 16px;
-    height: 50px;
-    padding: 0 20px;
+    min-height: 50px;
+    padding: 10px 20px;
     border: 1px solid rgba(15, 23, 42, 0.14);
     border-radius: 20px;
     background: #ffffff;
@@ -47,7 +47,9 @@
 
 .team4all-toolbar__content {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
     width: 100%;
 }
 
@@ -85,6 +87,28 @@
     border: 1px solid rgba(15, 23, 42, 0.14);
     border-radius: 10px;
     background: #f8fbff;
+}
+
+.team4all-toolbar__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.team4all-filter-chip {
+    padding: 6px 12px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 999px;
+    background: #f8fbff;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.team4all-filter-chip[aria-pressed="true"] {
+    border-color: #3d6a8b;
+    background: rgba(61, 106, 139, 0.12);
+    font-weight: 700;
 }
 
 .team4all-status {
