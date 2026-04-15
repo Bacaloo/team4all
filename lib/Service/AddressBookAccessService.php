@@ -63,7 +63,7 @@ class AddressBookAccessService {
 	 */
 	public function getAddressBookIdentity(array $addressBook): string {
 		$ownerUid = $this->extractOwnerUid($addressBook);
-		$uri = trim((string)($addressBook['uri'] ?? ''));
+		$uri = $this->normalizeComparableUri(trim((string)($addressBook['uri'] ?? '')), $ownerUid);
 
 		if ($ownerUid !== '' && $uri !== '') {
 			return 'owner:' . $ownerUid . '|uri:' . $uri;
@@ -98,6 +98,19 @@ class AddressBookAccessService {
 		$displayName = trim((string)($addressBook['{DAV:}displayname'] ?? ''));
 
 		return $displayName !== '' ? $displayName : trim((string)($addressBook['uri'] ?? ''));
+	}
+
+	private function normalizeComparableUri(string $uri, string $ownerUid): string {
+		if ($uri === '' || $ownerUid === '') {
+			return $uri;
+		}
+
+		$suffix = '_shared_by_' . $ownerUid;
+		if (str_ends_with($uri, $suffix)) {
+			return substr($uri, 0, -strlen($suffix)) ?: $uri;
+		}
+
+		return $uri;
 	}
 
 	/**
