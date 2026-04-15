@@ -135,26 +135,30 @@ class ContactGroupProvisioningService {
 		}
 
 		$currentPrincipalUri = 'principals/users/' . $currentUser->getUID();
+		$targetAddressBook = $this->resolveProvisioningAddressBook($cardDavBackend, $currentPrincipalUri);
 		$contacts = [];
 
 		foreach ($addressBooks as $addressBook) {
 			$addressBookId = (int)$addressBook['id'];
 			$cards = $cardDavBackend->getCards($addressBookId);
 			$bookContacts = $this->collectTeam4AllContactsFromCards($cards, $addressBookId);
+			$contacts = array_merge($contacts, $bookContacts);
+		}
 
-			if (($addressBook['principaluri'] ?? null) === $currentPrincipalUri) {
-				$createdLeader = $this->ensureMissingGroupLeaderContacts(
-					$cardDavBackend,
-					$addressBookId,
-					$bookContacts,
-				);
-				if ($createdLeader) {
+		if ($targetAddressBook !== null && isset($targetAddressBook['id'])) {
+			$createdLeader = $this->ensureMissingGroupLeaderContacts(
+				$cardDavBackend,
+				(int)$targetAddressBook['id'],
+				$contacts,
+			);
+			if ($createdLeader) {
+				$contacts = [];
+				foreach ($addressBooks as $addressBook) {
+					$addressBookId = (int)$addressBook['id'];
 					$cards = $cardDavBackend->getCards($addressBookId);
-					$bookContacts = $this->collectTeam4AllContactsFromCards($cards, $addressBookId);
+					$contacts = array_merge($contacts, $this->collectTeam4AllContactsFromCards($cards, $addressBookId));
 				}
 			}
-
-			$contacts = array_merge($contacts, $bookContacts);
 		}
 
 		return $this->groupContactsByCompany($contacts);
@@ -569,7 +573,7 @@ class ContactGroupProvisioningService {
 			return '';
 		}
 
-		if (preg_match('/^([[:alnum:]]{4})-([0-9]+)$/u', $value, $matches) === 1) {
+		if (preg_match('/^([[:alnum:]]{4})-/u', $value, $matches) === 1) {
 			return $matches[1];
 		}
 
@@ -815,7 +819,6 @@ class ContactGroupProvisioningService {
 
 	private function groupContactsByCompany(array $contacts): array {
 		$grouped = [];
-		$entries = [];
 
 		foreach ($contacts as $contact) {
 			$companies = array_values(array_filter(
@@ -824,13 +827,15 @@ class ContactGroupProvisioningService {
 			));
 
 			if ($companies === []) {
-				$entries[] = [
-					'type' => 'person',
+				$pseudoGroupKey = '__person__' . (string)($contact['sourceKey'] ?? $contact['uri'] ?? $contact['uid'] ?? $contact['name']);
+				$grouped[$pseudoGroupKey] = [
+					'type' => 'group',
 					'label' => $contact['name'],
 					'company' => '',
-					'leader' => null,
+					'leader' => $contact,
 					'members' => [],
-					'person' => $contact,
+					'person' => null,
+					'isPseudoGroup' => true,
 				];
 				continue;
 			}
@@ -838,10 +843,14 @@ class ContactGroupProvisioningService {
 			foreach ($companies as $company) {
 				if (!isset($grouped[$company])) {
 					$grouped[$company] = [
+						'type' => 'group',
+						'label' => $company,
 						'company' => $company,
 						'leader' => null,
 						'leaderCandidates' => [],
 						'members' => [],
+						'person' => null,
+						'isPseudoGroup' => false,
 					];
 				}
 
@@ -866,18 +875,6 @@ class ContactGroupProvisioningService {
 						static fn(array $member): bool => (string)($member['sourceKey'] ?? $member['uri']) !== $leaderSourceKey
 					)
 				);
-			} elseif ($group['members'] !== []) {
-				$group['leader'] = $this->pickPreferredDisplayLeaderFromMembers($group['members']);
-
-				if ($group['leader'] !== null) {
-					$leaderSourceKey = (string)($group['leader']['sourceKey'] ?? $group['leader']['uri']);
-					$group['members'] = array_values(
-						array_filter(
-							$group['members'],
-							static fn(array $member): bool => (string)($member['sourceKey'] ?? $member['uri']) !== $leaderSourceKey
-						)
-					);
-				}
 			}
 
 			usort(
@@ -887,19 +884,13 @@ class ContactGroupProvisioningService {
 		}
 		unset($group);
 
+		$entries = [];
 		foreach (array_values($grouped) as $group) {
 			if ($group['leader'] === null && $group['members'] === []) {
 				continue;
 			}
 
-			$entries[] = [
-				'type' => 'group',
-				'label' => $group['company'],
-				'company' => $group['company'],
-				'leader' => $group['leader'],
-				'members' => $group['members'],
-				'person' => null,
-			];
+			$entries[] = $group;
 		}
 
 		usort(
@@ -925,28 +916,6 @@ class ContactGroupProvisioningService {
 		return $candidates[0];
 	}
 
-	private function pickPreferredDisplayLeaderFromMembers(array $members): ?array {
-		if ($members === []) {
-			return null;
-		}
-
-		usort($members, function (array $left, array $right): int {
-			$leftScore = $this->displayLeaderFallbackScore($left);
-			$rightScore = $this->displayLeaderFallbackScore($right);
-
-			if ($leftScore !== $rightScore) {
-				return $rightScore <=> $leftScore;
-			}
-
-			return strcasecmp((string)($left['name'] ?? ''), (string)($right['name'] ?? ''));
-		});
-
-		$leader = $members[0];
-		$leader['isFallbackLeader'] = true;
-
-		return $leader;
-	}
-
 	private function isGeneratedGroupLeaderUri(string $uri): bool {
 		return str_starts_with($uri, self::GROUP_LEADER_URI_PREFIX);
 	}
@@ -963,24 +932,6 @@ class ContactGroupProvisioningService {
 		}
 
 		if (trim($candidate['rawName']) !== '') {
-			$score += 10;
-		}
-
-		return $score;
-	}
-
-	private function displayLeaderFallbackScore(array $candidate): int {
-		$score = 0;
-
-		if (!$this->isGeneratedGroupLeaderUri((string)($candidate['uri'] ?? ''))) {
-			$score += 100;
-		}
-
-		if (trim((string)($candidate['rawName'] ?? '')) !== '') {
-			$score += 50;
-		}
-
-		if (trim((string)($candidate['note'] ?? '')) !== '') {
 			$score += 10;
 		}
 
@@ -1173,7 +1124,7 @@ class ContactGroupProvisioningService {
 		$vCard->FN = $company;
 		$vCard->N = [$company, '', '', '', ''];
 		$vCard->ORG = $company;
-		$vCard->NOTE = 'Adresskarte automatisch durch Team4All angelegt.';
+		$vCard->NOTE = 'Kontakt automatisch durch Team4All angelegt.';
 		$vCard->add('CATEGORIES', self::CONTACT_GROUP_NAME);
 	}
 

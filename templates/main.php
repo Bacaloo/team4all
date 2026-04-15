@@ -135,55 +135,14 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 									data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 									data-team4all-leader-detail-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 								>
-									<strong><?= p($entry['company']) ?></strong>
+									<strong><?= p($entry['company'] !== '' ? $entry['company'] : $entry['leader']['name']) ?></strong>
 								</button>
 							<?php else: ?>
 								<div class="team4all-contact-group__header">
 									<strong><?= p($entry['company']) ?></strong>
 								</div>
 							<?php endif; ?>
-							<?php if ($entry['leader'] === null && count($entry['members']) === 1): ?>
-								<span
-									role="button"
-									tabindex="0"
-									class="team4all-contact-item team4all-contact-item--single team4all-contact-trigger team4all-contact-trigger--text"
-									data-team4all-contact-search="<?= p(mb_strtolower($entry['members'][0]['searchText'])) ?>"
-									data-team4all-note-mode="single"
-									data-team4all-note-title="<?= p($entry['members'][0]['name']) ?>"
-									data-team4all-note-uid="<?= p($entry['members'][0]['uid']) ?>"
-									data-team4all-note-uri="<?= p($entry['members'][0]['uri']) ?>"
-									data-team4all-note-address-book-id="<?= p((string)$entry['members'][0]['addressBookId']) ?>"
-									data-team4all-note-content="<?= p(base64_encode($entry['members'][0]['note'])) ?>"
-									data-team4all-detail-mode="single"
-									data-team4all-detail-title="<?= p($entry['members'][0]['name']) ?>"
-									data-team4all-detail-company="<?= p($entry['members'][0]['companyDisplay'] ?? $entry['members'][0]['company']) ?>"
-									data-team4all-detail-uid="<?= p($entry['members'][0]['uid']) ?>"
-									data-team4all-detail-uri="<?= p($entry['members'][0]['uri']) ?>"
-									data-team4all-detail-address-book-id="<?= p((string)$entry['members'][0]['addressBookId']) ?>"
-									data-team4all-detail-prefix="<?= p(base64_encode($entry['members'][0]['prefix'])) ?>"
-									data-team4all-detail-first-name="<?= p(base64_encode($entry['members'][0]['firstName'])) ?>"
-									data-team4all-detail-last-name="<?= p(base64_encode($entry['members'][0]['lastName'])) ?>"
-									data-team4all-detail-address-type="<?= p($entry['members'][0]['addressType']) ?>"
-									data-team4all-detail-street-address="<?= p(base64_encode($entry['members'][0]['streetAddress'])) ?>"
-									data-team4all-detail-postal-code="<?= p(base64_encode($entry['members'][0]['postalCode'])) ?>"
-									data-team4all-detail-locality="<?= p(base64_encode($entry['members'][0]['locality'])) ?>"
-									data-team4all-detail-addresses="<?= p(base64_encode(json_encode($entry['members'][0]['addresses'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
-									data-team4all-detail-telephones="<?= p(base64_encode($entry['members'][0]['telephones'])) ?>"
-									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['members'][0]['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
-									data-team4all-detail-emails="<?= p(base64_encode($entry['members'][0]['emails'])) ?>"
-									data-team4all-detail-contact-groups="<?= p(base64_encode(json_encode($entry['members'][0]['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
-								>
-									<strong><?= p($entry['members'][0]['name']) ?></strong>
-								</span>
-							<?php else: ?>
-								<?php if ($entry['leader'] === null): ?>
-									<div class="team4all-contact-placeholder">
-										<strong>Kein Gruppenleader</strong>
-										<span>Es wurde kein Kontakt gefunden, bei dem Kontaktname und Firma uebereinstimmen.</span>
-									</div>
-								<?php endif; ?>
-							<?php endif; ?>
-							<?php if ($entry['members'] !== [] && !($entry['leader'] === null && count($entry['members']) === 1)): ?>
+							<?php if ($entry['members'] !== []): ?>
 								<ul class="team4all-contact-items<?= $entry['leader'] !== null ? ' team4all-contact-items--indented' : '' ?>">
 									<?php foreach ($entry['members'] as $member): ?>
 										<li>
