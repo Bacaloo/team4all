@@ -20,10 +20,6 @@ $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
         style="grid-column:1 / -1;display:flex;align-items:center;justify-content:stretch;gap:16px;min-height:50px;padding:10px 20px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
         <div class="team4all-toolbar__content">
-            <label class="team4all-search">
-                <span class="team4all-search__icon" aria-hidden="true"></span>
-                <input id="team4all-contact-search" type="search" placeholder="Kontakte suchen" autocomplete="off" aria-label="Kontakte suchen" />
-            </label>
             <?php if ($frontendFilterGroups !== []): ?>
                 <div class="team4all-toolbar__filters" aria-label="Kontaktgruppenfilter">
                     <?php foreach ($frontendFilterGroups as $filterGroup): ?>
@@ -38,6 +34,10 @@ $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+            <label class="team4all-search">
+                <span class="team4all-search__icon" aria-hidden="true"></span>
+                <input id="team4all-contact-search" type="search" placeholder="Kontakte suchen" autocomplete="off" aria-label="Kontakte suchen" />
+            </label>
         </div>
     </section>
 

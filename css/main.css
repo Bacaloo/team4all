@@ -46,10 +46,10 @@
 }
 
 .team4all-toolbar__content {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
     width: 100%;
 }
 
@@ -58,6 +58,7 @@
     align-items: center;
     gap: 12px;
     width: 100%;
+    min-width: 0;
 }
 
 .team4all-search__label {
@@ -90,9 +91,13 @@
 }
 
 .team4all-toolbar__filters {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    align-items: start;
+    justify-content: start;
+    width: max-content;
 }
 
 .team4all-filter-chip {
@@ -109,6 +114,19 @@
     border-color: #3d6a8b;
     background: rgba(61, 106, 139, 0.12);
     font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+    .team4all-toolbar__content {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .team4all-toolbar__filters {
+        grid-auto-flow: row;
+        grid-template-rows: none;
+        grid-template-columns: repeat(auto-fit, minmax(120px, max-content));
+        width: 100%;
+    }
 }
 
 .team4all-status {
