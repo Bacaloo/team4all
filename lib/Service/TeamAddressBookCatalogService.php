@@ -62,7 +62,7 @@ class TeamAddressBookCatalogService {
 
 		$sharedBooks = array_values(array_filter(
 			$booksById,
-			static fn(array $book): bool => $this->isSharedWithinTeam($book, $teamUserUids)
+			fn(array $book): bool => $this->isSharedWithinTeam($book, $teamUserUids)
 		));
 
 		if ($sharedBooks === []) {
