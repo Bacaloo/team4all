@@ -773,11 +773,12 @@ class ContactGroupProvisioningService {
 	 */
 	private function extractAllAddresses(VCard $vCard): array {
 		$addresses = [];
+		$seenAddresses = [];
 
 		foreach ($vCard->select('ADR') as $addressProperty) {
 			$type = $this->getAddressType($addressProperty);
 			$value = $this->normalizeAddressValue($addressProperty->getValue());
-			$addresses[] = [
+			$address = [
 				'type' => $type,
 				'label' => match ($type) {
 					'home' => 'Privat',
@@ -788,6 +789,20 @@ class ContactGroupProvisioningService {
 				'postalCode' => trim((string)($value[5] ?? '')),
 				'locality' => trim((string)($value[3] ?? '')),
 			];
+
+			$dedupeKey = implode('|', [
+				$type,
+				mb_strtolower($address['streetAddress']),
+				mb_strtolower($address['postalCode']),
+				mb_strtolower($address['locality']),
+			]);
+
+			if (isset($seenAddresses[$dedupeKey])) {
+				continue;
+			}
+
+			$seenAddresses[$dedupeKey] = true;
+			$addresses[] = $address;
 		}
 
 		usort($addresses, static function (array $left, array $right): int {
@@ -851,6 +866,18 @@ class ContactGroupProvisioningService {
 						static fn(array $member): bool => (string)($member['sourceKey'] ?? $member['uri']) !== $leaderSourceKey
 					)
 				);
+			} elseif ($group['members'] !== []) {
+				$group['leader'] = $this->pickPreferredDisplayLeaderFromMembers($group['members']);
+
+				if ($group['leader'] !== null) {
+					$leaderSourceKey = (string)($group['leader']['sourceKey'] ?? $group['leader']['uri']);
+					$group['members'] = array_values(
+						array_filter(
+							$group['members'],
+							static fn(array $member): bool => (string)($member['sourceKey'] ?? $member['uri']) !== $leaderSourceKey
+						)
+					);
+				}
 			}
 
 			usort(
@@ -861,7 +888,7 @@ class ContactGroupProvisioningService {
 		unset($group);
 
 		foreach (array_values($grouped) as $group) {
-			if ($group['members'] === []) {
+			if ($group['leader'] === null && $group['members'] === []) {
 				continue;
 			}
 
@@ -898,6 +925,28 @@ class ContactGroupProvisioningService {
 		return $candidates[0];
 	}
 
+	private function pickPreferredDisplayLeaderFromMembers(array $members): ?array {
+		if ($members === []) {
+			return null;
+		}
+
+		usort($members, function (array $left, array $right): int {
+			$leftScore = $this->displayLeaderFallbackScore($left);
+			$rightScore = $this->displayLeaderFallbackScore($right);
+
+			if ($leftScore !== $rightScore) {
+				return $rightScore <=> $leftScore;
+			}
+
+			return strcasecmp((string)($left['name'] ?? ''), (string)($right['name'] ?? ''));
+		});
+
+		$leader = $members[0];
+		$leader['isFallbackLeader'] = true;
+
+		return $leader;
+	}
+
 	private function isGeneratedGroupLeaderUri(string $uri): bool {
 		return str_starts_with($uri, self::GROUP_LEADER_URI_PREFIX);
 	}
@@ -914,6 +963,24 @@ class ContactGroupProvisioningService {
 		}
 
 		if (trim($candidate['rawName']) !== '') {
+			$score += 10;
+		}
+
+		return $score;
+	}
+
+	private function displayLeaderFallbackScore(array $candidate): int {
+		$score = 0;
+
+		if (!$this->isGeneratedGroupLeaderUri((string)($candidate['uri'] ?? ''))) {
+			$score += 100;
+		}
+
+		if (trim((string)($candidate['rawName'] ?? '')) !== '') {
+			$score += 50;
+		}
+
+		if (trim((string)($candidate['note'] ?? '')) !== '') {
 			$score += 10;
 		}
 
