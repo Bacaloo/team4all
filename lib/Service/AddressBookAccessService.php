@@ -137,7 +137,7 @@ class AddressBookAccessService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	protected function filterReadableAddressBooksForCurrentUser(array $addressBooks, IUser $currentUser): array {
-		$selectedAddressBookIds = $this->addressBookSelectionService->getSelectedAddressBookIds();
+		$selectedAddressBookIds = $this->addressBookSelectionService->getSelectedAddressBookIds($currentUser->getUID());
 		if ($selectedAddressBookIds === []) {
 			return $addressBooks;
 		}

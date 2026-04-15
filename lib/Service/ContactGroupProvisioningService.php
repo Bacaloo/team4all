@@ -400,7 +400,12 @@ class ContactGroupProvisioningService {
 	 * @return array<string, mixed>|null
 	 */
 	private function resolveProvisioningAddressBook(object $cardDavBackend, string $principalUri): ?array {
-		$selectedIdentity = $this->addressBookSelectionService->getDefaultAddressBookId();
+		$userUid = '';
+		if (preg_match('#principals/users/([^/]+)$#', $principalUri, $matches) === 1) {
+			$userUid = $matches[1];
+		}
+
+		$selectedIdentity = $this->addressBookSelectionService->getDefaultAddressBookId($userUid);
 		if ($selectedIdentity !== '') {
 			$addressBooks = $this->addressBookAccessService->getAddressBooksForPrincipal($cardDavBackend, $principalUri);
 			$selectedAddressBook = $this->addressBookAccessService->findAddressBookByIdentity($addressBooks, $selectedIdentity);

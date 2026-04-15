@@ -22,6 +22,27 @@ class TeamAddressBookCatalogService {
 	 * @return list<array{id:string,label:string,ownerUid:string,uri:string,displayName:string,visibleFor:list<string>}>
 	 */
 	public function getSharedAddressBookOptionsForTeam(): array {
+		$grouped = $this->getSharedAddressBookOptionsForTeamByUser();
+		$allBooks = [];
+
+		foreach ($grouped as $userEntry) {
+			foreach ($userEntry['addressBooks'] as $addressBook) {
+				$allBooks[$addressBook['id']] = $addressBook;
+			}
+		}
+
+		$sharedBooks = array_values($allBooks);
+		usort($sharedBooks, static function (array $left, array $right): int {
+			return strcasecmp($left['label'], $right['label']);
+		});
+
+		return $sharedBooks;
+	}
+
+	/**
+	 * @return list<array{uid:string,displayName:string,addressBooks:list<array{id:string,label:string,ownerUid:string,uri:string,displayName:string,visibleFor:list<string>}>>>
+	 */
+	public function getSharedAddressBookOptionsForTeamByUser(): array {
 		$cardDavBackend = $this->resolveCardDavBackend();
 		if ($cardDavBackend === null) {
 			return [];
@@ -33,7 +54,9 @@ class TeamAddressBookCatalogService {
 			$this->groupProvisioningService->getTeam4AllGroupUsers(),
 		);
 
-		foreach ($this->groupProvisioningService->getTeam4AllGroupUsers() as $user) {
+		$teamUsers = $this->groupProvisioningService->getTeam4AllGroupUsers();
+
+		foreach ($teamUsers as $user) {
 			$viewerUid = $user->getUID();
 			$principalUri = 'principals/users/' . $viewerUid;
 			$addressBooks = $this->addressBookAccessService->getAddressBooksForPrincipal($cardDavBackend, $principalUri);
@@ -76,7 +99,27 @@ class TeamAddressBookCatalogService {
 			return strcasecmp($left['label'], $right['label']);
 		});
 
-		return $sharedBooks;
+		$booksByViewer = [];
+		foreach ($teamUsers as $user) {
+			$viewerUid = $user->getUID();
+			$booksByViewer[$viewerUid] = [
+				'uid' => $viewerUid,
+				'displayName' => $user->getDisplayName() ?: $viewerUid,
+				'addressBooks' => [],
+			];
+		}
+
+		foreach ($sharedBooks as $addressBook) {
+			foreach ($addressBook['visibleFor'] as $viewerUid) {
+				if (!isset($booksByViewer[$viewerUid])) {
+					continue;
+				}
+
+				$booksByViewer[$viewerUid]['addressBooks'][] = $addressBook;
+			}
+		}
+
+		return array_values($booksByViewer);
 	}
 
 	private function resolveCardDavBackend(): ?object {

@@ -21,10 +21,24 @@ class AdminSettings implements ISettings {
 	}
 
 	public function getForm(): TemplateResponse {
+		$addressBooksByUser = $this->teamAddressBookCatalogService->getSharedAddressBookOptionsForTeamByUser();
+		$selectedAddressBookIdsByUser = [];
+		$defaultAddressBookIdsByUser = [];
+
+		foreach ($addressBooksByUser as $userEntry) {
+			$userUid = trim((string)($userEntry['uid'] ?? ''));
+			if ($userUid === '') {
+				continue;
+			}
+
+			$selectedAddressBookIdsByUser[$userUid] = $this->addressBookSelectionService->getSelectedAddressBookIds($userUid);
+			$defaultAddressBookIdsByUser[$userUid] = $this->addressBookSelectionService->getDefaultAddressBookId($userUid);
+		}
+
 		return new TemplateResponse('team4all', 'admin', [
-			'addressBooks' => $this->teamAddressBookCatalogService->getSharedAddressBookOptionsForTeam(),
-			'selectedAddressBookIds' => $this->addressBookSelectionService->getSelectedAddressBookIds(),
-			'defaultAddressBookId' => $this->addressBookSelectionService->getDefaultAddressBookId(),
+			'addressBooksByUser' => $addressBooksByUser,
+			'selectedAddressBookIdsByUser' => $selectedAddressBookIdsByUser,
+			'defaultAddressBookIdsByUser' => $defaultAddressBookIdsByUser,
 			'pageTitle' => $this->l10n->t('Nutzbare Adressbücher'),
 			'saveUrl' => $this->urlGenerator->linkToRoute('team4all.adminSettings.save'),
 		]);
