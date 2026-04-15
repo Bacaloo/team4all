@@ -864,8 +864,10 @@ class ContactGroupProvisioningService {
 		}
 
 		foreach ($grouped as &$group) {
-			$group['leader'] = $this->pickPreferredLeaderCandidate($group['leaderCandidates']);
-			unset($group['leaderCandidates']);
+			if (array_key_exists('leaderCandidates', $group)) {
+				$group['leader'] = $this->pickPreferredLeaderCandidate($group['leaderCandidates']);
+				unset($group['leaderCandidates']);
+			}
 
 			if ($group['leader'] !== null) {
 				$leaderSourceKey = (string)($group['leader']['sourceKey'] ?? $group['leader']['uri']);
