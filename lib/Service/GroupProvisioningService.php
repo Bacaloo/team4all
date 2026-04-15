@@ -60,6 +60,21 @@ class GroupProvisioningService {
 		return $adminUsers[0] ?? null;
 	}
 
+	/**
+	 * @return list<IUser>
+	 */
+	public function getTeam4AllGroupUsers(): array {
+		$group = $this->groupManager->get(self::GROUP_ID);
+		if (!$group instanceof IGroup) {
+			return [];
+		}
+
+		return array_values(array_filter(
+			$group->getUsers(),
+			static fn(mixed $user): bool => $user instanceof IUser
+		));
+	}
+
 	public function ensureTeam4AllGroup(): void {
 		$group = $this->groupManager->get(self::GROUP_ID);
 		if ($group instanceof IGroup) {

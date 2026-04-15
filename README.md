@@ -19,6 +19,7 @@ Die Sichtbarkeit und Nutzbarkeit der App ist standardmäßig für alle angemelde
 - Team4All wertet für den aktuell angemeldeten Nutzer alle in Nextcloud sichtbaren Adressbücher aus, also eigene und freigegebene Adressbücher.
 - In Team4All sichtbar und bearbeitbar bleiben dabei weiterhin nur Kontakte, die in der Kontaktgruppe `Team4All` liegen.
 - Team4All-Zusatzdaten wie `anrede` und `briefanrede` werden kontaktbezogen geteilt, damit berechtigte Nutzer dieselben Werte sehen und bearbeiten.
+- In den Administratoreneinstellungen gibt es einen eigenen Bereich `Team4All`, in dem ausgewaehlt werden kann, welche geteilten Adressbuecher aus dem NC-Team `Team4All` in der App nutzbar sind.
 - Für Version `0.4.0` wird zusätzlich ein Team-Ordner `Team4All` sichergestellt. Die Kontengruppe `Team4All` erhält darauf standardmäßig Nur-Lese-Zugriff.
 - Ab Version `0.4.1` arbeitet Team4All fachlich nur mit Adressbuchkontakten, die in der Kontaktgruppe `Team4All` liegen.
 - Bei jeder App-Aktivierung wird ausschließlich im Standard-Adressbuch `contacts` des Provisionierungs-/Admin-Benutzers geprüft, ob die Kontaktgruppe `Team4All` vorhanden ist. Wenn nicht, wird sie dort über den ersten Kontakt des Provisionierungs-/Admin-Benutzers hergestellt.

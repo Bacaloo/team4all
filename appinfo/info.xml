@@ -5,7 +5,7 @@
   <name>Team4All</name>
   <summary>Teamarbeit für alle im Unternehmen</summary>
   <description>Grundgerüst der Team4All Nextcloud-App mit Basisroute und Startseite.</description>
-  <version>0.5.2</version>
+  <version>0.5.3</version>
   <licence>AGPL-3.0-or-later</licence>
   <author>Team4All</author>
   <namespace>Team4All</namespace>
@@ -21,6 +21,10 @@
       <step>OCA\Team4All\Repair\EnsureTeam4AllStructure</step>
     </install>
   </repair-steps>
+  <settings>
+    <admin>OCA\Team4All\Settings\AdminSettings</admin>
+    <admin-section>OCA\Team4All\Settings\AdminSection</admin-section>
+  </settings>
   <navigations>
     <navigation>
       <id>team4all</id>

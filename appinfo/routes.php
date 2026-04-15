@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
 	'routes' => [
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
+		['name' => 'adminSettings#save', 'url' => '/admin/address-books', 'verb' => 'POST'],
 		['name' => 'page#fetchContact', 'url' => '/contact/fetch', 'verb' => 'GET'],
 		['name' => 'contactMeta#show', 'url' => '/contact-meta', 'verb' => 'GET'],
 		['name' => 'contactMeta#save', 'url' => '/contact-meta', 'verb' => 'POST'],

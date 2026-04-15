@@ -7,6 +7,7 @@ Die Kontengruppe `Team4All` bleibt für Provisioning und technische Zielstruktur
 Team4All wertet für den aktuellen Nutzer alle sichtbaren bzw. freigegebenen Adressbücher aus.
 In Team4All sichtbar bleiben weiterhin nur Kontakte aus der Kontaktgruppe `Team4All`.
 Team4All-Zusatzdaten werden pro Kontakt geteilt statt pro NC-Benutzer getrennt gespeichert.
+Die zulaessigen Team4All-Adressbuecher werden ueber einen eigenen Administratorenbereich der App konfiguriert.
 Team4All arbeitet fachlich nur mit Adressbuchkontakten aus der Kontaktgruppe `Team4All`.
 Die Kontaktgruppen-Provisionierung arbeitet dabei ausschließlich mit dem Standard-Adressbuch `contacts` des Provisionierungs-/Admin-Benutzers.
 Für Team4All ist die direkte Auswertung der CardDAV-/Adressbuchdaten maßgeblich. Die Anzeige in der Contacts-App ist dafür nicht die fachliche Referenz.
