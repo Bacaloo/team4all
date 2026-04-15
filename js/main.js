@@ -55,12 +55,14 @@
     const detailsSingle = document.getElementById('team4all-details-single');
     const detailsSingleEditor = document.getElementById('team4all-details-single-editor');
     const detailsSingleTitle = document.getElementById('team4all-details-single-title');
+    const detailsSingleCompany = document.getElementById('team4all-details-single-company');
     const detailsSingleAddressOrigin = document.getElementById('team4all-details-single-address-origin');
 
     const detailEditors = {
         single: {
             container: detailsSingleEditor,
             title: detailsSingleTitle,
+            company: detailsSingleCompany,
             addressOrigin: detailsSingleAddressOrigin,
             fields: {
                 anrede: document.getElementById('team4all-details-single-anrede'),
@@ -566,14 +568,23 @@
         const trimmedCompany = (company || '').trim();
 
         if (trimmedTitle === '') {
-            return trimmedCompany;
+            return {
+                title: '',
+                company: trimmedCompany,
+            };
         }
 
         if (trimmedCompany === '') {
-            return trimmedTitle;
+            return {
+                title: trimmedTitle,
+                company: '',
+            };
         }
 
-        return `${trimmedTitle} (${trimmedCompany})`;
+        return {
+            title: trimmedTitle,
+            company: ` (${trimmedCompany})`,
+        };
     };
 
     const populateDetailEditor = (editor, title, data) => {
@@ -581,7 +592,9 @@
             return;
         }
 
-        setContent(editor.title, buildDetailTitle(title, data.company), 'Kontaktdaten');
+        const detailTitle = buildDetailTitle(title, data.company);
+        setContent(editor.title, detailTitle.title, 'Kontaktdaten');
+        setContent(editor.company, detailTitle.company, '');
         editor.fields.anrede.value = data.anrede || '';
         editor.fields.briefanrede.value = data.briefanrede || '';
         editor.fields.prefix.value = data.prefix || '';

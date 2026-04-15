@@ -374,6 +374,14 @@ button.team4all-contact-trigger {
     font-weight: 700;
 }
 
+.team4all-details__title-name {
+    font-weight: 700;
+}
+
+.team4all-details__title-company {
+    font-weight: 400;
+}
+
 .team4all-details__subtitle {
     margin: 0 0 2px;
     font-size: 0.9rem;

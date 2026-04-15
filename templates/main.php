@@ -229,7 +229,10 @@ $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
                         class="team4all-details__section"
                         data-team4all-contact-editor="true"
                     >
-                        <h3 id="team4all-details-single-title" class="team4all-details__title"></h3>
+                        <h3 class="team4all-details__title">
+                            <span id="team4all-details-single-title" class="team4all-details__title-name"></span>
+                            <span id="team4all-details-single-company" class="team4all-details__title-company"></span>
+                        </h3>
                         <div class="team4all-details__grid">
                             <label class="team4all-details__field team4all-details__field--full">
                                 <span>Anrede</span>
