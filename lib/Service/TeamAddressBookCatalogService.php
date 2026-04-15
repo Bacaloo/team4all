@@ -28,6 +28,10 @@ class TeamAddressBookCatalogService {
 		}
 
 		$booksById = [];
+		$teamUserUids = array_map(
+			static fn(IUser $user): string => $user->getUID(),
+			$this->groupProvisioningService->getTeam4AllGroupUsers(),
+		);
 
 		foreach ($this->groupProvisioningService->getTeam4AllGroupUsers() as $user) {
 			$viewerUid = $user->getUID();
@@ -58,8 +62,15 @@ class TeamAddressBookCatalogService {
 
 		$sharedBooks = array_values(array_filter(
 			$booksById,
-			static fn(array $book): bool => count($book['visibleFor']) > 1
+			static fn(array $book): bool => $this->isSharedWithinTeam($book, $teamUserUids)
 		));
+
+		if ($sharedBooks === []) {
+			$sharedBooks = array_values(array_filter(
+				$booksById,
+				static fn(array $book): bool => in_array($book['ownerUid'], $teamUserUids, true)
+			));
+		}
 
 		usort($sharedBooks, static function (array $left, array $right): int {
 			return strcasecmp($left['label'], $right['label']);
@@ -94,5 +105,30 @@ class TeamAddressBookCatalogService {
 		}
 
 		return $displayName . ' (' . $ownerUid . ')';
+	}
+
+	/**
+	 * @param array{id:string,label:string,ownerUid:string,uri:string,displayName:string,visibleFor:list<string>} $book
+	 * @param list<string> $teamUserUids
+	 */
+	private function isSharedWithinTeam(array $book, array $teamUserUids): bool {
+		$visibleFor = $book['visibleFor'];
+		$ownerUid = $book['ownerUid'];
+
+		if (count($visibleFor) > 1) {
+			return true;
+		}
+
+		if ($ownerUid === '') {
+			return false;
+		}
+
+		foreach ($visibleFor as $viewerUid) {
+			if ($viewerUid !== $ownerUid && in_array($viewerUid, $teamUserUids, true)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

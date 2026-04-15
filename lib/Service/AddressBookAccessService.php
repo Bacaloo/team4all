@@ -62,8 +62,14 @@ class AddressBookAccessService {
 	 * @param array<string, mixed> $addressBook
 	 */
 	public function getAddressBookIdentity(array $addressBook): string {
-		$principalUri = trim((string)($addressBook['principaluri'] ?? ''));
+		$ownerUid = $this->extractOwnerUid($addressBook);
 		$uri = trim((string)($addressBook['uri'] ?? ''));
+
+		if ($ownerUid !== '' && $uri !== '') {
+			return 'owner:' . $ownerUid . '|uri:' . $uri;
+		}
+
+		$principalUri = trim((string)($addressBook['principaluri'] ?? ''));
 
 		return $principalUri !== '' && $uri !== '' ? $principalUri . '|' . $uri : '';
 	}
@@ -72,6 +78,11 @@ class AddressBookAccessService {
 	 * @param array<string, mixed> $addressBook
 	 */
 	public function extractOwnerUid(array $addressBook): string {
+		$ownerPrincipal = trim((string)($addressBook['{http://owncloud.org/ns}owner-principal'] ?? ''));
+		if (preg_match('#principals/users/([^/]+)$#', $ownerPrincipal, $matches) === 1) {
+			return $matches[1];
+		}
+
 		$principalUri = (string)($addressBook['principaluri'] ?? '');
 		if (preg_match('#principals/users/([^/]+)$#', $principalUri, $matches) === 1) {
 			return $matches[1];
