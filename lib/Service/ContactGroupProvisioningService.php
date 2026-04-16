@@ -1099,6 +1099,8 @@ class ContactGroupProvisioningService {
 
 	private function findExistingLeaderContact(array $cards, string $company, int $addressBookId): ?array {
 		$candidates = [];
+		$expectedLeaderUid = $this->buildGroupLeaderContactUid($company);
+		$expectedLeaderUri = $this->buildGroupLeaderContactUri($company);
 
 		foreach ($cards as $card) {
 			if (!isset($card['carddata']) || !is_string($card['carddata'])) {
@@ -1111,6 +1113,8 @@ class ContactGroupProvisioningService {
 			}
 
 			$rawName = isset($vCard->FN) ? trim((string)$vCard->FN->getValue()) : '';
+			$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
+			$uri = (string)($card['uri'] ?? '');
 			$companies = $this->extractCompanies($vCard);
 			$displayCompany = $this->extractDisplayCompany($vCard);
 			if (!in_array($company, $companies, true)) {
@@ -1120,11 +1124,15 @@ class ContactGroupProvisioningService {
 			$normalizedCompany = $company;
 			$effectiveName = $rawName !== '' ? $rawName : $normalizedCompany;
 
-			if (!$this->isLeaderContact($rawName, $effectiveName, $company)) {
+			$isManagedLeader = $uid === $expectedLeaderUid
+				|| $uri === $expectedLeaderUri
+				|| $this->isGeneratedGroupLeaderUri($uri);
+
+			if (!$isManagedLeader && !$this->isLeaderContact($rawName, $effectiveName, $company)) {
 				continue;
 			}
 
-			$candidate = $this->buildContactDataFromCard($vCard, (string)($card['uri'] ?? ''), $addressBookId);
+			$candidate = $this->buildContactDataFromCard($vCard, $uri, $addressBookId);
 			$candidate['company'] = $normalizedCompany;
 			$candidate['companyDisplay'] = $displayCompany;
 			$candidate['companies'] = $companies;
