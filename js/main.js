@@ -1075,8 +1075,12 @@
         }
 
         try {
-            const response = await fetch(contactListRefreshUrl, {
+            const refreshUrl = new URL(contactListRefreshUrl, window.location.origin);
+            refreshUrl.searchParams.set('team4allRefresh', String(Date.now()));
+
+            const response = await fetch(refreshUrl.toString(), {
                 method: 'GET',
+                cache: 'no-store',
                 headers: {
                     requesttoken: requestToken,
                     'X-Requested-With': 'XMLHttpRequest',
