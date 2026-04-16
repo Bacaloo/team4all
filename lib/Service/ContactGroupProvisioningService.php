@@ -290,6 +290,89 @@ class ContactGroupProvisioningService {
 		];
 	}
 
+	public function moveContactWithinGroup(
+		string $company,
+		string $uid,
+		string $uri,
+		int $addressBookId,
+		int $targetAddressBookId,
+	): bool {
+		$company = trim($company);
+		$uid = trim($uid);
+		$uri = trim($uri);
+		if ($company === '' || $targetAddressBookId <= 0 || ($uid === '' && $uri === '')) {
+			return false;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null || !method_exists($cardDavBackend, 'deleteCard')) {
+			return false;
+		}
+
+		$currentUser = $this->groupProvisioningService->getCurrentUser();
+		if (!$currentUser instanceof IUser) {
+			return false;
+		}
+
+		$principalUri = 'principals/users/' . $currentUser->getUID();
+		$availableAddressBooks = $this->addressBookAccessService->getAddressBooksForPrincipal($cardDavBackend, $principalUri);
+		$targetAddressBook = $this->findAddressBookById($availableAddressBooks, $targetAddressBookId);
+		if ($targetAddressBook === null) {
+			return false;
+		}
+
+		$match = $this->findReadableCard($cardDavBackend, $uid, $uri, $addressBookId);
+		if ($match === null) {
+			return false;
+		}
+
+		$contact = $this->buildContactDataFromCard(
+			$match['vCard'],
+			(string)($match['card']['uri'] ?? $uri),
+			(int)$match['addressBook']['id'],
+		);
+
+		if ($this->shouldSkipContactDuringGroupMove($contact, $company)) {
+			$this->removeMovedCompanyFromSkippedContact($cardDavBackend, $contact, $company);
+
+			return true;
+		}
+
+		return $this->moveContactToAddressBook($cardDavBackend, $contact, $targetAddressBookId);
+	}
+
+	/**
+	 * @return array{filename: string, content: string}|null
+	 */
+	public function buildContactVCardDownload(string $uid, string $uri, int $addressBookId): ?array {
+		$uid = trim($uid);
+		$uri = trim($uri);
+		if ($uid === '' && $uri === '') {
+			return null;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return null;
+		}
+
+		$match = $this->findReadableCard($cardDavBackend, $uid, $uri, $addressBookId);
+		if ($match === null || !isset($match['card']['carddata']) || !is_string($match['card']['carddata'])) {
+			return null;
+		}
+
+		$contact = $this->buildContactDataFromCard(
+			$match['vCard'],
+			(string)($match['card']['uri'] ?? $uri),
+			(int)$match['addressBook']['id'],
+		);
+
+		return [
+			'filename' => $this->buildContactVCardFilename((string)($contact['name'] ?? 'kontakt')),
+			'content' => trim($match['card']['carddata']) . "\r\n",
+		];
+	}
+
 	public function getContactByUri(string $uri, int $addressBookId = 0): ?array {
 		$uri = trim($uri);
 		if ($uri === '') {
@@ -787,6 +870,13 @@ class ContactGroupProvisioningService {
 		$sanitized = trim($sanitized, '-');
 
 		return ($sanitized !== '' ? $sanitized : 'team4all-group') . '.vcf';
+	}
+
+	private function buildContactVCardFilename(string $name): string {
+		$sanitized = preg_replace('/[^[:alnum:]\-_]+/u', '-', trim($name)) ?? 'team4all-contact';
+		$sanitized = trim($sanitized, '-');
+
+		return ($sanitized !== '' ? $sanitized : 'team4all-contact') . '.vcf';
 	}
 
 	private function applyManagedContactData(VCard $vCard, IUser $user, string $managedUid): void {

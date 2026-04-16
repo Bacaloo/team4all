@@ -179,6 +179,34 @@ class PageController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	public function moveContact(
+		string $company = '',
+		string $uid = '',
+		string $uri = '',
+		string $addressBookId = '0',
+		string $targetAddressBookId = '0',
+	): JSONResponse {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
+			return new JSONResponse([
+				'moved' => false,
+				'message' => 'Access denied.',
+			], Http::STATUS_FORBIDDEN);
+		}
+
+		$moved = $this->contactGroupProvisioningService->moveContactWithinGroup(
+			$company,
+			$uid,
+			$uri,
+			(int)$addressBookId,
+			(int)$targetAddressBookId,
+		);
+
+		return new JSONResponse([
+			'moved' => $moved,
+		], $moved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
+	}
+
+	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function downloadGroupVCard(string $company = ''): DataDownloadResponse|JSONResponse {
 		if (!$this->appAccessService->canCurrentUserAccess()) {
@@ -189,6 +217,38 @@ class PageController extends Controller {
 		}
 
 		$vCardDownload = $this->contactGroupProvisioningService->buildGroupVCardDownload($company);
+		if ($vCardDownload === null) {
+			return new JSONResponse([
+				'download' => false,
+			], Http::STATUS_NOT_FOUND);
+		}
+
+		return new DataDownloadResponse(
+			$vCardDownload['content'],
+			$vCardDownload['filename'],
+			'text/vcard; charset=utf-8',
+		);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function downloadContactVCard(
+		string $uid = '',
+		string $uri = '',
+		string $addressBookId = '0',
+	): DataDownloadResponse|JSONResponse {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
+			return new JSONResponse([
+				'download' => false,
+				'message' => 'Access denied.',
+			], Http::STATUS_FORBIDDEN);
+		}
+
+		$vCardDownload = $this->contactGroupProvisioningService->buildContactVCardDownload(
+			$uid,
+			$uri,
+			(int)$addressBookId,
+		);
 		if ($vCardDownload === null) {
 			return new JSONResponse([
 				'download' => false,

@@ -15,6 +15,8 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
     data-team4all-icon-url="<?= p($team4AllFaviconUrl) ?>"
     data-team4all-group-move-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.moveGroup')) ?>"
     data-team4all-group-vcard-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.downloadGroupVCard')) ?>"
+    data-team4all-contact-move-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.moveContact')) ?>"
+    data-team4all-contact-vcard-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.downloadContactVCard')) ?>"
     data-team4all-movable-address-books="<?= p(base64_encode(json_encode($movableAddressBooks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
     style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);gap:12px;padding:8px 12px 12px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
 >
@@ -108,6 +110,7 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
 								<button
 									type="button"
 									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
+									data-team4all-context-kind="leader"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['leader']['searchText'])) ?>"
 									data-team4all-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-group-company="<?= p($entry['company']) ?>"
@@ -177,6 +180,8 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
 											role="button"
 											tabindex="0"
 											class="team4all-contact-item team4all-contact-trigger team4all-contact-trigger--text"
+											data-team4all-context-kind="member"
+											data-team4all-group-company="<?= p($entry['company']) ?>"
 											data-team4all-contact-search="<?= p(mb_strtolower($member['searchText'])) ?>"
 											data-team4all-contact-groups="<?= p(base64_encode(json_encode($member['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											data-team4all-note-mode="<?= p($entry['leader'] !== null ? 'member' : 'single') ?>"
@@ -247,7 +252,7 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
 
 	<div id="team4all-group-move-dialog" class="team4all-group-dialog" hidden>
 		<div class="team4all-group-dialog__surface">
-			<h3>Teamleader verschieben</h3>
+			<h3 id="team4all-group-move-dialog-title">Kontakt verschieben</h3>
 			<p id="team4all-group-move-dialog-label" class="team4all-group-dialog__label"></p>
 			<label class="team4all-group-dialog__field">
 				<span>Zieladressbuch</span>

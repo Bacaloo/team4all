@@ -42,8 +42,11 @@
     const contactListRefreshUrl = window.location.href;
     const groupMoveUrl = root.dataset.team4allGroupMoveUrl || '';
     const groupVCardUrl = root.dataset.team4allGroupVcardUrl || '';
+    const contactMoveUrl = root.dataset.team4allContactMoveUrl || '';
+    const contactVCardUrl = root.dataset.team4allContactVcardUrl || '';
     const groupMenu = document.getElementById('team4all-group-menu');
     const groupMoveDialog = document.getElementById('team4all-group-move-dialog');
+    const groupMoveDialogTitle = document.getElementById('team4all-group-move-dialog-title');
     const groupMoveDialogLabel = document.getElementById('team4all-group-move-dialog-label');
     const groupMoveTarget = document.getElementById('team4all-group-move-target');
     const groupMoveCancelButton = groupMoveDialog ? groupMoveDialog.querySelector('[data-team4all-group-dialog-action="cancel"]') : null;
@@ -243,6 +246,11 @@
         if (groupMoveDialogLabel) {
             groupMoveDialogLabel.textContent = activeGroupMenuState.company || '';
         }
+        if (groupMoveDialogTitle) {
+            groupMoveDialogTitle.textContent = activeGroupMenuState.kind === 'member'
+                ? 'Kontakt verschieben'
+                : 'Teamleader verschieben';
+        }
 
         if (options.length === 0) {
             const option = document.createElement('option');
@@ -266,6 +274,18 @@
 
         const url = new URL(groupVCardUrl, window.location.origin);
         url.searchParams.set('company', activeGroupMenuState.company || '');
+        window.location.assign(url.toString());
+    };
+
+    const downloadContactVCard = () => {
+        if (!activeGroupMenuState || !contactVCardUrl) {
+            return;
+        }
+
+        const url = new URL(contactVCardUrl, window.location.origin);
+        url.searchParams.set('uid', activeGroupMenuState.uid || '');
+        url.searchParams.set('uri', activeGroupMenuState.uri || '');
+        url.searchParams.set('addressBookId', activeGroupMenuState.addressBookId || '');
         window.location.assign(url.toString());
     };
 
@@ -298,6 +318,45 @@
 
         if (!response.ok) {
             throw new Error(`Moving group failed with status ${response.status}`);
+        }
+
+        closeMoveDialog();
+        hideGroupMenu();
+        await refreshContactList();
+    };
+
+    const moveContact = async () => {
+        if (!activeGroupMenuState || !groupMoveTarget || !contactMoveUrl) {
+            return;
+        }
+
+        const targetAddressBookId = (groupMoveTarget.value || '').trim();
+        if (targetAddressBookId === '') {
+            closeMoveDialog();
+            return;
+        }
+
+        await saveDetailEditor(detailEditors.single);
+
+        const body = new URLSearchParams({
+            company: activeGroupMenuState.company || '',
+            uid: activeGroupMenuState.uid || '',
+            uri: activeGroupMenuState.uri || '',
+            addressBookId: activeGroupMenuState.addressBookId || '',
+            targetAddressBookId,
+        });
+
+        const response = await fetch(contactMoveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                requesttoken: requestToken,
+            },
+            body: body.toString(),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Moving contact failed with status ${response.status}`);
         }
 
         closeMoveDialog();
@@ -1231,7 +1290,11 @@
             if (action === 'move') {
                 openMoveDialog();
             } else if (action === 'vcard') {
-                downloadGroupVCard();
+                if (activeGroupMenuState?.kind === 'member') {
+                    downloadContactVCard();
+                } else {
+                    downloadGroupVCard();
+                }
             }
             return;
         }
@@ -1244,7 +1307,8 @@
             if (action === 'cancel') {
                 closeMoveDialog();
             } else if (action === 'confirm') {
-                void moveGroup().catch((error) => {
+                const moveAction = activeGroupMenuState?.kind === 'member' ? moveContact : moveGroup;
+                void moveAction().catch((error) => {
                     console.error(error);
                     closeMoveDialog();
                 });
@@ -1308,7 +1372,10 @@
         event.preventDefault();
 
         openGroupMenu({
+            kind: trigger.getAttribute('data-team4all-context-kind') || 'leader',
             company: trigger.getAttribute('data-team4all-group-company') || '',
+            uid: trigger.getAttribute('data-team4all-detail-uid') || '',
+            uri: trigger.getAttribute('data-team4all-detail-uri') || '',
             addressBookId: trigger.getAttribute('data-team4all-detail-address-book-id') || '',
         }, event.clientX, event.clientY);
     });
@@ -1331,7 +1398,8 @@
     if (groupMoveConfirmButton) {
         groupMoveConfirmButton.addEventListener('click', (event) => {
             event.preventDefault();
-            void moveGroup().catch((error) => {
+            const moveAction = activeGroupMenuState?.kind === 'member' ? moveContact : moveGroup;
+            void moveAction().catch((error) => {
                 console.error(error);
                 closeMoveDialog();
             });

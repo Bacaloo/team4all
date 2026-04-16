@@ -9,6 +9,8 @@ return [
 		['name' => 'page#fetchContact', 'url' => '/contact/fetch', 'verb' => 'GET'],
 		['name' => 'page#moveGroup', 'url' => '/group/move', 'verb' => 'POST'],
 		['name' => 'page#downloadGroupVCard', 'url' => '/group/vcard', 'verb' => 'GET'],
+		['name' => 'page#moveContact', 'url' => '/contact/move', 'verb' => 'POST'],
+		['name' => 'page#downloadContactVCard', 'url' => '/contact/vcard', 'verb' => 'GET'],
 		['name' => 'contactMeta#show', 'url' => '/contact-meta', 'verb' => 'GET'],
 		['name' => 'contactMeta#save', 'url' => '/contact-meta', 'verb' => 'POST'],
 		['name' => 'page#updateNote', 'url' => '/note', 'verb' => 'POST'],
