@@ -5,7 +5,7 @@
   <name>Team4All</name>
   <summary>Teamarbeit für alle im Unternehmen</summary>
   <description>Grundgerüst der Team4All Nextcloud-App mit Basisroute und Startseite.</description>
-  <version>0.5.4</version>
+  <version>0.6.0</version>
   <licence>AGPL-3.0-or-later</licence>
   <author>Team4All</author>
   <namespace>Team4All</namespace>

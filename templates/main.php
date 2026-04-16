@@ -344,12 +344,29 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
         aria-label="Arbeitsbereich Spalte 3"
         style="padding:0;min-width:0;height:100%;min-height:0;"
     >
-        <div
-            class="team4all-main__panel"
-            style="height:100%;min-height:0;width:100%;box-sizing:border-box;padding:10px 14px 14px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);"
-        >
-            <h2>Reserviert</h2>
-            <p>Hier kann später ein weiterer Funktionsbereich entstehen.</p>
+        <div class="team4all-main__split-panels">
+            <section class="team4all-main__panel team4all-main__panel--split">
+                <header class="team4all-main__panel-header">
+                    <h2>Mails</h2>
+                    <div class="team4all-main__panel-menu" aria-label="Mail-Menü">
+                        <button type="button" class="team4all-main__panel-menu-button" aria-label="Mail-Aktion" disabled></button>
+                    </div>
+                </header>
+                <div class="team4all-main__panel-body">
+                    <p>Hier entsteht der Mail-Bereich.</p>
+                </div>
+            </section>
+            <section class="team4all-main__panel team4all-main__panel--split">
+                <header class="team4all-main__panel-header">
+                    <h2>Dokumente</h2>
+                    <div class="team4all-main__panel-menu" aria-label="Dokument-Menü">
+                        <button type="button" class="team4all-main__panel-menu-button" aria-label="Dokument-Aktion" disabled></button>
+                    </div>
+                </header>
+                <div class="team4all-main__panel-body">
+                    <p>Hier entsteht der Dokumenten-Bereich.</p>
+                </div>
+            </section>
         </div>
     </section>
 
