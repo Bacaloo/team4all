@@ -179,6 +179,7 @@ class PageController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function downloadGroupVCard(string $company = ''): DataDownloadResponse|JSONResponse {
 		if (!$this->appAccessService->canCurrentUserAccess()) {
 			return new JSONResponse([

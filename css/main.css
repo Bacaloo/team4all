@@ -154,6 +154,10 @@
     box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
 }
 
+.team4all-group-menu[hidden] {
+    display: none !important;
+}
+
 .team4all-group-menu__action {
     appearance: none;
     padding: 10px 12px;
@@ -175,6 +179,10 @@
     justify-content: center;
     padding: 20px;
     background: rgba(15, 23, 42, 0.28);
+}
+
+.team4all-group-dialog[hidden] {
+    display: none !important;
 }
 
 .team4all-group-dialog__surface {
