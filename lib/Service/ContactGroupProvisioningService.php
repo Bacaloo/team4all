@@ -1056,6 +1056,30 @@ class ContactGroupProvisioningService {
 				continue 2;
 			}
 
+			foreach ($allCards as $card) {
+				if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+					continue;
+				}
+
+				$vCard = $this->parseVCard($card['carddata']);
+				if (!$vCard instanceof VCard) {
+					continue;
+				}
+
+				$existingUid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
+				if ($existingUid !== $leaderUid) {
+					continue;
+				}
+
+				$this->applyManagedGroupLeaderData($vCard, $company, $leaderUid);
+				$cardDavBackend->updateCard($addressBookId, (string)($card['uri'] ?? ''), $vCard->serialize());
+				$createdLeader = true;
+				$knownUris[] = (string)($card['uri'] ?? '');
+				$allCards = $cardDavBackend->getCards($addressBookId);
+
+				continue 2;
+			}
+
 			$vCard = new VCard();
 			$this->applyManagedGroupLeaderData($vCard, $company, $leaderUid);
 			$cardDavBackend->createCard($addressBookId, $leaderUri, $vCard->serialize());
