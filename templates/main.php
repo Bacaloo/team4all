@@ -152,7 +152,12 @@ $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
 									data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 									data-team4all-leader-detail-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 								>
-									<strong><?= p($entry['company'] !== '' ? $entry['company'] : $entry['leader']['name']) ?></strong>
+									<span class="team4all-contact-group__title">
+										<strong><?= p($entry['company'] !== '' ? $entry['company'] : $entry['leader']['name']) ?></strong>
+										<?php if (($entry['company'] ?? '') !== '' && trim((string)$entry['leader']['name']) !== '' && mb_strtolower(trim((string)$entry['leader']['name'])) !== mb_strtolower(trim((string)$entry['company']))): ?>
+											<span class="team4all-contact-group__leader-name"><?= p($entry['leader']['name']) ?></span>
+										<?php endif; ?>
+									</span>
 								</button>
 							<?php else: ?>
 								<div class="team4all-contact-group__header">
