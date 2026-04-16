@@ -173,7 +173,13 @@ class ContactGroupProvisioningService {
 			return [];
 		}
 
-		$addressBooks = $this->addressBookAccessService->getReadableAddressBooksForCurrentUser($cardDavBackend);
+		$currentUser = $this->groupProvisioningService->getCurrentUser();
+		if (!$currentUser instanceof IUser) {
+			return [];
+		}
+
+		$principalUri = 'principals/users/' . $currentUser->getUID();
+		$addressBooks = $this->addressBookAccessService->getAddressBooksForPrincipal($cardDavBackend, $principalUri);
 		$options = [];
 
 		foreach ($addressBooks as $addressBook) {

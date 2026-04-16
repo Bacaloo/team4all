@@ -46,6 +46,8 @@
     const groupMoveDialog = document.getElementById('team4all-group-move-dialog');
     const groupMoveDialogLabel = document.getElementById('team4all-group-move-dialog-label');
     const groupMoveTarget = document.getElementById('team4all-group-move-target');
+    const groupMoveCancelButton = groupMoveDialog ? groupMoveDialog.querySelector('[data-team4all-group-dialog-action="cancel"]') : null;
+    const groupMoveConfirmButton = groupMoveDialog ? groupMoveDialog.querySelector('[data-team4all-group-dialog-action="confirm"]') : null;
 
     const notesEmpty = document.getElementById('team4all-notes-empty');
     const notesSingle = document.getElementById('team4all-notes-single');
@@ -244,6 +246,10 @@
             option.value = '';
             option.textContent = 'Kein anderes Adressbuch verfuegbar';
             groupMoveTarget.appendChild(option);
+        }
+
+        if (groupMoveConfirmButton) {
+            groupMoveConfirmButton.disabled = options.length === 0;
         }
 
         groupMoveDialog.hidden = false;
@@ -1297,6 +1303,40 @@
             company: trigger.getAttribute('data-team4all-group-company') || '',
             addressBookId: trigger.getAttribute('data-team4all-detail-address-book-id') || '',
         }, event.clientX, event.clientY);
+    });
+
+    if (groupMoveDialog) {
+        groupMoveDialog.addEventListener('click', (event) => {
+            if (event.target === groupMoveDialog) {
+                closeMoveDialog();
+            }
+        });
+    }
+
+    if (groupMoveCancelButton) {
+        groupMoveCancelButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            closeMoveDialog();
+        });
+    }
+
+    if (groupMoveConfirmButton) {
+        groupMoveConfirmButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            void moveGroup().catch((error) => {
+                console.error(error);
+                closeMoveDialog();
+            });
+        });
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        hideGroupMenu();
+        closeMoveDialog();
     });
 
     if (search) {
