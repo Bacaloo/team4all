@@ -1363,7 +1363,7 @@
 
     root.addEventListener('contextmenu', (event) => {
         const eventElement = getEventElement(event.target);
-        const trigger = eventElement ? eventElement.closest('.team4all-contact-trigger--header') : null;
+        const trigger = eventElement ? eventElement.closest('.team4all-contact-trigger[data-team4all-context-kind]') : null;
         if (!trigger) {
             hideGroupMenu();
             return;
