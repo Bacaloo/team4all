@@ -197,6 +197,7 @@
         }
 
         groupMenu.hidden = true;
+        groupMenu.style.display = 'none';
         groupMenu.style.left = '';
         groupMenu.style.top = '';
     };
@@ -207,6 +208,7 @@
         }
 
         groupMoveDialog.hidden = true;
+        groupMoveDialog.style.display = 'none';
     };
 
     const openGroupMenu = (state, positionX, positionY) => {
@@ -216,6 +218,7 @@
 
         activeGroupMenuState = state;
         groupMenu.hidden = false;
+        groupMenu.style.display = 'flex';
         groupMenu.style.left = `${positionX}px`;
         groupMenu.style.top = `${positionY}px`;
     };
@@ -253,6 +256,7 @@
         }
 
         groupMoveDialog.hidden = false;
+        groupMoveDialog.style.display = 'flex';
     };
 
     const downloadGroupVCard = () => {
