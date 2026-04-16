@@ -111,6 +111,18 @@
         element.textContent = value && value.trim() !== '' ? value : fallback;
     };
 
+    const getEventElement = (target) => {
+        if (target instanceof Element) {
+            return target;
+        }
+
+        if (target instanceof Node && target.parentElement instanceof Element) {
+            return target.parentElement;
+        }
+
+        return null;
+    };
+
     const activeFilterGroups = new Set();
     let activeGroupMenuState = null;
 
@@ -1195,7 +1207,8 @@
     };
 
     root.addEventListener('click', (event) => {
-        const menuAction = event.target instanceof Element ? event.target.closest('[data-team4all-group-action]') : null;
+        const eventElement = getEventElement(event.target);
+        const menuAction = eventElement ? eventElement.closest('[data-team4all-group-action]') : null;
         if (menuAction) {
             event.preventDefault();
             const action = menuAction.getAttribute('data-team4all-group-action') || '';
@@ -1209,7 +1222,7 @@
             return;
         }
 
-        const dialogAction = event.target instanceof Element ? event.target.closest('[data-team4all-group-dialog-action]') : null;
+        const dialogAction = eventElement ? eventElement.closest('[data-team4all-group-dialog-action]') : null;
         if (dialogAction) {
             event.preventDefault();
             const action = dialogAction.getAttribute('data-team4all-group-dialog-action') || '';
@@ -1225,7 +1238,7 @@
             return;
         }
 
-        const filterChip = event.target instanceof Element ? event.target.closest('.team4all-filter-chip') : null;
+        const filterChip = eventElement ? eventElement.closest('.team4all-filter-chip') : null;
         if (filterChip) {
             const filterGroup = (filterChip.getAttribute('data-team4all-filter-group') || '').trim().toLowerCase();
             if (filterGroup !== '') {
@@ -1245,13 +1258,13 @@
         hideGroupMenu();
 
         if (groupMoveDialog && !groupMoveDialog.hidden) {
-            const insideDialog = event.target instanceof Element ? event.target.closest('.team4all-group-dialog__surface') : null;
+            const insideDialog = eventElement ? eventElement.closest('.team4all-group-dialog__surface') : null;
             if (!insideDialog) {
                 closeMoveDialog();
             }
         }
 
-        const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger') : null;
+        const trigger = eventElement ? eventElement.closest('.team4all-contact-trigger') : null;
         if (!trigger) {
             return;
         }
@@ -1260,7 +1273,8 @@
     });
 
     root.addEventListener('keydown', (event) => {
-        const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger') : null;
+        const eventElement = getEventElement(event.target);
+        const trigger = eventElement ? eventElement.closest('.team4all-contact-trigger') : null;
         if (!trigger || (event.key !== 'Enter' && event.key !== ' ')) {
             return;
         }
@@ -1270,7 +1284,8 @@
     });
 
     root.addEventListener('contextmenu', (event) => {
-        const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger--header') : null;
+        const eventElement = getEventElement(event.target);
+        const trigger = eventElement ? eventElement.closest('.team4all-contact-trigger--header') : null;
         if (!trigger) {
             hideGroupMenu();
             return;
