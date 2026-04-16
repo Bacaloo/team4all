@@ -210,8 +210,14 @@ class ContactGroupProvisioningService {
 			return false;
 		}
 
-		$readableAddressBooks = $this->addressBookAccessService->getReadableAddressBooksForCurrentUser($cardDavBackend);
-		$targetAddressBook = $this->findAddressBookById($readableAddressBooks, $targetAddressBookId);
+		$currentUser = $this->groupProvisioningService->getCurrentUser();
+		if (!$currentUser instanceof IUser) {
+			return false;
+		}
+
+		$principalUri = 'principals/users/' . $currentUser->getUID();
+		$availableAddressBooks = $this->addressBookAccessService->getAddressBooksForPrincipal($cardDavBackend, $principalUri);
+		$targetAddressBook = $this->findAddressBookById($availableAddressBooks, $targetAddressBookId);
 		if ($targetAddressBook === null) {
 			return false;
 		}
