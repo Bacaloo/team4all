@@ -40,6 +40,12 @@
     const contactFetchUrl = `${window.OC?.webroot || ''}/apps/team4all/contact/fetch`;
     const contactMetaUrl = `${window.OC?.webroot || ''}/apps/team4all/contact-meta`;
     const contactListRefreshUrl = window.location.href;
+    const groupMoveUrl = root.dataset.team4allGroupMoveUrl || '';
+    const groupVCardUrl = root.dataset.team4allGroupVcardUrl || '';
+    const groupMenu = document.getElementById('team4all-group-menu');
+    const groupMoveDialog = document.getElementById('team4all-group-move-dialog');
+    const groupMoveDialogLabel = document.getElementById('team4all-group-move-dialog-label');
+    const groupMoveTarget = document.getElementById('team4all-group-move-target');
 
     const notesEmpty = document.getElementById('team4all-notes-empty');
     const notesSingle = document.getElementById('team4all-notes-single');
@@ -106,6 +112,7 @@
     };
 
     const activeFilterGroups = new Set();
+    let activeGroupMenuState = null;
 
     const decodeDataValue = (value) => {
         if (!value) {
@@ -131,6 +138,20 @@
         }
     };
 
+    const movableAddressBooks = (() => {
+        const encoded = root.dataset.team4allMovableAddressBooks || '';
+        if (!encoded) {
+            return [];
+        }
+
+        try {
+            const parsed = JSON.parse(decodeDataValue(encoded));
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            return [];
+        }
+    })();
+
     const readContactGroups = (element) => {
         if (!element) {
             return [];
@@ -154,6 +175,112 @@
         } catch (error) {
             return [];
         }
+    };
+
+    const hideGroupMenu = () => {
+        if (!groupMenu) {
+            return;
+        }
+
+        groupMenu.hidden = true;
+        groupMenu.style.left = '';
+        groupMenu.style.top = '';
+    };
+
+    const closeMoveDialog = () => {
+        if (!groupMoveDialog) {
+            return;
+        }
+
+        groupMoveDialog.hidden = true;
+    };
+
+    const openGroupMenu = (state, positionX, positionY) => {
+        if (!groupMenu) {
+            return;
+        }
+
+        activeGroupMenuState = state;
+        groupMenu.hidden = false;
+        groupMenu.style.left = `${positionX}px`;
+        groupMenu.style.top = `${positionY}px`;
+    };
+
+    const openMoveDialog = () => {
+        if (!groupMoveDialog || !groupMoveTarget || !activeGroupMenuState) {
+            return;
+        }
+
+        const currentAddressBookId = String(activeGroupMenuState.addressBookId || '');
+        const options = movableAddressBooks.filter((addressBook) => String(addressBook.id || '') !== currentAddressBookId);
+
+        groupMoveTarget.replaceChildren();
+
+        options.forEach((addressBook) => {
+            const option = document.createElement('option');
+            option.value = String(addressBook.id || '');
+            option.textContent = addressBook.label || addressBook.id || '';
+            groupMoveTarget.appendChild(option);
+        });
+
+        if (groupMoveDialogLabel) {
+            groupMoveDialogLabel.textContent = activeGroupMenuState.company || '';
+        }
+
+        if (options.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Kein anderes Adressbuch verfuegbar';
+            groupMoveTarget.appendChild(option);
+        }
+
+        groupMoveDialog.hidden = false;
+    };
+
+    const downloadGroupVCard = () => {
+        if (!activeGroupMenuState || !groupVCardUrl) {
+            return;
+        }
+
+        const url = new URL(groupVCardUrl, window.location.origin);
+        url.searchParams.set('company', activeGroupMenuState.company || '');
+        window.location.assign(url.toString());
+    };
+
+    const moveGroup = async () => {
+        if (!activeGroupMenuState || !groupMoveTarget || !groupMoveUrl) {
+            return;
+        }
+
+        const targetAddressBookId = (groupMoveTarget.value || '').trim();
+        if (targetAddressBookId === '') {
+            closeMoveDialog();
+            return;
+        }
+
+        await saveDetailEditor(detailEditors.single);
+
+        const body = new URLSearchParams({
+            company: activeGroupMenuState.company || '',
+            targetAddressBookId,
+        });
+
+        const response = await fetch(groupMoveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                requesttoken: requestToken,
+            },
+            body: body.toString(),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Moving group failed with status ${response.status}`);
+        }
+
+        closeMoveDialog();
+        hideGroupMenu();
+        await refreshContactList();
     };
 
     const readTriggerDetailData = (trigger, prefix = 'data-team4all-detail') => ({
@@ -1068,6 +1195,36 @@
     };
 
     root.addEventListener('click', (event) => {
+        const menuAction = event.target instanceof Element ? event.target.closest('[data-team4all-group-action]') : null;
+        if (menuAction) {
+            event.preventDefault();
+            const action = menuAction.getAttribute('data-team4all-group-action') || '';
+            hideGroupMenu();
+
+            if (action === 'move') {
+                openMoveDialog();
+            } else if (action === 'vcard') {
+                downloadGroupVCard();
+            }
+            return;
+        }
+
+        const dialogAction = event.target instanceof Element ? event.target.closest('[data-team4all-group-dialog-action]') : null;
+        if (dialogAction) {
+            event.preventDefault();
+            const action = dialogAction.getAttribute('data-team4all-group-dialog-action') || '';
+
+            if (action === 'cancel') {
+                closeMoveDialog();
+            } else if (action === 'confirm') {
+                void moveGroup().catch((error) => {
+                    console.error(error);
+                    closeMoveDialog();
+                });
+            }
+            return;
+        }
+
         const filterChip = event.target instanceof Element ? event.target.closest('.team4all-filter-chip') : null;
         if (filterChip) {
             const filterGroup = (filterChip.getAttribute('data-team4all-filter-group') || '').trim().toLowerCase();
@@ -1083,6 +1240,15 @@
                 applySearch();
             }
             return;
+        }
+
+        hideGroupMenu();
+
+        if (groupMoveDialog && !groupMoveDialog.hidden) {
+            const insideDialog = event.target instanceof Element ? event.target.closest('.team4all-group-dialog__surface') : null;
+            if (!insideDialog) {
+                closeMoveDialog();
+            }
         }
 
         const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger') : null;
@@ -1101,6 +1267,21 @@
 
         event.preventDefault();
         void activateTrigger(trigger);
+    });
+
+    root.addEventListener('contextmenu', (event) => {
+        const trigger = event.target instanceof Element ? event.target.closest('.team4all-contact-trigger--header') : null;
+        if (!trigger) {
+            hideGroupMenu();
+            return;
+        }
+
+        event.preventDefault();
+
+        openGroupMenu({
+            company: trigger.getAttribute('data-team4all-group-company') || '',
+            addressBookId: trigger.getAttribute('data-team4all-detail-address-book-id') || '',
+        }, event.clientX, event.clientY);
     });
 
     if (search) {

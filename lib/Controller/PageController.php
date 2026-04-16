@@ -11,6 +11,7 @@ use OCA\Team4All\Service\GroupProvisioningService;
 use OCA\Team4All\Service\TeamFolderProvisioningService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -71,6 +72,7 @@ class PageController extends Controller {
 			'team4AllGroups' => $team4AllGroups,
 			'team4AllGroupCount' => count($team4AllGroups),
 			'frontendFilterGroups' => $this->contactGroupFilterService->getSelectedFrontendFilterGroups(),
+			'movableAddressBooks' => $this->contactGroupProvisioningService->getMovableAddressBookOptions(),
 		]);
 	}
 
@@ -155,6 +157,48 @@ class PageController extends Controller {
 		return new JSONResponse([
 			'saved' => $saved,
 		], $saved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
+	}
+
+	#[NoAdminRequired]
+	public function moveGroup(string $company = '', string $targetAddressBookId = '0'): JSONResponse {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
+			return new JSONResponse([
+				'moved' => false,
+				'message' => 'Access denied.',
+			], Http::STATUS_FORBIDDEN);
+		}
+
+		$moved = $this->contactGroupProvisioningService->moveGroupToAddressBook(
+			$company,
+			(int)$targetAddressBookId,
+		);
+
+		return new JSONResponse([
+			'moved' => $moved,
+		], $moved ? Http::STATUS_OK : Http::STATUS_BAD_REQUEST);
+	}
+
+	#[NoAdminRequired]
+	public function downloadGroupVCard(string $company = ''): DataDownloadResponse|JSONResponse {
+		if (!$this->appAccessService->canCurrentUserAccess()) {
+			return new JSONResponse([
+				'download' => false,
+				'message' => 'Access denied.',
+			], Http::STATUS_FORBIDDEN);
+		}
+
+		$vCardDownload = $this->contactGroupProvisioningService->buildGroupVCardDownload($company);
+		if ($vCardDownload === null) {
+			return new JSONResponse([
+				'download' => false,
+			], Http::STATUS_NOT_FOUND);
+		}
+
+		return new DataDownloadResponse(
+			$vCardDownload['content'],
+			$vCardDownload['filename'],
+			'text/vcard; charset=utf-8',
+		);
 	}
 
 	/**

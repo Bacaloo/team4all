@@ -141,6 +141,95 @@
     outline: none;
 }
 
+.team4all-group-menu {
+    position: fixed;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    padding: 6px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+}
+
+.team4all-group-menu__action {
+    appearance: none;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.team4all-group-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.28);
+}
+
+.team4all-group-dialog__surface {
+    width: min(420px, 100%);
+    padding: 20px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.22);
+}
+
+.team4all-group-dialog__surface h3 {
+    margin: 0 0 8px;
+}
+
+.team4all-group-dialog__label {
+    margin: 0 0 14px;
+    color: var(--color-text-maxcontrast);
+}
+
+.team4all-group-dialog__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.team4all-group-dialog__field select {
+    width: 100%;
+    min-height: 38px;
+}
+
+.team4all-group-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.team4all-group-dialog__button {
+    appearance: none;
+    padding: 9px 14px;
+    border: 1px solid rgba(47, 143, 78, 0.35);
+    border-radius: 10px;
+    background: #6fd08d;
+    color: #163323;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+}
+
+.team4all-group-dialog__button--secondary {
+    border-color: rgba(15, 23, 42, 0.14);
+    background: #eceff3;
+    color: inherit;
+}
+
 @media (max-width: 1100px) {
     .team4all-toolbar__content {
         flex-direction: column;

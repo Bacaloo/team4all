@@ -164,6 +164,120 @@ class ContactGroupProvisioningService {
 		return $this->groupContactsByCompany($contacts);
 	}
 
+	/**
+	 * @return list<array{id: string, label: string}>
+	 */
+	public function getMovableAddressBookOptions(): array {
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return [];
+		}
+
+		$addressBooks = $this->addressBookAccessService->getReadableAddressBooksForCurrentUser($cardDavBackend);
+		$options = [];
+
+		foreach ($addressBooks as $addressBook) {
+			$addressBookId = (int)($addressBook['id'] ?? 0);
+			if ($addressBookId <= 0) {
+				continue;
+			}
+
+			$options[] = [
+				'id' => (string)$addressBookId,
+				'label' => $this->addressBookAccessService->getDisplayName($addressBook),
+			];
+		}
+
+		usort($options, static fn(array $left, array $right): int => strcasecmp($left['label'], $right['label']));
+
+		return $options;
+	}
+
+	public function moveGroupToAddressBook(string $company, int $targetAddressBookId): bool {
+		$company = trim($company);
+		if ($company === '' || $targetAddressBookId <= 0) {
+			return false;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null || !method_exists($cardDavBackend, 'deleteCard')) {
+			return false;
+		}
+
+		$readableAddressBooks = $this->addressBookAccessService->getReadableAddressBooksForCurrentUser($cardDavBackend);
+		$targetAddressBook = $this->findAddressBookById($readableAddressBooks, $targetAddressBookId);
+		if ($targetAddressBook === null) {
+			return false;
+		}
+
+		$groupEntry = $this->findGroupEntryForCurrentUser($cardDavBackend, $company);
+		if ($groupEntry === null || ($groupEntry['leader'] ?? null) === null) {
+			return false;
+		}
+
+		$contactsToMove = $this->getUniqueContactsForGroupEntry($groupEntry);
+		if ($contactsToMove === []) {
+			return false;
+		}
+
+		foreach ($contactsToMove as $contact) {
+			if ($this->shouldSkipContactDuringGroupMove($contact, $company)) {
+				$this->removeMovedCompanyFromSkippedContact($cardDavBackend, $contact, $company);
+				continue;
+			}
+
+			if (!$this->moveContactToAddressBook($cardDavBackend, $contact, $targetAddressBookId)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * @return array{filename: string, content: string}|null
+	 */
+	public function buildGroupVCardDownload(string $company): ?array {
+		$company = trim($company);
+		if ($company === '') {
+			return null;
+		}
+
+		$cardDavBackend = $this->resolveCardDavBackend();
+		if ($cardDavBackend === null) {
+			return null;
+		}
+
+		$groupEntry = $this->findGroupEntryForCurrentUser($cardDavBackend, $company);
+		if ($groupEntry === null || ($groupEntry['leader'] ?? null) === null) {
+			return null;
+		}
+
+		$serializedCards = [];
+		foreach ($this->getUniqueContactsForGroupEntry($groupEntry) as $contact) {
+			$match = $this->findReadableCard(
+				$cardDavBackend,
+				trim((string)($contact['uid'] ?? '')),
+				trim((string)($contact['uri'] ?? '')),
+				(int)($contact['addressBookId'] ?? 0),
+			);
+			if ($match === null || !isset($match['card']['carddata']) || !is_string($match['card']['carddata'])) {
+				continue;
+			}
+
+			$serializedCards[] = trim($match['card']['carddata']);
+		}
+
+		if ($serializedCards === []) {
+			return null;
+		}
+
+		return [
+			'filename' => $this->buildGroupVCardFilename($company),
+			'content' => implode("\r\n", $serializedCards) . "\r\n",
+		];
+	}
+
 	public function getContactByUri(string $uri, int $addressBookId = 0): ?array {
 		$uri = trim($uri);
 		if ($uri === '') {
@@ -313,6 +427,20 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
+	 * @param list<array<string, mixed>> $addressBooks
+	 * @return array<string, mixed>|null
+	 */
+	private function findAddressBookById(array $addressBooks, int $addressBookId): ?array {
+		foreach ($addressBooks as $addressBook) {
+			if ((int)($addressBook['id'] ?? 0) === $addressBookId) {
+				return $addressBook;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * @return array{addressBook: array<string, mixed>, card: array<string, mixed>, vCard: VCard}|null
 	 */
 	private function findReadableCard(object $cardDavBackend, string $uid = '', string $uri = '', int $addressBookId = 0): ?array {
@@ -452,6 +580,201 @@ class ContactGroupProvisioningService {
 		}
 
 		return null;
+	}
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	private function findGroupEntryForCurrentUser(object $cardDavBackend, string $company): ?array {
+		$addressBooks = $this->addressBookAccessService->getReadableAddressBooksForCurrentUser($cardDavBackend);
+		if ($addressBooks === []) {
+			return null;
+		}
+
+		$contacts = [];
+		foreach ($addressBooks as $addressBook) {
+			$addressBookId = (int)$addressBook['id'];
+			$cards = $cardDavBackend->getCards($addressBookId);
+			$contacts = array_merge($contacts, $this->collectTeam4AllContactsFromCards($cards, $addressBookId));
+		}
+
+		foreach ($this->groupContactsByCompany($contacts) as $entry) {
+			if (($entry['type'] ?? '') === 'group' && (string)($entry['company'] ?? '') === $company) {
+				return $entry;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param array<string, mixed> $groupEntry
+	 * @return list<array<string, mixed>>
+	 */
+	private function getUniqueContactsForGroupEntry(array $groupEntry): array {
+		$contacts = [];
+		$seen = [];
+
+		$groupContacts = [];
+		if (isset($groupEntry['leader']) && is_array($groupEntry['leader'])) {
+			$groupContacts[] = $groupEntry['leader'];
+		}
+		if (isset($groupEntry['members']) && is_array($groupEntry['members'])) {
+			$groupContacts = array_merge($groupContacts, $groupEntry['members']);
+		}
+
+		foreach ($groupContacts as $contact) {
+			if (!is_array($contact)) {
+				continue;
+			}
+
+			$key = (string)($contact['sourceKey'] ?? (($contact['addressBookId'] ?? '') . ':' . ($contact['uri'] ?? '')));
+			if ($key === '' || isset($seen[$key])) {
+				continue;
+			}
+
+			$seen[$key] = true;
+			$contacts[] = $contact;
+		}
+
+		return $contacts;
+	}
+
+	/**
+	 * @param array<string, mixed> $contact
+	 */
+	private function moveContactToAddressBook(object $cardDavBackend, array $contact, int $targetAddressBookId): bool {
+		$sourceAddressBookId = (int)($contact['addressBookId'] ?? 0);
+		$uri = trim((string)($contact['uri'] ?? ''));
+		$uid = trim((string)($contact['uid'] ?? ''));
+
+		if ($sourceAddressBookId <= 0 || $uri === '') {
+			return false;
+		}
+
+		if ($sourceAddressBookId === $targetAddressBookId) {
+			return true;
+		}
+
+		$match = $this->findReadableCard($cardDavBackend, $uid, $uri, $sourceAddressBookId);
+		if ($match === null || !isset($match['card']['carddata']) || !is_string($match['card']['carddata'])) {
+			return false;
+		}
+
+		$cardData = $match['card']['carddata'];
+		$targetCards = $cardDavBackend->getCards($targetAddressBookId);
+		$targetUri = $uri;
+
+		foreach ($targetCards as $targetCard) {
+			if (!isset($targetCard['carddata']) || !is_string($targetCard['carddata'])) {
+				continue;
+			}
+
+			$targetVCard = $this->parseVCard($targetCard['carddata']);
+			if (!$targetVCard instanceof VCard) {
+				continue;
+			}
+
+			$targetCardUid = isset($targetVCard->UID) ? trim((string)$targetVCard->UID->getValue()) : '';
+			$targetCardUri = (string)($targetCard['uri'] ?? '');
+
+			if (($uid !== '' && $targetCardUid === $uid) || $targetCardUri === $uri) {
+				$cardDavBackend->updateCard($targetAddressBookId, $targetCardUri, $cardData);
+				$cardDavBackend->deleteCard($sourceAddressBookId, $uri);
+
+				return true;
+			}
+		}
+
+		$cardDavBackend->createCard($targetAddressBookId, $targetUri, $cardData);
+		$cardDavBackend->deleteCard($sourceAddressBookId, $uri);
+
+		return true;
+	}
+
+	/**
+	 * @param array<string, mixed> $contact
+	 */
+	private function shouldSkipContactDuringGroupMove(array $contact, string $company): bool {
+		if ($this->isManagedGroupLeaderContact($contact, $company)) {
+			return false;
+		}
+
+		$companies = array_values(array_filter(
+			array_map(
+				static fn(mixed $value): string => trim((string)$value),
+				is_array($contact['companies'] ?? null) ? $contact['companies'] : []
+			),
+			static fn(string $value): bool => $value !== ''
+		));
+
+		return count($companies) > 1;
+	}
+
+	/**
+	 * @param array<string, mixed> $contact
+	 */
+	private function removeMovedCompanyFromSkippedContact(object $cardDavBackend, array $contact, string $company): void {
+		$uid = trim((string)($contact['uid'] ?? ''));
+		$uri = trim((string)($contact['uri'] ?? ''));
+		$addressBookId = (int)($contact['addressBookId'] ?? 0);
+		if ($addressBookId <= 0 || ($uid === '' && $uri === '')) {
+			return;
+		}
+
+		$match = $this->findReadableCard($cardDavBackend, $uid, $uri, $addressBookId);
+		if ($match === null) {
+			return;
+		}
+
+		$vCard = $match['vCard'];
+		$remainingCompanies = $this->extractRemainingOrgParts($vCard, $company);
+
+		$this->removeProperties($vCard, 'ORG');
+		if ($remainingCompanies !== []) {
+			$vCard->add('ORG', implode(' | ', $remainingCompanies));
+		}
+
+		$cardDavBackend->updateCard(
+			(int)$match['addressBook']['id'],
+			(string)($match['card']['uri'] ?? $uri),
+			$vCard->serialize(),
+		);
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function extractRemainingOrgParts(VCard $vCard, string $excludedCompany): array {
+		if (!isset($vCard->ORG)) {
+			return [];
+		}
+
+		$value = $vCard->ORG->getValue();
+		$rawCompanies = is_array($value) ? $value : [$value];
+		$remainingCompanies = [];
+
+		foreach ($rawCompanies as $rawCompany) {
+			foreach ($this->splitCompanyValue((string)$rawCompany) as $companyPart) {
+				if ($this->canonicalizeCompanyName($companyPart) === $excludedCompany) {
+					continue;
+				}
+
+				$cleanedPart = trim($companyPart);
+				if ($cleanedPart !== '') {
+					$remainingCompanies[] = $cleanedPart;
+				}
+			}
+		}
+
+		return array_values(array_unique($remainingCompanies));
+	}
+
+	private function buildGroupVCardFilename(string $company): string {
+		$sanitized = preg_replace('/[^[:alnum:]\-_]+/u', '-', trim($company)) ?? 'team4all-group';
+		$sanitized = trim($sanitized, '-');
+
+		return ($sanitized !== '' ? $sanitized : 'team4all-group') . '.vcf';
 	}
 
 	private function applyManagedContactData(VCard $vCard, IUser $user, string $managedUid): void {

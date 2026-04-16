@@ -7,11 +7,15 @@ style('team4all', 'main');
 
 $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
 $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
+$movableAddressBooks = $_['movableAddressBooks'] ?? [];
 ?>
 <div
     id="team4all-root"
     class="team4all-root"
     data-team4all-icon-url="<?= p($team4AllFaviconUrl) ?>"
+    data-team4all-group-move-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.moveGroup')) ?>"
+    data-team4all-group-vcard-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.downloadGroupVCard')) ?>"
+    data-team4all-movable-address-books="<?= p(base64_encode(json_encode($movableAddressBooks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
     style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);gap:12px;padding:8px 12px 12px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
 >
     <section
@@ -106,6 +110,7 @@ $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
 									class="team4all-contact-group__header team4all-contact-trigger team4all-contact-trigger--header"
 									data-team4all-contact-search="<?= p(mb_strtolower($entry['leader']['searchText'])) ?>"
 									data-team4all-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
+									data-team4all-group-company="<?= p($entry['company']) ?>"
 									data-team4all-note-mode="leader"
 									data-team4all-note-title="<?= p($entry['leader']['name']) ?>"
 									data-team4all-note-uid="<?= p($entry['leader']['uid']) ?>"
@@ -234,6 +239,26 @@ $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
 			<?php endif; ?>
 		</div>
     </aside>
+
+	<div id="team4all-group-menu" class="team4all-group-menu" hidden>
+		<button type="button" class="team4all-group-menu__action" data-team4all-group-action="move">Verschieben</button>
+		<button type="button" class="team4all-group-menu__action" data-team4all-group-action="vcard">vCard</button>
+	</div>
+
+	<div id="team4all-group-move-dialog" class="team4all-group-dialog" hidden>
+		<div class="team4all-group-dialog__surface">
+			<h3>Teamleader verschieben</h3>
+			<p id="team4all-group-move-dialog-label" class="team4all-group-dialog__label"></p>
+			<label class="team4all-group-dialog__field">
+				<span>Zieladressbuch</span>
+				<select id="team4all-group-move-target"></select>
+			</label>
+			<div class="team4all-group-dialog__actions">
+				<button type="button" class="team4all-group-dialog__button team4all-group-dialog__button--secondary" data-team4all-group-dialog-action="cancel">Abbrechen</button>
+				<button type="button" class="team4all-group-dialog__button" data-team4all-group-dialog-action="confirm">Verschieben</button>
+			</div>
+		</div>
+	</div>
 
     <main class="team4all-main" aria-label="Arbeitsbereich" style="padding:0;min-width:0;height:100%;min-height:0;">
         <div
