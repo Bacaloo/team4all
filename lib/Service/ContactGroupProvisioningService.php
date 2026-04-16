@@ -1205,16 +1205,19 @@ class ContactGroupProvisioningService {
 
 		foreach ($grouped as &$group) {
 			if (array_key_exists('leaderCandidates', $group)) {
+				$group['leaderCandidates'] = $this->getUniqueContacts($group['leaderCandidates']);
 				$group['leader'] = $this->pickPreferredLeaderCandidate($group['leaderCandidates']);
 				unset($group['leaderCandidates']);
 			}
 
+			$group['members'] = $this->getUniqueContacts($group['members']);
+
 			if ($group['leader'] !== null) {
-				$leaderSourceKey = (string)($group['leader']['sourceKey'] ?? $group['leader']['uri']);
+				$leaderSourceKey = $this->getContactIdentityKey($group['leader']);
 				$group['members'] = array_values(
 					array_filter(
 						$group['members'],
-						static fn(array $member): bool => (string)($member['sourceKey'] ?? $member['uri']) !== $leaderSourceKey
+						fn(array $member): bool => $this->getContactIdentityKey($member) !== $leaderSourceKey
 					)
 				);
 			}
@@ -1241,6 +1244,46 @@ class ContactGroupProvisioningService {
 		);
 
 		return $entries;
+	}
+
+	/**
+	 * @param list<array<string, mixed>> $contacts
+	 * @return list<array<string, mixed>>
+	 */
+	private function getUniqueContacts(array $contacts): array {
+		$uniqueContacts = [];
+		$seen = [];
+
+		foreach ($contacts as $contact) {
+			$key = $this->getContactIdentityKey($contact);
+			if ($key === '' || isset($seen[$key])) {
+				continue;
+			}
+
+			$seen[$key] = true;
+			$uniqueContacts[] = $contact;
+		}
+
+		return $uniqueContacts;
+	}
+
+	/**
+	 * @param array<string, mixed> $contact
+	 */
+	private function getContactIdentityKey(array $contact): string {
+		$key = trim((string)($contact['sourceKey'] ?? ''));
+		if ($key !== '') {
+			return $key;
+		}
+
+		$addressBookId = trim((string)($contact['addressBookId'] ?? ''));
+		$uri = trim((string)($contact['uri'] ?? ''));
+		if ($addressBookId !== '' && $uri !== '') {
+			return $addressBookId . ':' . $uri;
+		}
+
+		$uid = trim((string)($contact['uid'] ?? ''));
+		return $uid;
 	}
 
 	private function pickPreferredLeaderCandidate(array $candidates): ?array {
