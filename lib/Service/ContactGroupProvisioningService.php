@@ -1214,9 +1214,10 @@ class ContactGroupProvisioningService {
 			$telephoneEntries
 		);
 		$displayParts = $this->buildEditableDisplayNameParts($name, $nameParts, $company);
+		$displayName = $this->buildDisplayedContactName($displayParts, $effectiveName);
 
 		return [
-			'name' => $effectiveName !== '' ? $effectiveName : '(Ohne Namen)',
+			'name' => $displayName,
 			'rawName' => $name,
 			'searchText' => $this->buildContactSearchText(
 				$name,
@@ -1247,6 +1248,26 @@ class ContactGroupProvisioningService {
 			'emails' => implode("\n", $emails),
 			'contactGroups' => $this->extractVisibleContactGroups($vCard),
 		];
+	}
+
+	/**
+	 * @param array{prefix: string, firstName: string, lastName: string} $displayParts
+	 */
+	private function buildDisplayedContactName(array $displayParts, string $fallback): string {
+		$firstName = trim($displayParts['firstName']);
+		$lastName = trim($displayParts['lastName']);
+
+		if ($lastName !== '' && $firstName !== '') {
+			return $lastName . ', ' . $firstName;
+		}
+
+		if ($lastName !== '') {
+			return $lastName;
+		}
+
+		$fallback = trim($fallback);
+
+		return $fallback !== '' ? $fallback : '(Ohne Namen)';
 	}
 
 	private function applyEditableContactDetails(
