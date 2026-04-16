@@ -326,19 +326,16 @@ class ContactGroupProvisioningService {
 			return false;
 		}
 
-		$contact = $this->buildContactDataFromCard(
-			$match['vCard'],
-			(string)($match['card']['uri'] ?? $uri),
-			(int)$match['addressBook']['id'],
-		);
+		$vCard = $match['vCard'];
+		$companies = $this->extractCompanies($vCard);
 
-		if ($this->shouldSkipContactDuringGroupMove($contact, $company)) {
-			$this->removeMovedCompanyFromSkippedContact($cardDavBackend, $contact, $company);
+		if (count($companies) > 1) {
+			$this->removeMovedCompanyFromMatchedContact($cardDavBackend, $match, $company);
 
 			return true;
 		}
 
-		return $this->moveContactToAddressBook($cardDavBackend, $contact, $targetAddressBookId);
+		return $this->moveMatchedCardToAddressBook($cardDavBackend, $match, $targetAddressBookId);
 	}
 
 	/**
@@ -788,6 +785,58 @@ class ContactGroupProvisioningService {
 	}
 
 	/**
+	 * @param array{addressBook: array<string, mixed>, card: array<string, mixed>, vCard: VCard} $match
+	 */
+	private function moveMatchedCardToAddressBook(object $cardDavBackend, array $match, int $targetAddressBookId): bool {
+		$sourceAddressBookId = (int)($match['addressBook']['id'] ?? 0);
+		$card = $match['card'];
+		$uri = trim((string)($card['uri'] ?? ''));
+		$vCard = $match['vCard'];
+		$uid = isset($vCard->UID) ? trim((string)$vCard->UID->getValue()) : '';
+
+		if ($sourceAddressBookId <= 0 || $uri === '') {
+			return false;
+		}
+
+		if ($sourceAddressBookId === $targetAddressBookId) {
+			return true;
+		}
+
+		if (!isset($card['carddata']) || !is_string($card['carddata'])) {
+			return false;
+		}
+
+		$cardData = $card['carddata'];
+		$targetCards = $cardDavBackend->getCards($targetAddressBookId);
+
+		foreach ($targetCards as $targetCard) {
+			if (!isset($targetCard['carddata']) || !is_string($targetCard['carddata'])) {
+				continue;
+			}
+
+			$targetVCard = $this->parseVCard($targetCard['carddata']);
+			if (!$targetVCard instanceof VCard) {
+				continue;
+			}
+
+			$targetCardUid = isset($targetVCard->UID) ? trim((string)$targetVCard->UID->getValue()) : '';
+			$targetCardUri = (string)($targetCard['uri'] ?? '');
+
+			if (($uid !== '' && $targetCardUid === $uid) || $targetCardUri === $uri) {
+				$cardDavBackend->updateCard($targetAddressBookId, $targetCardUri, $cardData);
+				$cardDavBackend->deleteCard($sourceAddressBookId, $uri);
+
+				return true;
+			}
+		}
+
+		$cardDavBackend->createCard($targetAddressBookId, $uri, $cardData);
+		$cardDavBackend->deleteCard($sourceAddressBookId, $uri);
+
+		return true;
+	}
+
+	/**
 	 * @param array<string, mixed> $contact
 	 */
 	private function shouldSkipContactDuringGroupMove(array $contact, string $company): bool {
@@ -833,6 +882,25 @@ class ContactGroupProvisioningService {
 		$cardDavBackend->updateCard(
 			(int)$match['addressBook']['id'],
 			(string)($match['card']['uri'] ?? $uri),
+			$vCard->serialize(),
+		);
+	}
+
+	/**
+	 * @param array{addressBook: array<string, mixed>, card: array<string, mixed>, vCard: VCard} $match
+	 */
+	private function removeMovedCompanyFromMatchedContact(object $cardDavBackend, array $match, string $company): void {
+		$vCard = $match['vCard'];
+		$remainingCompanies = $this->extractRemainingOrgParts($vCard, $company);
+
+		$this->removeProperties($vCard, 'ORG');
+		if ($remainingCompanies !== []) {
+			$vCard->add('ORG', implode(' | ', $remainingCompanies));
+		}
+
+		$cardDavBackend->updateCard(
+			(int)$match['addressBook']['id'],
+			(string)($match['card']['uri'] ?? ''),
 			$vCard->serialize(),
 		);
 	}

@@ -320,6 +320,11 @@
             throw new Error(`Moving group failed with status ${response.status}`);
         }
 
+        const result = await response.json();
+        if (!result?.moved) {
+            throw new Error('Moving group was rejected by the backend.');
+        }
+
         closeMoveDialog();
         hideGroupMenu();
         await refreshContactList();
@@ -357,6 +362,11 @@
 
         if (!response.ok) {
             throw new Error(`Moving contact failed with status ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (!result?.moved) {
+            throw new Error('Moving contact was rejected by the backend.');
         }
 
         closeMoveDialog();
