@@ -886,7 +886,7 @@ class ContactGroupProvisioningService {
 
 			usort(
 				$group['members'],
-				static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name'])
+				fn(array $left, array $right): int => $this->compareContactsForDisplayOrder($left, $right)
 			);
 		}
 		unset($group);
@@ -1485,6 +1485,44 @@ class ContactGroupProvisioningService {
 		return $uid === $expectedLeaderUid
 			|| $uri === $expectedLeaderUri
 			|| $this->isGeneratedGroupLeaderUri($uri);
+	}
+
+	/**
+	 * @param array<string, mixed> $left
+	 * @param array<string, mixed> $right
+	 */
+	private function compareContactsForDisplayOrder(array $left, array $right): int {
+		$leftLastName = trim((string)($left['lastName'] ?? ''));
+		$rightLastName = trim((string)($right['lastName'] ?? ''));
+
+		if ($leftLastName !== '' && $rightLastName !== '') {
+			$lastNameComparison = strcasecmp($leftLastName, $rightLastName);
+			if ($lastNameComparison !== 0) {
+				return $lastNameComparison;
+			}
+
+			$firstNameComparison = strcasecmp(
+				trim((string)($left['firstName'] ?? '')),
+				trim((string)($right['firstName'] ?? ''))
+			);
+			if ($firstNameComparison !== 0) {
+				return $firstNameComparison;
+			}
+		}
+
+		if ($leftLastName !== '' && $rightLastName === '') {
+			return $this->compareTextValues($left['name'] ?? '', $right['name'] ?? '');
+		}
+
+		if ($leftLastName === '' && $rightLastName !== '') {
+			return $this->compareTextValues($left['name'] ?? '', $right['name'] ?? '');
+		}
+
+		return $this->compareTextValues($left['name'] ?? '', $right['name'] ?? '');
+	}
+
+	private function compareTextValues(string $left, string $right): int {
+		return strcasecmp(trim($left), trim($right));
 	}
 
 	private function normalizeComparableValue(string $value): string {
