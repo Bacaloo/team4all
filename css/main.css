@@ -321,6 +321,8 @@
 .team4all-main__panel h2,
 .team4all-sidebar h2 {
     margin: 0;
+    font-size: 16pt;
+    line-height: 1.2;
 }
 
 .team4all-main__panel-header {
