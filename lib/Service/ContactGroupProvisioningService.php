@@ -859,10 +859,10 @@ class ContactGroupProvisioningService {
 					];
 				}
 
-				if ($this->isLeaderContact($contact['rawName'], $contact['name'], $company)) {
-					$grouped[$company]['leaderCandidates'][] = $contact;
-					continue;
-				}
+					if ($this->isManagedGroupLeaderContact($contact, $company) || $this->isLeaderContact($contact['rawName'], $contact['name'], $company)) {
+						$grouped[$company]['leaderCandidates'][] = $contact;
+						continue;
+					}
 
 				$grouped[$company]['members'][] = $contact;
 			}
@@ -1471,6 +1471,20 @@ class ContactGroupProvisioningService {
 		}
 
 		return $this->normalizeComparableValue($effectiveName) === $normalizedCompany;
+	}
+
+	/**
+	 * @param array<string, mixed> $contact
+	 */
+	private function isManagedGroupLeaderContact(array $contact, string $company): bool {
+		$expectedLeaderUid = $this->buildGroupLeaderContactUid($company);
+		$expectedLeaderUri = $this->buildGroupLeaderContactUri($company);
+		$uid = trim((string)($contact['uid'] ?? ''));
+		$uri = trim((string)($contact['uri'] ?? ''));
+
+		return $uid === $expectedLeaderUid
+			|| $uri === $expectedLeaderUri
+			|| $this->isGeneratedGroupLeaderUri($uri);
 	}
 
 	private function normalizeComparableValue(string $value): string {
