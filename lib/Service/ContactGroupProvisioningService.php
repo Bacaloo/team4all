@@ -1300,7 +1300,11 @@ class ContactGroupProvisioningService {
 		$vCard->add('N', [$lastName, $firstName, '', $prefix, '']);
 
 		$addressType = $this->normalizeAddressType($addressType);
-		$this->removeAddressPropertiesByType($vCard, $addressType);
+		$remainingAddresses = $this->getAddressEntriesExcludingType($vCard, $addressType);
+		$this->removeProperties($vCard, 'ADR');
+		foreach ($remainingAddresses as $addressEntry) {
+			$vCard->add('ADR', $addressEntry['value'], ['TYPE' => strtoupper($addressEntry['type'])]);
+		}
 		if ($streetAddress !== '' || $postalCode !== '' || $locality !== '') {
 			$vCard->add('ADR', ['', '', $streetAddress, $locality, '', $postalCode, ''], ['TYPE' => strtoupper($addressType)]);
 		}
@@ -1406,12 +1410,25 @@ class ContactGroupProvisioningService {
 		];
 	}
 
-	private function removeAddressPropertiesByType(VCard $vCard, string $addressType): void {
+	/**
+	 * @return list<array{type: string, value: array{0:string,1:string,2:string,3:string,4:string,5:string,6:string}}>
+	 */
+	private function getAddressEntriesExcludingType(VCard $vCard, string $excludedAddressType): array {
+		$addressEntries = [];
+
 		foreach ($vCard->select('ADR') as $addressProperty) {
-			if ($this->getAddressType($addressProperty) === $addressType) {
-				unset($addressProperty);
+			$addressType = $this->getAddressType($addressProperty);
+			if ($addressType === $excludedAddressType) {
+				continue;
 			}
+
+			$addressEntries[] = [
+				'type' => $addressType,
+				'value' => $this->normalizeAddressValue($addressProperty->getValue()),
+			];
 		}
+
+		return $addressEntries;
 	}
 
 	private function isWorkAddressProperty($addressProperty): bool {
