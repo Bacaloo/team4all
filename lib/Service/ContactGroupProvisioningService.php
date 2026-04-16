@@ -930,8 +930,11 @@ class ContactGroupProvisioningService {
 	private function leaderCandidateScore(array $candidate): int {
 		$score = 0;
 
-		if (!$this->isGeneratedGroupLeaderUri($candidate['uri'])) {
-			$score += 100;
+		$uid = trim((string)($candidate['uid'] ?? ''));
+		$uri = trim((string)($candidate['uri'] ?? ''));
+
+		if ($this->isGeneratedGroupLeaderUri($uri) || str_starts_with($uid, self::GROUP_LEADER_UID_PREFIX)) {
+			$score += 1000;
 		}
 
 		if (trim($candidate['note']) !== '') {
@@ -1125,8 +1128,7 @@ class ContactGroupProvisioningService {
 			$effectiveName = $rawName !== '' ? $rawName : $normalizedCompany;
 
 			$isManagedLeader = $uid === $expectedLeaderUid
-				|| $uri === $expectedLeaderUri
-				|| $this->isGeneratedGroupLeaderUri($uri);
+				|| $uri === $expectedLeaderUri;
 
 			if (!$isManagedLeader && !$this->isLeaderContact($rawName, $effectiveName, $company)) {
 				continue;
@@ -1521,8 +1523,7 @@ class ContactGroupProvisioningService {
 		$uri = trim((string)($contact['uri'] ?? ''));
 
 		return $uid === $expectedLeaderUid
-			|| $uri === $expectedLeaderUri
-			|| $this->isGeneratedGroupLeaderUri($uri);
+			|| $uri === $expectedLeaderUri;
 	}
 
 	/**
