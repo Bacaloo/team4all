@@ -1185,10 +1185,17 @@
         }
     };
 
+    const handleManualRefresh = (event) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        void refreshContactList();
+    };
+
     if (contactRefreshButton) {
-        contactRefreshButton.addEventListener('click', () => {
-            void refreshContactList();
-        });
+        contactRefreshButton.addEventListener('click', handleManualRefresh);
     }
 
     const activateTrigger = async (trigger) => {
@@ -1306,6 +1313,12 @@
 
     root.addEventListener('click', (event) => {
         const eventElement = getEventElement(event.target);
+        const refreshTrigger = eventElement ? eventElement.closest('#team4all-contact-refresh') : null;
+        if (refreshTrigger) {
+            handleManualRefresh(event);
+            return;
+        }
+
         const menuAction = eventElement ? eventElement.closest('[data-team4all-group-action]') : null;
         if (menuAction) {
             event.preventDefault();
