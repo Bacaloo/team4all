@@ -6,6 +6,7 @@ script('team4all', 'main');
 style('team4all', 'main');
 
 $team4AllFaviconUrl = image_path('team4all', 'favicon.svg');
+$contactRefreshIconUrl = image_path('team4all', 'contact_refresh.svg');
 $frontendFilterGroups = $_['frontendFilterGroups'] ?? [];
 $movableAddressBooks = $_['movableAddressBooks'] ?? [];
 ?>
@@ -18,7 +19,7 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
     data-team4all-contact-move-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.moveContact')) ?>"
     data-team4all-contact-vcard-url="<?= p(\OC::$server->getURLGenerator()->linkToRoute('team4all.page.downloadContactVCard')) ?>"
     data-team4all-movable-address-books="<?= p(base64_encode(json_encode($movableAddressBooks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
-    style="display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);gap:12px;padding:8px 12px 12px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
+    style="--team4all-contact-refresh-icon:url('<?= p($contactRefreshIconUrl) ?>');display:grid;grid-template-columns:20% repeat(3,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);gap:12px;padding:8px 12px 12px;min-height:calc(100vh - 50px);width:100%;max-width:none;box-sizing:border-box;align-items:stretch;align-content:stretch;"
 >
     <section
         class="team4all-toolbar"
@@ -53,16 +54,14 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
         style="display:flex;flex-direction:column;gap:12px;height:100%;min-height:0;padding:14px 16px 16px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
         <div class="team4all-sidebar__header">
-            <div class="team4all-sidebar__title-wrap">
-                <h2>Kontakte</h2>
-                <button
-                    type="button"
-                    id="team4all-contact-refresh"
-                    class="team4all-sidebar__refresh"
-                    aria-label="Kontakte neu laden"
-                    title="Kontakte neu laden"
-                ></button>
-            </div>
+            <h2>Kontakte</h2>
+            <button
+                type="button"
+                id="team4all-contact-refresh"
+                class="team4all-sidebar__refresh"
+                aria-label="Kontakte neu laden"
+                title="Kontakte neu laden"
+            ></button>
         </div>
 		<?php $team4AllGroups = $_['team4AllGroups'] ?? []; ?>
 		<div class="team4all-contact-list">

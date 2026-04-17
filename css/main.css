@@ -276,6 +276,7 @@
 .team4all-sidebar__header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
 }
 
@@ -293,7 +294,7 @@
     padding: 0;
     border: 1px solid rgba(15, 23, 42, 0.14);
     border-radius: 999px;
-    background: #f8fbff url('/core/img/actions/history.svg') center / 16px 16px no-repeat;
+    background: #f8fbff var(--team4all-contact-refresh-icon) center / 16px 16px no-repeat;
     cursor: pointer;
 }
 
