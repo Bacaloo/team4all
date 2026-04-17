@@ -33,6 +33,7 @@
 
     const search = document.getElementById('team4all-contact-search');
     const contactList = root.querySelector('.team4all-contact-list');
+    const contactRefreshButton = document.getElementById('team4all-contact-refresh');
     const filterChips = Array.from(root.querySelectorAll('.team4all-filter-chip'));
     const requestToken = document.head?.dataset?.requesttoken || '';
     const noteSaveUrl = `${window.OC?.webroot || ''}/apps/team4all/note`;
@@ -1143,6 +1144,10 @@
             return;
         }
 
+        if (contactRefreshButton) {
+            contactRefreshButton.disabled = true;
+        }
+
         try {
             const refreshUrl = new URL(contactListRefreshUrl, window.location.origin);
             refreshUrl.searchParams.set('team4allRefresh', String(Date.now()));
@@ -1173,8 +1178,18 @@
             applySearch();
         } catch (error) {
             console.error(error);
+        } finally {
+            if (contactRefreshButton) {
+                contactRefreshButton.disabled = false;
+            }
         }
     };
+
+    if (contactRefreshButton) {
+        contactRefreshButton.addEventListener('click', () => {
+            void refreshContactList();
+        });
+    }
 
     const activateTrigger = async (trigger) => {
         await saveDetailEditor(detailEditors.single);

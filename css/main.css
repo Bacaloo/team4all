@@ -279,6 +279,29 @@
     gap: 12px;
 }
 
+.team4all-sidebar__title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.team4all-sidebar__refresh {
+    appearance: none;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 999px;
+    background: #f8fbff url('/core/img/actions/history.svg') center / 16px 16px no-repeat;
+    cursor: pointer;
+}
+
+.team4all-sidebar__refresh:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
 .team4all-sidebar__copy {
     margin: 0;
     color: var(--color-text-maxcontrast);

@@ -53,8 +53,15 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
         style="display:flex;flex-direction:column;gap:12px;height:100%;min-height:0;padding:14px 16px 16px;border:1px solid rgba(15,23,42,.14);border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.10);box-sizing:border-box;"
     >
         <div class="team4all-sidebar__header">
-            <div>
+            <div class="team4all-sidebar__title-wrap">
                 <h2>Kontakte</h2>
+                <button
+                    type="button"
+                    id="team4all-contact-refresh"
+                    class="team4all-sidebar__refresh"
+                    aria-label="Kontakte neu laden"
+                    title="Kontakte neu laden"
+                ></button>
             </div>
         </div>
 		<?php $team4AllGroups = $_['team4AllGroups'] ?? []; ?>
