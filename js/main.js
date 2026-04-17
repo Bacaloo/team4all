@@ -1139,13 +1139,17 @@
         });
     };
 
-    const refreshContactList = async () => {
+    const refreshContactList = async (showManualRefreshState = false) => {
         if (!contactList) {
             return;
         }
 
         if (contactRefreshButton) {
             contactRefreshButton.disabled = true;
+        }
+
+        if (showManualRefreshState) {
+            contactList.replaceChildren();
         }
 
         try {
@@ -1191,7 +1195,7 @@
             event.stopPropagation();
         }
 
-        void refreshContactList();
+        void refreshContactList(true);
     };
 
     if (contactRefreshButton) {
