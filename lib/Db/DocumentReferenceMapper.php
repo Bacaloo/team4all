@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Team4All\Db;
 
+use OCA\Team4All\Service\DocumentReferenceSyncService;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
@@ -44,7 +45,7 @@ class DocumentReferenceMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')
 			->from($this->getTableName())
-			->where($qb->expr()->eq('contact_uid', $qb->createNamedParameter('')))
+			->where($qb->expr()->eq('contact_uid', $qb->createNamedParameter(DocumentReferenceSyncService::UNASSIGNED_CONTACT_UID)))
 			->orderBy('file_name', 'ASC');
 
 		return $this->findEntities($qb);

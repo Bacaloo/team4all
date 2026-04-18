@@ -10,7 +10,7 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 
 class DocumentReferenceSyncService {
-	private const UNASSIGNED_CONTACT_UID = '';
+	public const UNASSIGNED_CONTACT_UID = '__unassigned__';
 
 	public function __construct(
 		private DocumentReferenceMapper $documentReferenceMapper,
