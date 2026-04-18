@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\Team4All\Db;
 
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
@@ -28,7 +29,7 @@ class DocumentReferenceMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')
 			->from($this->getTableName())
-			->where($qb->expr()->in('contact_uid', $qb->createNamedParameter($contactUids, IDBConnection::PARAM_STR_ARRAY)))
+			->where($qb->expr()->in('contact_uid', $qb->createNamedParameter($contactUids, IQueryBuilder::PARAM_STR_ARRAY)))
 			->orderBy('document_created_at', 'DESC')
 			->addOrderBy('subject', 'ASC')
 			->addOrderBy('file_name', 'ASC');
