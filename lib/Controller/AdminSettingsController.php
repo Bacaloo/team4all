@@ -39,7 +39,12 @@ class AdminSettingsController extends Controller {
 		array|null $defaultAddressBookId = null,
 		array|null $teamUserUids = null,
 		array|string|null $frontendFilterGroups = null,
+		string $adminAction = '',
 	): RedirectResponse {
+		if ($adminAction === 'syncDocumentReferences') {
+			return $this->buildSyncRedirectResponse();
+		}
+
 		foreach ($teamUserUids ?? [] as $userUid) {
 			if (!is_string($userUid) || trim($userUid) === '') {
 				continue;
@@ -80,6 +85,10 @@ class AdminSettingsController extends Controller {
 	#[AdminRequired]
 	#[NoCSRFRequired]
 	public function syncDocumentReferences(): RedirectResponse {
+		return $this->buildSyncRedirectResponse();
+	}
+
+	private function buildSyncRedirectResponse(): RedirectResponse {
 		$result = $this->documentReferenceSyncService->syncFromDocumentsFolder();
 
 		$target = $this->request->getHeader('Referer');

@@ -143,7 +143,8 @@
 	<?php if (!empty($_['documentSyncMessage'])): ?>
 		<p><strong><?php p((string)$_['documentSyncMessage']); ?></strong></p>
 	<?php endif; ?>
-	<form method="post" action="<?php p($_['documentSyncUrl'] ?? ''); ?>" style="margin:0 0 16px;">
+	<form method="post" action="<?php p($_['saveUrl'] ?? ''); ?>" style="margin:0 0 16px;">
+		<input type="hidden" name="adminAction" value="syncDocumentReferences">
 		<button class="button" type="submit"><?php p('Dokumenttabelle mit Verzeichnis abgleichen'); ?></button>
 	</form>
 	<?php $documentReferenceFiles = $_['documentReferenceFiles'] ?? []; ?>
