@@ -137,4 +137,8 @@
 			<button class="button button-primary" type="submit"><?php p('Auswahl speichern'); ?></button>
 		</p>
 	</form>
+	<hr style="margin:32px 0 10px;border:0;border-top:1px solid rgba(15,23,42,.14);">
+	<p style="margin:0;font-size:12px;color:var(--color-text-maxcontrast);">
+		<?php p('Team4All Version ' . ($_['appVersion'] ?? 'unbekannt')); ?>
+	</p>
 </div>

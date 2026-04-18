@@ -404,6 +404,17 @@
     color: var(--color-text-maxcontrast);
 }
 
+.team4all-document-list {
+    margin: 0;
+    padding-left: 18px;
+    list-style: disc;
+}
+
+.team4all-document-list__item {
+    margin: 0 0 6px;
+    line-height: 1.45;
+}
+
 .team4all-eyebrow {
     margin: 0 0 6px;
     font-size: 0.75rem;

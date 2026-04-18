@@ -105,6 +105,7 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
 									data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['person']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-detail-emails="<?= p(base64_encode($entry['person']['emails'])) ?>"
 									data-team4all-detail-contact-groups="<?= p(base64_encode(json_encode($entry['person']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
+									data-team4all-documents="<?= p(base64_encode(json_encode($entry['person']['documents'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 								>
 									<strong><?= p($entry['person']['name']) ?></strong>
 								</span>
@@ -165,6 +166,7 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
 									data-team4all-leader-detail-telephone-entries="<?= p(base64_encode(json_encode($entry['leader']['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 									data-team4all-leader-detail-emails="<?= p(base64_encode($entry['leader']['emails'])) ?>"
 									data-team4all-leader-detail-contact-groups="<?= p(base64_encode(json_encode($entry['leader']['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
+									data-team4all-documents="<?= p(base64_encode(json_encode($entry['documents'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 								>
 									<span class="team4all-contact-group__title">
 										<strong><?= p($entry['company'] !== '' ? $entry['company'] : $entry['leader']['name']) ?></strong>
@@ -214,6 +216,7 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
 											data-team4all-detail-telephone-entries="<?= p(base64_encode(json_encode($member['telephoneEntries'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											data-team4all-detail-emails="<?= p(base64_encode($member['emails'])) ?>"
 											data-team4all-detail-contact-groups="<?= p(base64_encode(json_encode($member['contactGroups'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
+											data-team4all-documents="<?= p(base64_encode(json_encode($member['documents'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]')) ?>"
 											<?php if ($entry['leader'] !== null): ?>
 												data-team4all-leader-title="<?= p($entry['leader']['name']) ?>"
 												data-team4all-leader-uid="<?= p($entry['leader']['uid']) ?>"
@@ -369,8 +372,12 @@ $movableAddressBooks = $_['movableAddressBooks'] ?? [];
                         <button type="button" class="team4all-main__panel-menu-button" aria-label="Dokument-Aktion" disabled></button>
                     </div>
                 </header>
-                <div class="team4all-main__panel-body">
-                    <p>Hier entsteht der Dokumenten-Bereich.</p>
+                <div id="team4all-documents" class="team4all-main__panel-body">
+                    <div id="team4all-documents-empty" class="team4all-contact-placeholder">
+                        <strong id="team4all-documents-empty-title">Keine Dokumente ausgewählt</strong>
+                        <span id="team4all-documents-empty-copy">Bitte links einen Kontakt oder Gruppenleader anklicken.</span>
+                    </div>
+                    <ul id="team4all-documents-list" class="team4all-document-list" hidden></ul>
                 </div>
             </section>
         </div>

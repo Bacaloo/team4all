@@ -7,6 +7,7 @@ namespace OCA\Team4All\Controller;
 use OCA\Team4All\Service\AppAccessService;
 use OCA\Team4All\Service\ContactGroupFilterService;
 use OCA\Team4All\Service\ContactGroupProvisioningService;
+use OCA\Team4All\Service\DocumentReferenceService;
 use OCA\Team4All\Service\GroupProvisioningService;
 use OCA\Team4All\Service\TeamFolderProvisioningService;
 use OCP\App\IAppManager;
@@ -39,6 +40,7 @@ class PageController extends Controller {
 		private AppAccessService $appAccessService,
 		private ContactGroupFilterService $contactGroupFilterService,
 		private ContactGroupProvisioningService $contactGroupProvisioningService,
+		private DocumentReferenceService $documentReferenceService,
 		private GroupProvisioningService $groupProvisioningService,
 		private TeamFolderProvisioningService $teamFolderProvisioningService,
 	) {
@@ -66,7 +68,9 @@ class PageController extends Controller {
 			]);
 		}
 
-		$team4AllGroups = $this->contactGroupProvisioningService->getTeam4AllContactGroups();
+		$team4AllGroups = $this->attachDocumentsToGroupEntries(
+			$this->contactGroupProvisioningService->getTeam4AllContactGroups()
+		);
 
 		return new TemplateResponse($this->appName, 'main', [
 			'team4AllGroups' => $team4AllGroups,
@@ -278,5 +282,115 @@ class PageController extends Controller {
 		}
 
 		return $missingApps;
+	}
+
+	/**
+	 * @param list<array<string, mixed>> $groupEntries
+	 * @return list<array<string, mixed>>
+	 */
+	private function attachDocumentsToGroupEntries(array $groupEntries): array {
+		$documentsByContactUid = $this->documentReferenceService->getDocumentsByContactUids(
+			$this->collectDocumentContactUids($groupEntries)
+		);
+
+		foreach ($groupEntries as &$entry) {
+			if (($entry['type'] ?? '') === 'person' && is_array($entry['person'] ?? null)) {
+				$personUid = trim((string)($entry['person']['uid'] ?? ''));
+				$entry['person']['documents'] = $documentsByContactUid[$personUid] ?? [];
+				continue;
+			}
+
+			$leaderDocuments = [];
+			if (is_array($entry['leader'] ?? null)) {
+				$leaderUid = trim((string)($entry['leader']['uid'] ?? ''));
+				$leaderDocuments = $documentsByContactUid[$leaderUid] ?? [];
+				$entry['leader']['documents'] = $leaderDocuments;
+			}
+
+			$groupDocuments = $leaderDocuments;
+			$members = is_array($entry['members'] ?? null) ? $entry['members'] : [];
+			foreach ($members as &$member) {
+				if (!is_array($member)) {
+					continue;
+				}
+
+				$memberUid = trim((string)($member['uid'] ?? ''));
+				$memberDocuments = $documentsByContactUid[$memberUid] ?? [];
+				$member['documents'] = $memberDocuments;
+				$groupDocuments = $this->mergeDocuments($groupDocuments, $memberDocuments);
+			}
+			unset($member);
+
+			$entry['members'] = $members;
+			$entry['documents'] = $groupDocuments;
+		}
+		unset($entry);
+
+		return $groupEntries;
+	}
+
+	/**
+	 * @param list<array<string, mixed>> $groupEntries
+	 * @return list<string>
+	 */
+	private function collectDocumentContactUids(array $groupEntries): array {
+		$contactUids = [];
+
+		foreach ($groupEntries as $entry) {
+			if (($entry['type'] ?? '') === 'person' && is_array($entry['person'] ?? null)) {
+				$uid = trim((string)($entry['person']['uid'] ?? ''));
+				if ($uid !== '') {
+					$contactUids[] = $uid;
+				}
+				continue;
+			}
+
+			if (is_array($entry['leader'] ?? null)) {
+				$uid = trim((string)($entry['leader']['uid'] ?? ''));
+				if ($uid !== '') {
+					$contactUids[] = $uid;
+				}
+			}
+
+			foreach (($entry['members'] ?? []) as $member) {
+				if (!is_array($member)) {
+					continue;
+				}
+
+				$uid = trim((string)($member['uid'] ?? ''));
+				if ($uid !== '') {
+					$contactUids[] = $uid;
+				}
+			}
+		}
+
+		return array_values(array_unique($contactUids));
+	}
+
+	/**
+	 * @param list<array{contactUid:string,fileName:string,subject:string,documentCreatedAt:?string}> $documents
+	 * @param list<array{contactUid:string,fileName:string,subject:string,documentCreatedAt:?string}> $additionalDocuments
+	 * @return list<array{contactUid:string,fileName:string,subject:string,documentCreatedAt:?string}>
+	 */
+	private function mergeDocuments(array $documents, array $additionalDocuments): array {
+		$seen = [];
+		$merged = [];
+
+		foreach (array_merge($documents, $additionalDocuments) as $document) {
+			$key = ($document['contactUid'] ?? '') . '|' . ($document['fileName'] ?? '');
+			if ($key === '|' || isset($seen[$key])) {
+				continue;
+			}
+
+			$seen[$key] = true;
+			$merged[] = $document;
+		}
+
+		usort($merged, static function (array $left, array $right): int {
+			return strcmp((string)($right['documentCreatedAt'] ?? ''), (string)($left['documentCreatedAt'] ?? ''))
+				?: strcmp((string)($left['subject'] ?? ''), (string)($right['subject'] ?? ''));
+		});
+
+		return $merged;
 	}
 }

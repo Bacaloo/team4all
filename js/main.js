@@ -63,6 +63,10 @@
     const notesMemberSection = document.getElementById('team4all-notes-member-section');
     const notesMemberTitle = document.getElementById('team4all-notes-member-title');
     const notesMemberContent = document.getElementById('team4all-notes-member-content');
+    const documentsEmpty = document.getElementById('team4all-documents-empty');
+    const documentsEmptyTitle = document.getElementById('team4all-documents-empty-title');
+    const documentsEmptyCopy = document.getElementById('team4all-documents-empty-copy');
+    const documentsList = document.getElementById('team4all-documents-list');
 
     const detailsEmpty = document.getElementById('team4all-details-empty');
     const detailsSingle = document.getElementById('team4all-details-single');
@@ -190,6 +194,24 @@
                 .filter((value) => typeof value === 'string')
                 .map((value) => value.trim().toLowerCase())
                 .filter((value) => value !== '');
+        } catch (error) {
+            return [];
+        }
+    };
+
+    const readDocuments = (element) => {
+        if (!element) {
+            return [];
+        }
+
+        const encoded = element.getAttribute('data-team4all-documents') || '';
+        if (encoded === '') {
+            return [];
+        }
+
+        try {
+            const parsed = JSON.parse(decodeDataValue(encoded));
+            return Array.isArray(parsed) ? parsed : [];
         } catch (error) {
             return [];
         }
@@ -438,6 +460,20 @@
         setVisible(notesEmpty, true);
         setVisible(notesSingle, false);
         setVisible(notesSplit, false);
+    };
+
+    const showEmptyDocuments = (
+        title = 'Keine Dokumente ausgewählt',
+        copy = 'Bitte links einen Kontakt oder Gruppenleader anklicken.'
+    ) => {
+        setVisible(documentsEmpty, true);
+        setVisible(documentsList, false);
+        setContent(documentsEmptyTitle, title, title);
+        setContent(documentsEmptyCopy, copy, copy);
+
+        if (documentsList) {
+            documentsList.replaceChildren();
+        }
     };
 
     const assignNoteEditorState = (element, uid, uri, addressBookId, value) => {
@@ -1080,6 +1116,29 @@
         assignNoteEditorState(notesMemberContent, memberUid, memberUri, memberAddressBookId, memberContent);
     };
 
+    const showDocuments = (documents) => {
+        if (!documentsList) {
+            return;
+        }
+
+        documentsList.replaceChildren();
+
+        if (!Array.isArray(documents) || documents.length === 0) {
+            showEmptyDocuments('Keine Dokumente vorhanden', 'Zu der aktuellen Auswahl wurden keine Dokumente gefunden.');
+            return;
+        }
+
+        documents.forEach((documentEntry) => {
+            const item = document.createElement('li');
+            item.className = 'team4all-document-list__item';
+            item.textContent = (documentEntry?.subject || documentEntry?.fileName || 'Ohne Betreff').trim() || 'Ohne Betreff';
+            documentsList.appendChild(item);
+        });
+
+        setVisible(documentsEmpty, false);
+        setVisible(documentsList, true);
+    };
+
     const applySearch = () => {
         if (!search) {
             return;
@@ -1278,6 +1337,7 @@
         }
 
         showSingleDetails(detailData.title || trigger.getAttribute('data-team4all-detail-title') || '', detailData);
+        showDocuments(readDocuments(trigger));
 
         if (noteMode === 'leader') {
             showLeaderNote(
@@ -1466,6 +1526,7 @@
 
     showEmptyDetails();
     showEmptyNotes();
+    showEmptyDocuments();
     registerNoteEditor(notesSingleContent);
     registerNoteEditor(notesLeaderContent);
     registerNoteEditor(notesMemberContent);

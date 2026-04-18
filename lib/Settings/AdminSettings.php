@@ -8,6 +8,7 @@ use OCA\Team4All\Service\AddressBookSelectionService;
 use OCA\Team4All\Service\ContactGroupCatalogService;
 use OCA\Team4All\Service\ContactGroupFilterService;
 use OCA\Team4All\Service\TeamAddressBookCatalogService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -19,6 +20,7 @@ class AdminSettings implements ISettings {
 		private AddressBookSelectionService $addressBookSelectionService,
 		private ContactGroupCatalogService $contactGroupCatalogService,
 		private ContactGroupFilterService $contactGroupFilterService,
+		private IAppManager $appManager,
 		private IL10N $l10n,
 		private IURLGenerator $urlGenerator,
 	) {
@@ -47,6 +49,7 @@ class AdminSettings implements ISettings {
 			'selectedFrontendFilterGroups' => $this->contactGroupFilterService->getSelectedFrontendFilterGroups(),
 			'pageTitle' => $this->l10n->t('Nutzbare Adressbücher'),
 			'saveUrl' => $this->urlGenerator->linkToRoute('team4all.adminSettings.save'),
+			'appVersion' => $this->appManager->getAppVersion('team4all'),
 		]);
 	}
 
