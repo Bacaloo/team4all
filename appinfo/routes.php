@@ -6,6 +6,7 @@ return [
 	'routes' => [
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 		['name' => 'adminSettings#save', 'url' => '/admin/address-books', 'verb' => 'POST'],
+		['name' => 'adminSettings#syncDocumentReferences', 'url' => '/admin/document-references/sync', 'verb' => 'POST'],
 		['name' => 'page#fetchContact', 'url' => '/contact/fetch', 'verb' => 'GET'],
 		['name' => 'page#moveGroup', 'url' => '/group/move', 'verb' => 'POST'],
 		['name' => 'page#downloadGroupVCard', 'url' => '/group/vcard', 'verb' => 'GET'],

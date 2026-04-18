@@ -137,6 +137,34 @@
 			<button class="button button-primary" type="submit"><?php p('Auswahl speichern'); ?></button>
 		</p>
 	</form>
+
+	<h3><?php p('Dokumentabgleich'); ?></h3>
+	<p><?php p('Vergleicht die Tabelle mit den Dateien direkt im Verzeichnis Team4All/Dokumente. Gespeichert wird der vollständige Dateiname inklusive Endung in der Spalte Datei.'); ?></p>
+	<?php if (!empty($_['documentSyncMessage'])): ?>
+		<p><strong><?php p((string)$_['documentSyncMessage']); ?></strong></p>
+	<?php endif; ?>
+	<form method="post" action="<?php p($_['documentSyncUrl'] ?? ''); ?>" style="margin:0 0 16px;">
+		<button class="button" type="submit"><?php p('Dokumenttabelle mit Verzeichnis abgleichen'); ?></button>
+	</form>
+	<?php $documentReferenceFiles = $_['documentReferenceFiles'] ?? []; ?>
+	<?php if ($documentReferenceFiles === []): ?>
+		<p><?php p('Aktuell sind keine unbearbeiteten Dokumentdateien in der Tabelle vorhanden.'); ?></p>
+	<?php else: ?>
+		<table style="width:100%;border-collapse:collapse;margin:0 0 16px;">
+			<thead>
+				<tr>
+					<th style="text-align:left;padding:8px 0;border-bottom:1px solid rgba(15,23,42,.14);"><?php p('Datei'); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ($documentReferenceFiles as $fileName): ?>
+					<tr>
+						<td style="padding:8px 0;border-bottom:1px solid rgba(15,23,42,.08);"><?php p((string)$fileName); ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	<?php endif; ?>
 	<hr style="margin:32px 0 10px;border:0;border-top:1px solid rgba(15,23,42,.14);">
 	<p style="margin:0;font-size:12px;color:var(--color-text-maxcontrast);">
 		<?php p('Team4All Version ' . ($_['appVersion'] ?? 'unbekannt')); ?>

@@ -36,4 +36,17 @@ class DocumentReferenceMapper extends QBMapper {
 
 		return $this->findEntities($qb);
 	}
+
+	/**
+	 * @return list<DocumentReference>
+	 */
+	public function findUnassigned(): array {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('contact_uid', $qb->createNamedParameter('')))
+			->orderBy('file_name', 'ASC');
+
+		return $this->findEntities($qb);
+	}
 }

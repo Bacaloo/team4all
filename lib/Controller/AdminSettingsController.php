@@ -7,6 +7,7 @@ namespace OCA\Team4All\Controller;
 use OCA\Team4All\AppInfo\Application;
 use OCA\Team4All\Service\AddressBookSelectionService;
 use OCA\Team4All\Service\ContactGroupFilterService;
+use OCA\Team4All\Service\DocumentReferenceSyncService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -19,6 +20,7 @@ class AdminSettingsController extends Controller {
 		IRequest $request,
 		private AddressBookSelectionService $addressBookSelectionService,
 		private ContactGroupFilterService $contactGroupFilterService,
+		private DocumentReferenceSyncService $documentReferenceSyncService,
 		private IURLGenerator $urlGenerator,
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -71,6 +73,27 @@ class AdminSettingsController extends Controller {
 		if (!is_string($target) || trim($target) === '') {
 			$target = $this->urlGenerator->getAbsoluteURL('/settings/admin/team4all');
 		}
+
+		return new RedirectResponse($target);
+	}
+
+	#[AdminRequired]
+	#[NoCSRFRequired]
+	public function syncDocumentReferences(): RedirectResponse {
+		$result = $this->documentReferenceSyncService->syncFromDocumentsFolder();
+
+		$target = $this->request->getHeader('Referer');
+		if (!is_string($target) || trim($target) === '') {
+			$target = $this->urlGenerator->getAbsoluteURL('/settings/admin/team4all');
+		}
+
+		$separator = str_contains($target, '?') ? '&' : '?';
+		$target .= $separator . http_build_query([
+			't4aDocumentSync' => '1',
+			't4aDocumentSyncAdded' => (string)$result['added'],
+			't4aDocumentSyncDeleted' => (string)$result['deleted'],
+			't4aDocumentSyncTotal' => (string)$result['total'],
+		]);
 
 		return new RedirectResponse($target);
 	}

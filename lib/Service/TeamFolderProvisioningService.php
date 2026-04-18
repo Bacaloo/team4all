@@ -42,6 +42,27 @@ class TeamFolderProvisioningService {
 		$this->ensureTeamFolderInternal(true);
 	}
 
+	public function getDocumentsFolderForUserContext(): ?Folder {
+		if (!class_exists(self::GROUP_FOLDERS_MANAGER_CLASS)) {
+			return null;
+		}
+
+		$groupFolderManager = $this->resolveGroupFolderManager();
+		if ($groupFolderManager === null) {
+			return null;
+		}
+
+		$mountPoint = $groupFolderManager->trimMountpoint(self::FOLDER_NAME);
+		$folderId = $this->findFolderIdByMountPoint($groupFolderManager, $mountPoint);
+		if ($folderId === null) {
+			return null;
+		}
+
+		$folder = $groupFolderManager->getFolder($folderId);
+
+		return $this->ensureDocumentsFolder($folder, $mountPoint, true);
+	}
+
 	private function ensureTeamFolderInternal(bool $requireProvisioningUser): void {
 		try {
 			if (!$this->canProvisionTeamFolder()) {
