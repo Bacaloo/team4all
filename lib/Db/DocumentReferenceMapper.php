@@ -50,4 +50,21 @@ class DocumentReferenceMapper extends QBMapper {
 
 		return $this->findEntities($qb);
 	}
+
+	public function countAll(): int {
+		$qb = $this->db->getQueryBuilder();
+		$qb->selectAlias($qb->createFunction('COUNT(*)'), 'row_count')
+			->from($this->getTableName());
+
+		return (int)$qb->executeQuery()->fetchOne();
+	}
+
+	public function countUnassigned(): int {
+		$qb = $this->db->getQueryBuilder();
+		$qb->selectAlias($qb->createFunction('COUNT(*)'), 'row_count')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('contact_uid', $qb->createNamedParameter(DocumentReferenceSyncService::UNASSIGNED_CONTACT_UID)));
+
+		return (int)$qb->executeQuery()->fetchOne();
+	}
 }

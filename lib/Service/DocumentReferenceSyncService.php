@@ -78,6 +78,16 @@ class DocumentReferenceSyncService {
 	}
 
 	/**
+	 * @return array{total:int,unassigned:int}
+	 */
+	public function getOverview(): array {
+		return [
+			'total' => $this->documentReferenceMapper->countAll(),
+			'unassigned' => $this->documentReferenceMapper->countUnassigned(),
+		];
+	}
+
+	/**
 	 * @return list<string>
 	 */
 	private function collectFileNames(Folder $documentsFolder): array {

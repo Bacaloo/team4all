@@ -143,14 +143,25 @@
 	<?php if (!empty($_['documentSyncMessage'])): ?>
 		<p><strong><?php p((string)$_['documentSyncMessage']); ?></strong></p>
 	<?php endif; ?>
+	<p>
+		<?php
+		$totalDocuments = (int)($_['documentReferenceTotal'] ?? 0);
+		$unassignedDocuments = (int)($_['documentReferenceUnassigned'] ?? 0);
+		p($totalDocuments . ' Datensätze, davon ' . $unassignedDocuments . ' nicht zugeordnet');
+		?>
+	</p>
 	<form method="post" action="<?php p($_['saveUrl'] ?? ''); ?>" style="margin:0 0 16px;">
 		<input type="hidden" name="adminAction" value="syncDocumentReferences">
 		<button class="button" type="submit"><?php p('Dokumenttabelle mit Verzeichnis abgleichen'); ?></button>
 	</form>
+	<p>
+		<a class="button" href="<?php p($_['showUnassignedDocumentsUrl'] ?? ''); ?>"><?php p('Nicht zugeordnete Dateinamen anzeigen'); ?></a>
+	</p>
 	<?php $documentReferenceFiles = $_['documentReferenceFiles'] ?? []; ?>
-	<?php if ($documentReferenceFiles === []): ?>
-		<p><?php p('Aktuell sind keine unbearbeiteten Dokumentdateien in der Tabelle vorhanden.'); ?></p>
-	<?php else: ?>
+	<?php if (!empty($_['showUnassignedDocuments'])): ?>
+		<?php if ($documentReferenceFiles === []): ?>
+			<p><?php p('Aktuell sind keine nicht zugeordneten Dokumentdateien vorhanden.'); ?></p>
+		<?php else: ?>
 		<table style="width:100%;border-collapse:collapse;margin:0 0 16px;">
 			<thead>
 				<tr>
@@ -165,6 +176,7 @@
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+		<?php endif; ?>
 	<?php endif; ?>
 	<hr style="margin:32px 0 10px;border:0;border-top:1px solid rgba(15,23,42,.14);">
 	<p style="margin:0;font-size:12px;color:var(--color-text-maxcontrast);">

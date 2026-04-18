@@ -34,6 +34,8 @@ class AdminSettings implements ISettings {
 		$addressBooksByUser = $this->teamAddressBookCatalogService->getSharedAddressBookOptionsForTeamByUser();
 		$selectedAddressBookIdsByUser = [];
 		$defaultAddressBookIdsByUser = [];
+		$documentOverview = $this->documentReferenceSyncService->getOverview();
+		$showUnassignedDocuments = $this->request->getParam('showUnassignedDocuments') === '1';
 
 		foreach ($addressBooksByUser as $userEntry) {
 			$userUid = trim((string)($userEntry['uid'] ?? ''));
@@ -51,9 +53,13 @@ class AdminSettings implements ISettings {
 			'defaultAddressBookIdsByUser' => $defaultAddressBookIdsByUser,
 			'availableContactGroups' => $this->contactGroupCatalogService->getAvailableContactGroupsForTeam(),
 			'selectedFrontendFilterGroups' => $this->contactGroupFilterService->getSelectedFrontendFilterGroups(),
-			'documentReferenceFiles' => $this->documentReferenceSyncService->getUnassignedFileNames(),
+			'documentReferenceFiles' => $showUnassignedDocuments ? $this->documentReferenceSyncService->getUnassignedFileNames() : [],
+			'documentReferenceTotal' => $documentOverview['total'],
+			'documentReferenceUnassigned' => $documentOverview['unassigned'],
+			'showUnassignedDocuments' => $showUnassignedDocuments,
 			'documentSyncUrl' => $this->urlGenerator->linkToRoute('team4all.adminSettings.syncDocumentReferences'),
 			'documentSyncMessage' => $this->buildDocumentSyncMessage(),
+			'showUnassignedDocumentsUrl' => $this->urlGenerator->getAbsoluteURL('/settings/admin/team4all?showUnassignedDocuments=1'),
 			'pageTitle' => $this->l10n->t('Nutzbare Adressbücher'),
 			'saveUrl' => $this->urlGenerator->linkToRoute('team4all.adminSettings.save'),
 			'appVersion' => $this->appManager->getAppVersion('team4all'),
